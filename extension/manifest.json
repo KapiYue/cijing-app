@@ -1,0 +1,43 @@
+{
+  "manifest_version": 3,
+  "name": "词鲸背单词",
+  "version": "1.0.0",
+  "description": "在真实英文阅读中双击查词，理解当前语境并同步到词鲸背单词 App。",
+  "permissions": ["storage", "contextMenus", "activeTab"],
+  "host_permissions": ["http://*/*", "https://*.supabase.co/*"],
+  "background": {
+    "service_worker": "background.js",
+    "type": "module"
+  },
+  "icons": {
+    "16": "icons/icon-16.png",
+    "32": "icons/icon-32.png",
+    "48": "icons/icon-48.png",
+    "128": "icons/icon-128.png"
+  },
+  "action": {
+    "default_title": "词鲸背单词",
+    "default_popup": "popup/popup.html",
+    "default_icon": {
+      "16": "icons/icon-16.png",
+      "32": "icons/icon-32.png",
+      "48": "icons/icon-48.png",
+      "128": "icons/icon-128.png"
+    }
+  },
+  "options_page": "options/options.html",
+  "content_scripts": [
+    {
+      "matches": ["<all_urls>"],
+      "js": ["content/content.js"],
+      "run_at": "document_idle",
+      "all_frames": false
+    }
+  ],
+  "commands": {
+    "lookup-selection": {
+      "suggested_key": { "default": "Alt+W", "mac": "Alt+W" },
+      "description": "查询选中的单词"
+    }
+  }
+}

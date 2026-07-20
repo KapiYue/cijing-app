@@ -1,0 +1,19 @@
+<!doctype html>
+<html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>词鲸背单词</title><link rel="stylesheet" href="popup.css"></head>
+<body><main>
+  <header><div class="mark">鲸</div><div><h1>词鲸背单词</h1><p>从真实阅读，走向长期记忆</p></div><button id="settings" class="icon" title="设置">⚙︎</button></header>
+  <section id="loading" class="center">正在连接本地词库…</section>
+  <section id="auth" hidden>
+    <h2>连接你的学习闭环</h2><p class="muted">扩展和 iOS App 使用同一账号同步。</p>
+    <label>邮箱<input id="email" type="email" autocomplete="email" placeholder="you@example.com"></label>
+    <label>密码<input id="password" type="password" autocomplete="current-password" minlength="6" placeholder="至少 6 位"></label>
+    <div id="auth-error" class="error" hidden></div>
+    <button id="signin" class="primary">登录</button><button id="signup" class="ghost">创建账号</button>
+  </section>
+  <section id="dashboard" hidden>
+    <div class="welcome"><span id="account"></span><button id="signout" class="link">退出</button></div>
+    <div class="plan"><div><small>今日待复习</small><strong id="review-count">0</strong></div><div><small>建议新词</small><strong id="new-count">0</strong></div><div><small>薄弱词</small><strong id="weak-count">0</strong></div></div>
+    <h3>最近收藏</h3><div id="recent" class="recent"></div>
+    <div class="tip">在英文网页双击单词，即刻查看当前语境含义。按 <kbd>⌥ W</kbd> 也可查询选中词。</div>
+  </section>
+</main><script type="module" src="popup.js"></script></body></html>
