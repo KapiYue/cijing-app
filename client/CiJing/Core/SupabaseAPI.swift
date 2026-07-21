@@ -37,16 +37,24 @@ final class SupabaseAPI: ObservableObject {
 
     func signIn(email: String, password: String) async throws {
         isAuthenticating = true; defer { isAuthenticating = false }
-        let body = try encoder.encode(Credentials(email: email, password: password))
-        let value: AuthSession = try await send(path: "/auth/v1/token?grant_type=password", method: "POST", body: body, authenticated: false)
-        persist(value)
+        let credentials = try AuthCredentialRules.validate(email: email, password: password, mode: .signIn)
+        do {
+            let body = try encoder.encode(Credentials(email: credentials.email, password: credentials.password))
+            let value: AuthSession = try await send(path: "/auth/v1/token?grant_type=password", method: "POST", body: body, authenticated: false)
+            persist(value)
+        } catch {
+            let compatiblePassword = AuthCredentialRules.compatibilityPassword(credentials.password)
+            guard compatiblePassword != password, Self.isInvalidCredentials(error) else { throw error }
+            let body = try encoder.encode(Credentials(email: credentials.email, password: compatiblePassword))
+            let value: AuthSession = try await send(path: "/auth/v1/token?grant_type=password", method: "POST", body: body, authenticated: false)
+            persist(value)
+        }
     }
 
-    /// Returns `true` when production Auth requires the user to confirm their email
-    /// before a session can be created.
-    func signUp(email: String, password: String) async throws -> Bool {
+    func signUp(email: String, password: String) async throws -> SignUpResult {
         isAuthenticating = true; defer { isAuthenticating = false }
-        let body = try encoder.encode(Credentials(email: email, password: password))
+        let credentials = try AuthCredentialRules.validate(email: email, password: password, mode: .signUp)
+        let body = try encoder.encode(Credentials(email: credentials.email, password: credentials.password))
         let value: SignupResponse = try await send(path: "/auth/v1/signup", method: "POST", body: body, authenticated: false)
         if let accessToken = value.accessToken,
            let refreshToken = value.refreshToken,
@@ -55,9 +63,9 @@ final class SupabaseAPI: ObservableObject {
            let user = value.user {
             persist(AuthSession(accessToken: accessToken, refreshToken: refreshToken, expiresIn: expiresIn,
                                 expiresAt: expiresAt, tokenType: value.tokenType, user: user))
-            return false
+            return .signedIn
         }
-        return true
+        return .emailConfirmationRequired
     }
 
     func signOut() async {
@@ -96,6 +104,7 @@ final class SupabaseAPI: ObservableObject {
         guard let url = URL(string: path, relativeTo: AppConfig.supabaseURL) else { throw CiJingAPIError.invalidResponse }
         var request = URLRequest(url: url)
         request.httpMethod = method; request.httpBody = body; request.timeoutInterval = 45
+        request.cachePolicy = .reloadIgnoringLocalCacheData
         request.setValue(AppConfig.supabasePublishableKey, forHTTPHeaderField: "apikey")
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
         if let token { request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization") }
@@ -105,9 +114,27 @@ final class SupabaseAPI: ObservableObject {
         guard (200..<300).contains(http.statusCode) else {
             let payload = try? decoder.decode(APIErrorPayload.self, from: data)
             let fallback = String(data: data, encoding: .utf8) ?? "HTTP \(http.statusCode)"
-            throw http.statusCode == 401 ? CiJingAPIError.unauthenticated : CiJingAPIError.server(payload?.message ?? payload?.errorDescription ?? payload?.msg ?? payload?.error ?? fallback)
+            let message = payload?.message ?? payload?.errorDescription ?? payload?.msg ?? payload?.error ?? fallback
+            let normalized = message.lowercased()
+            if normalized.contains("user already registered") || normalized.contains("already been registered") {
+                throw CiJingAPIError.server("该邮箱已注册，请直接登录。")
+            }
+            if path.contains("/auth/v1/token") {
+                if normalized.contains("email not confirmed") {
+                    throw CiJingAPIError.server("邮箱尚未验证，请先打开验证邮件完成确认。")
+                }
+                if normalized.contains("invalid login credentials") {
+                    throw CiJingAPIError.server("邮箱或密码不正确。")
+                }
+            }
+            throw http.statusCode == 401 ? CiJingAPIError.unauthenticated : CiJingAPIError.server(message)
         }
         return (data, http)
+    }
+
+    private static func isInvalidCredentials(_ error: Error) -> Bool {
+        let message = error.localizedDescription.lowercased()
+        return message.contains("invalid login credentials") || message.contains("邮箱或密码不正确")
     }
 
     func dailyPlan() async throws -> DailyPlan {

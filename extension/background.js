@@ -1,4 +1,5 @@
 import * as api from "./shared/api.js";
+import { getPreferences } from "./shared/preferences.js";
 
 chrome.runtime.onInstalled.addListener(() => {
   chrome.contextMenus.create({ id: "cijing-lookup", title: "用词鲸背单词查询“%s”", contexts: ["selection"] });
@@ -25,6 +26,7 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
     LOOKUP_WORD: () => api.lookupWord(message.payload),
     SAVE_WORD: () => api.saveWord(message.payload),
     GET_DASHBOARD: () => api.getDashboard(),
+    GET_PREFERENCES: () => getPreferences(),
     TEST_CONNECTION: () => api.testConnection(),
     OPEN_LOGIN: () => chrome.action.openPopup()
   };

@@ -19,6 +19,12 @@ server/ (Flask) ── trusted health/ops boundary; no client secrets
 - AI 调用由 Edge Function 校验用户 JWT 后执行，并写入用户级缓存。
 - 扩展仅在用户双击英文词时读取当前句子/段落；收藏前不上传完整页面。
 
+## 邮箱认证复用
+
+- iOS 的邮箱规范化、格式校验、密码规则与兼容处理集中在 `client/CiJing/Core/AuthCredentials.swift`，登录界面和 Supabase 网络层共同调用。
+- Chrome 扩展的同类规则集中在 `extension/shared/auth.js`，弹窗和后台 API 共同调用。
+- 两端直接向 Supabase Auth 传递规范化后的真实邮箱。当前注册后直接建立会话；未来启用邮箱确认后，两端会保留邮箱并提示用户完成验证。
+
 ## 学习调度
 
 每个单词保存 `strength`、`ease_factor`、`interval_days`、`repetitions`、`lapses` 与 `due_at`。数据库函数 `apply_review` 根据 0–5 质量分更新状态和下次复习时间：

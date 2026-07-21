@@ -39,6 +39,8 @@ private enum AppTab: Int, CaseIterable, Identifiable {
 }
 
 struct MainTabView: View {
+    @Environment(\.scenePhase) private var scenePhase
+    @EnvironmentObject private var store: AppStore
     @State private var selection: AppTab = .home
 
     init() {
@@ -51,19 +53,27 @@ struct MainTabView: View {
 
     var body: some View {
         ZStack(alignment: .bottom) {
-            TabView(selection: $selection) {
-                NavigationStack { HomeView() }.tag(AppTab.home)
-                NavigationStack { WordLibraryView() }.tag(AppTab.library)
-                NavigationStack { LookupView() }.tag(AppTab.lookup)
-                NavigationStack { SettingsView() }.tag(AppTab.settings)
-            }
-            .toolbar(.hidden, for: .tabBar)
+            tabContent
 
             tabBar
                 .padding(.horizontal, 12)
                 .padding(.bottom, 8)
         }
         .tint(CiJingTheme.purple)
+        .onChange(of: selection) { _, _ in Task { await refreshSelectedTab() } }
+        .onChange(of: scenePhase) { _, phase in
+            if phase == .active { Task { await refreshSelectedTab() } }
+        }
+    }
+
+    @ViewBuilder
+    private var tabContent: some View {
+        switch selection {
+        case .home: NavigationStack { HomeView() }
+        case .library: NavigationStack { WordLibraryView() }
+        case .lookup: NavigationStack { LookupView() }
+        case .settings: NavigationStack { SettingsView() }
+        }
     }
 
     private var tabBar: some View {
@@ -74,9 +84,9 @@ struct MainTabView: View {
                 } label: {
                     VStack(spacing: 3) {
                         Image(systemName: selection == tab ? tab.selectedIcon : tab.icon)
-                            .font(.system(size: 20, weight: .medium))
+                            .font(.system(size: 21, weight: .semibold))
                             .symbolEffect(.bounce, value: selection == tab)
-                        Text(tab.title).font(.system(size: 10, weight: selection == tab ? .bold : .medium))
+                        Text(tab.title).font(.system(size: 12, weight: selection == tab ? .bold : .semibold))
                     }
                     .foregroundStyle(selection == tab ? CiJingTheme.purpleDark : Color(red: 129 / 255, green: 123 / 255, blue: 134 / 255))
                     .frame(maxWidth: .infinity, minHeight: 57)
@@ -89,9 +99,16 @@ struct MainTabView: View {
         }
         .padding(6)
         .frame(height: 70)
-        .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 25, style: .continuous))
-        .background(Color(red: 245 / 255, green: 239 / 255, blue: 252 / 255).opacity(0.88), in: RoundedRectangle(cornerRadius: 25, style: .continuous))
+        .background(Color(red: 249 / 255, green: 246 / 255, blue: 253 / 255), in: RoundedRectangle(cornerRadius: 25, style: .continuous))
         .overlay(RoundedRectangle(cornerRadius: 25, style: .continuous).stroke(CiJingTheme.line))
-        .shadow(color: Color(red: 73 / 255, green: 47 / 255, blue: 99 / 255).opacity(0.2), radius: 19, y: 10)
+        .shadow(color: CiJingTheme.purpleDark.opacity(0.14), radius: 12, y: 5)
+    }
+
+    private func refreshSelectedTab() async {
+        switch selection {
+        case .library: await store.refreshLibrary()
+        case .home: await store.refreshAll()
+        case .lookup, .settings: break
+        }
     }
 }

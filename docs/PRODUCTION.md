@@ -29,14 +29,13 @@
 2. 执行 `supabase db push --project-ref <project-ref>` 应用迁移。
 3. 执行 `make edge-secrets`，脚本从根目录 `.env` 读取 OpenRouter 变量，通过权限为 `0600` 的系统临时文件推送到已关联的 Supabase 项目，并立即删除临时文件。
 4. 部署三个 Edge Functions：`lookup-word`、`explain-reading-word`、`generate-reading`。
-5. 如部署 Flask 服务，将 `.env` 中的 `SUPABASE_URL`、`SUPABASE_SECRET_KEY` 和 `PORT` 注入托管平台，使用 `server/Dockerfile` 构建。
-6. 用 Release 配置归档 iOS App；生产包不依赖开发设置页中的本地覆盖值。
+5. 在 Supabase `Authentication → Sign In / Providers → Email` 中保持 Email Provider 与注册开启；第一版关闭 `Confirm email` 和 `Secure password change`，密码最小长度设置为 8。iOS 与 Chrome 扩展都直接使用用户填写的真实邮箱。两端已经兼容“注册后需确认邮箱”的响应，后续开启 `Confirm email` 时再配置邮件模板与跳转地址即可。
+6. 如部署 Flask 服务，将 `.env` 中的 `SUPABASE_URL`、`SUPABASE_SECRET_KEY` 和 `PORT` 注入托管平台，使用 `server/Dockerfile` 构建。
+7. 用 Release 配置归档 iOS App；生产包不依赖开发设置页中的本地覆盖值。
 
 部署后先执行 `make production-audit` 核对表、RPC、认证策略和 Edge Functions，再执行
-`CIJING_E2E_EMAIL='<可收信的专用别名>' make production-smoke` 跑注册、邮箱确认、登录、词库、复习、
-AI 查词与 AI 阅读的端到端验收。只需验证登录及内部功能时，可执行
-`node scripts/production-smoke-test.mjs --admin-bootstrap`，该模式不发送邮件。
-验收脚本使用独立的 `cijing-e2e-*` 账号，并在结束时删除该账号；所有业务数据依赖
+`make production-smoke` 跑邮箱注册、密码登录、词库、复习、AI 查词与 AI 阅读的端到端验收。
+验收脚本使用独立的 `cijing_e2e_*` 邮箱，并在结束时删除该用户；所有业务数据依赖
 `on delete cascade` 同步清理。
 
 不得提交 `.env` 或生成后的 Swift/JavaScript 配置。

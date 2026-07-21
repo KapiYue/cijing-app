@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Popup visual fixture</title>
+  <link rel="stylesheet" href="../../popup/popup.css">
+</head>
+<body>
+<script type="module">
+  const preferences = { autoSave: false, saveContext: true, privacyMode: false, disabledHosts: [], theme: "purple" };
+  globalThis.chrome = {
+    storage: { local: {
+      async get(key) { return { [key]: key === "cijingPreferences" ? preferences : null }; },
+      async set(values) { Object.assign(preferences, values.cijingPreferences || {}); }
+    } },
+    tabs: { async query() { return [{ url: "https://example.com/article" }]; } },
+    runtime: {
+      openOptionsPage() {},
+      async sendMessage(message) {
+        if (message.type === "GET_SESSION") return { ok: true, data: { signedIn: true, email: "test5@qq.com" } };
+        if (message.type === "GET_DASHBOARD") return { ok: true, data: {
+          plan: { review_due: 2, new_suggested: 3, weak_count: 1 },
+          recent: [
+            { term: "reasoning", primary_meaning: "推理；推理过程" },
+            { term: "roughly", primary_meaning: "大致地；粗略地" },
+            { term: "useful", primary_meaning: "有用的；有益的" }
+          ]
+        } };
+        return { ok: true, data: {} };
+      }
+    }
+  };
+  const source = await fetch("../../popup/popup.html").then((response) => response.text());
+  const parsed = new DOMParser().parseFromString(source, "text/html");
+  document.body.innerHTML = parsed.body.innerHTML;
+  await import("../../popup/popup.js");
+</script>
+</body>
+</html>

@@ -1,6 +1,28 @@
 import AVFoundation
 import Speech
 
+enum SpeechVoicePreference {
+    static let storageKey = "speechVoiceIdentifier"
+
+    static var selectedVoice: AVSpeechSynthesisVoice? {
+        guard let identifier = UserDefaults.standard.string(forKey: storageKey), !identifier.isEmpty else {
+            return AVSpeechSynthesisVoice(language: "en-US")
+        }
+        return AVSpeechSynthesisVoice(identifier: identifier) ?? AVSpeechSynthesisVoice(language: "en-US")
+    }
+
+    static var englishVoices: [AVSpeechSynthesisVoice] {
+        AVSpeechSynthesisVoice.speechVoices()
+            .filter { $0.language.lowercased().hasPrefix("en-") }
+            .sorted {
+                if $0.language == $1.language { return $0.name.localizedStandardCompare($1.name) == .orderedAscending }
+                if $0.language == "en-US" { return true }
+                if $1.language == "en-US" { return false }
+                return $0.language < $1.language
+            }
+    }
+}
+
 @MainActor
 final class SpeechService: NSObject, ObservableObject, AVSpeechSynthesizerDelegate {
     @Published var isSpeaking = false
@@ -17,7 +39,7 @@ final class SpeechService: NSObject, ObservableObject, AVSpeechSynthesizerDelega
     func speak(_ text: String, slow: Bool = false) {
         synthesizer.stopSpeaking(at: .immediate)
         let utterance = AVSpeechUtterance(string: text)
-        utterance.voice = AVSpeechSynthesisVoice(language: "en-US")
+        utterance.voice = SpeechVoicePreference.selectedVoice
         utterance.rate = slow ? 0.38 : 0.49
         utterance.pitchMultiplier = 1
         currentText = text; synthesizer.speak(utterance)

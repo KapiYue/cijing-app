@@ -8,7 +8,7 @@ loadEnv(path.join(root, ".env"));
 const baseURL = process.env.SUPABASE_URL;
 const publishableKey = process.env.SUPABASE_PUBLISHABLE_KEY || process.env.SUPABASE_ANON_KEY;
 if (!baseURL || !publishableKey) throw new Error(".env 中缺少 SUPABASE_URL 或 SUPABASE_PUBLISHABLE_KEY");
-const email = `smoke-${Date.now()}@cijing.local`;
+const email = `smoke_${Date.now()}@cijing.joy-coder.com`;
 const password = "CiJing-local-123!";
 
 async function request(path, { body, token } = {}) {

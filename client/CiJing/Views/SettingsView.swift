@@ -1,4 +1,5 @@
 import SwiftUI
+import AVFoundation
 
 struct SettingsView: View {
     @EnvironmentObject private var store: AppStore
@@ -6,6 +7,7 @@ struct SettingsView: View {
     @AppStorage("dailyReminderEnabled") private var dailyReminder = true
     @AppStorage("autoPronunciationEnabled") private var autoPronunciation = true
     @AppStorage("hapticFeedbackEnabled") private var hapticFeedback = true
+    @AppStorage(SpeechVoicePreference.storageKey) private var speechVoiceIdentifier = ""
     @State private var importing = false
     @State private var message: String?
 
@@ -25,6 +27,10 @@ struct SettingsView: View {
                         SettingsToggleRow(icon: "bell", title: "每日学习提醒", subtitle: "每天 20:30", isOn: $dailyReminder)
                         SettingsDivider()
                         SettingsToggleRow(icon: "speaker.wave.2", title: "自动播放发音", subtitle: "打开词条时自动朗读", isOn: $autoPronunciation)
+                        SettingsDivider()
+                        NavigationLink { SpeechVoiceSettingsView() } label: {
+                            SettingsActionRow(icon: "waveform", title: "英文发音声音", subtitle: selectedVoiceName)
+                        }.buttonStyle(.plain)
                         SettingsDivider()
                         SettingsToggleRow(icon: "sparkles", title: "触感反馈", subtitle: "答题与完成时轻触反馈", isOn: $hapticFeedback)
                     }
@@ -57,23 +63,14 @@ struct SettingsView: View {
                         }.buttonStyle(.plain)
                     }
 
-                    #if DEBUG
-                    SettingsSectionTitle("开发环境")
-                    SettingsGroup {
-                        NavigationLink { DeveloperSettingsView() } label: {
-                            SettingsActionRow(icon: "wrench.and.screwdriver", title: "Supabase 连接", subtitle: AppConfig.supabaseURL.host ?? AppConfig.supabaseURL.absoluteString)
-                        }.buttonStyle(.plain)
-                    }
-                    #endif
-
                     Button(role: .destructive) { Task { await api.signOut() } } label: {
-                        Text("退出登录").font(.subheadline.bold()).frame(maxWidth: .infinity).padding(.vertical, 15)
+                        Text("退出登录").font(CiJingTypography.rowTitle).frame(maxWidth: .infinity).padding(.vertical, 16)
                     }
                     .background(.white.opacity(0.76), in: RoundedRectangle(cornerRadius: 17))
                     .padding(.top, 20)
 
                     Text("词鲸背单词 1.0.0 · © 2026")
-                        .font(.system(size: 10)).foregroundStyle(CiJingTheme.secondary.opacity(0.72))
+                        .font(CiJingTypography.supporting).foregroundStyle(CiJingTheme.secondary.opacity(0.72))
                         .frame(maxWidth: .infinity).padding(.vertical, 22)
                 }
                 .padding(.horizontal, 18)
@@ -94,8 +91,8 @@ struct SettingsView: View {
                 .frame(width: 50, height: 50)
                 .background(LinearGradient(colors: [Color(red: 247 / 255, green: 207 / 255, blue: 169 / 255), CiJingTheme.warm], startPoint: .topLeading, endPoint: .bottomTrailing), in: RoundedRectangle(cornerRadius: 16))
             VStack(alignment: .leading, spacing: 4) {
-                Text(profileName).font(.system(size: 14, weight: .bold)).foregroundStyle(CiJingTheme.ink)
-                Text("编辑头像、昵称与账户安全").font(.system(size: 10)).foregroundStyle(Color(red: 119 / 255, green: 107 / 255, blue: 128 / 255))
+                Text(profileName).font(.system(size: 17, weight: .bold)).foregroundStyle(CiJingTheme.ink).lineLimit(1)
+                Text("编辑头像、昵称与账户安全").font(.system(size: 13)).foregroundStyle(Color(red: 119 / 255, green: 107 / 255, blue: 128 / 255))
             }
             Spacer()
             Image(systemName: "chevron.right").foregroundStyle(CiJingTheme.purple)
@@ -107,12 +104,19 @@ struct SettingsView: View {
 
     private var profileName: String {
         let value = store.profile?.displayName?.trimmingCharacters(in: .whitespacesAndNewlines)
-        return value?.isEmpty == false ? value! : String(api.currentEmail.split(separator: "@").first ?? "学习者")
+        return value?.isEmpty == false ? value! : api.currentEmail
     }
     private var profileInitial: String { String(profileName.prefix(1)).uppercased() }
     private var preferenceSummary: String {
         guard let profile = store.profile else { return "故事 · 适中 · 中篇" }
         return "\(ReadingOptions.label(for: profile.preferredStyle)) · \(ReadingOptions.label(for: profile.preferredDifficulty)) · 中篇"
+    }
+    private var selectedVoiceName: String {
+        guard !speechVoiceIdentifier.isEmpty,
+              let voice = AVSpeechSynthesisVoice(identifier: speechVoiceIdentifier) else {
+            return "跟随系统（美式英语）"
+        }
+        return "\(voice.name) · \(voice.language)"
     }
 
     private func importDemo() async {
@@ -124,10 +128,79 @@ struct SettingsView: View {
     }
 }
 
+private struct SpeechVoiceSettingsView: View {
+    @AppStorage(SpeechVoicePreference.storageKey) private var selectedIdentifier = ""
+    @StateObject private var speech = SpeechService()
+
+    private var voices: [AVSpeechSynthesisVoice] { SpeechVoicePreference.englishVoices }
+
+    var body: some View {
+        ZStack {
+            PaperBackground()
+            ScrollView {
+                VStack(alignment: .leading, spacing: 14) {
+                    VStack(alignment: .leading, spacing: 7) {
+                        Text("选择英文声音").font(.system(size: 24, weight: .bold, design: .rounded))
+                        Text("发音由苹果系统在本机合成，不会把朗读内容发送给大模型。可用声音取决于当前设备已安装的系统语音。")
+                            .font(.system(size: 13)).foregroundStyle(CiJingTheme.secondary).lineSpacing(4)
+                    }
+
+                    VStack(spacing: 0) {
+                        voiceRow(identifier: "", title: "跟随系统", subtitle: "默认美式英语声音")
+                        ForEach(voices, id: \.identifier) { voice in
+                            SettingsDivider()
+                            voiceRow(identifier: voice.identifier, title: voice.name, subtitle: voiceSubtitle(voice))
+                        }
+                    }
+                    .background(Color(red: 249 / 255, green: 245 / 255, blue: 253 / 255).opacity(0.93), in: RoundedRectangle(cornerRadius: 22))
+                    .overlay(RoundedRectangle(cornerRadius: 22).stroke(CiJingTheme.line.opacity(0.82)))
+                    .clipShape(RoundedRectangle(cornerRadius: 22))
+                }
+                .padding(18)
+            }
+        }
+        .navigationTitle("英文发音")
+        .navigationBarTitleDisplayMode(.inline)
+        .onDisappear { speech.stop() }
+    }
+
+    private func voiceRow(identifier: String, title: String, subtitle: String) -> some View {
+        Button {
+            selectedIdentifier = identifier
+            speech.speak("Resilient learners grow stronger every day.")
+        } label: {
+            HStack(spacing: 12) {
+                SettingsIcon(systemName: "speaker.wave.2.fill")
+                VStack(alignment: .leading, spacing: 3) {
+                    Text(title).font(CiJingTypography.rowTitle).foregroundStyle(CiJingTheme.ink)
+                    Text(subtitle).font(CiJingTypography.supporting).foregroundStyle(CiJingTheme.secondary)
+                }
+                Spacer()
+                Image(systemName: selectedIdentifier == identifier ? "checkmark.circle.fill" : "circle")
+                    .font(.system(size: 20)).foregroundStyle(selectedIdentifier == identifier ? CiJingTheme.purple : CiJingTheme.line)
+            }
+            .padding(.horizontal, 15).frame(minHeight: 61).contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+        .accessibilityAddTraits(selectedIdentifier == identifier ? .isSelected : [])
+    }
+
+    private func voiceSubtitle(_ voice: AVSpeechSynthesisVoice) -> String {
+        let locale = Locale.current.localizedString(forIdentifier: voice.language) ?? voice.language
+        let gender: String
+        switch voice.gender {
+        case .male: gender = "男声"
+        case .female: gender = "女声"
+        default: gender = "系统声音"
+        }
+        return "\(locale) · \(gender)"
+    }
+}
+
 private struct SettingsSectionTitle: View {
     let value: String
     init(_ value: String) { self.value = value }
-    var body: some View { Text(value).font(.system(size: 11)).foregroundStyle(CiJingTheme.secondary).padding(.horizontal, 4).padding(.top, 20).padding(.bottom, 8) }
+    var body: some View { Text(value).font(CiJingTypography.label).foregroundStyle(CiJingTheme.secondary).padding(.horizontal, 4).padding(.top, 22).padding(.bottom, 9) }
 }
 
 private struct SettingsGroup<Content: View>: View {
@@ -154,12 +227,12 @@ private struct SettingsToggleRow: View {
         HStack(spacing: 12) {
             SettingsIcon(systemName: icon)
             VStack(alignment: .leading, spacing: 3) {
-                Text(title).font(.system(size: 13, weight: .semibold)).foregroundStyle(CiJingTheme.ink)
-                Text(subtitle).font(.system(size: 9)).foregroundStyle(CiJingTheme.secondary)
+                Text(title).font(CiJingTypography.rowTitle).foregroundStyle(CiJingTheme.ink)
+                Text(subtitle).font(CiJingTypography.supporting).foregroundStyle(CiJingTheme.secondary)
             }
             Spacer()
             Toggle("", isOn: $isOn).labelsHidden().tint(CiJingTheme.purple)
-        }.padding(.horizontal, 15).frame(minHeight: 57)
+        }.padding(.horizontal, 15).frame(minHeight: 68)
     }
 }
 
@@ -175,13 +248,13 @@ private struct SettingsActionRow: View {
             if let icon { SettingsIcon(systemName: icon) }
             else { SettingsIcon(text: iconText ?? "·") }
             VStack(alignment: .leading, spacing: 3) {
-                Text(title).font(.system(size: 13, weight: .semibold)).foregroundStyle(CiJingTheme.ink)
-                Text(subtitle).font(.system(size: 9)).foregroundStyle(CiJingTheme.secondary).lineLimit(1)
+                Text(title).font(CiJingTypography.rowTitle).foregroundStyle(CiJingTheme.ink)
+                Text(subtitle).font(CiJingTypography.supporting).foregroundStyle(CiJingTheme.secondary).lineLimit(2)
             }
             Spacer()
-            if let status { Text(status).font(.system(size: 9)).foregroundStyle(CiJingTheme.success) }
+            if let status { Text(status).font(CiJingTypography.label).foregroundStyle(CiJingTheme.success) }
             else { Image(systemName: "chevron.right").font(.caption).foregroundStyle(CiJingTheme.secondary.opacity(0.65)) }
-        }.padding(.horizontal, 15).frame(minHeight: 57).contentShape(Rectangle())
+        }.padding(.horizontal, 15).frame(minHeight: 68).contentShape(Rectangle())
     }
 }
 
@@ -190,12 +263,12 @@ private struct SettingsIcon: View {
     var text: String? = nil
     var body: some View {
         Group {
-            if let systemName { Image(systemName: systemName).font(.system(size: 15, weight: .medium)) }
-            else { Text(text ?? "").font(.system(size: 12, weight: .bold)) }
+            if let systemName { Image(systemName: systemName).font(.system(size: 16, weight: .medium)) }
+            else { Text(text ?? "").font(.system(size: 13, weight: .bold)) }
         }
         .foregroundStyle(CiJingTheme.purple)
-        .frame(width: 31, height: 31)
-        .background(CiJingTheme.purpleSoft, in: RoundedRectangle(cornerRadius: 10))
+        .frame(width: 36, height: 36)
+        .background(CiJingTheme.purpleSoft, in: RoundedRectangle(cornerRadius: 11))
     }
 }
 
@@ -231,7 +304,7 @@ private struct ProfileSettingsView: View {
                     } else {
                         ProgressView("正在加载资料…").padding(40)
                     }
-                    Text("登录账号：\(api.currentEmail)").font(.caption2).foregroundStyle(CiJingTheme.secondary)
+                    Text("登录邮箱：\(api.currentEmail)").font(.system(size: 13)).foregroundStyle(CiJingTheme.secondary)
                 }.padding(18)
             }
         }

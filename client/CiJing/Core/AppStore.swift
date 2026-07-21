@@ -30,6 +30,21 @@ final class AppStore: ObservableObject {
         } catch { errorMessage = error.localizedDescription }
     }
 
+    /// Refreshes the library independently so an unrelated home/profile request cannot leave it stale.
+    func refreshLibrary() async {
+        guard api.isSignedIn else { return }
+        let showsLoader = words.isEmpty
+        if showsLoader { isLoading = true }
+        defer { if showsLoader { isLoading = false } }
+        do {
+            words = try await api.words()
+            if let refreshedPlan = try? await api.dailyPlan() { plan = refreshedPlan }
+            errorMessage = nil
+        } catch {
+            errorMessage = error.localizedDescription
+        }
+    }
+
     func loadTargets(limit: Int = 10) async -> [Word] {
         do { return try await api.learningTargets(limit: limit) }
         catch { errorMessage = error.localizedDescription; return [] }

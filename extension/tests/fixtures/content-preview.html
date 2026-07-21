@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="en">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Content card visual fixture</title></head>
+<body style="margin:0;padding:40px;font:18px/1.7 Georgia,serif;background:#172017;color:#f7f4ec;min-height:100vh">
+  <main><p id="sample">This useful feature provides a practical way to understand difficult words while reading.</p></main>
+  <script>
+    const listeners = [];
+    globalThis.chrome = {
+      runtime: {
+        async sendMessage(message) {
+          if (message.type === "GET_PREFERENCES") return { ok: true, data: { autoSave: false, saveContext: true, privacyMode: false, disabledHosts: [], theme: "purple" } };
+          if (message.type === "LOOKUP_WORD") return { ok: true, data: { data: {
+            term: "useful", lemma: "useful", phonetic: "ˈjuːsfəl", primaryMeaning: "有用的；有益的",
+            contextualMeaning: "此处指能够帮助读者理解文本", englishDefinition: "helpful for doing or achieving something",
+            exampleEnglish: "This feature is useful for focused reading.", exampleChinese: "这个功能对专注阅读很有用。",
+            sentence: "This useful feature provides a practical way to understand difficult words while reading.",
+            parts: [{ partOfSpeech: "adjective", meaning: "helpful; serving a practical purpose" }]
+          } } };
+          if (message.type === "SAVE_WORD") return { ok: true, data: {} };
+          return { ok: true, data: {} };
+        },
+        onMessage: { addListener(listener) { listeners.push(listener); } }
+      },
+      storage: { onChanged: { addListener() {} } }
+    };
+  </script>
+  <script src="../../content/content.js"></script>
+  <script>
+    window.addEventListener("load", () => setTimeout(() => {
+      const text = document.getElementById("sample").firstChild;
+      const range = document.createRange();
+      range.setStart(text, 5);
+      range.setEnd(text, 11);
+      const selection = window.getSelection();
+      selection.removeAllRanges();
+      selection.addRange(range);
+      document.getElementById("sample").dispatchEvent(new MouseEvent("dblclick", { bubbles: true }));
+    }, 50));
+  </script>
+</body>
+</html>

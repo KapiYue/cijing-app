@@ -10,9 +10,7 @@ const secretKey = config.SUPABASE_SECRET_KEY;
 if (!baseURL || !publishableKey || !secretKey) throw new Error("生产验收缺少 Supabase 环境变量");
 
 const runID = Date.now();
-const adminBootstrap = process.argv.includes("--admin-bootstrap");
-const email = adminBootstrap ? `cijing-e2e-${runID}@cijing.app` : process.env.CIJING_E2E_EMAIL;
-if (!email) throw new Error("公开注册验收需要 CIJING_E2E_EMAIL；仅验证登录与内部功能可使用 --admin-bootstrap");
+const email = `cijing_e2e_${runID}@cijing.joy-coder.com`;
 const password = `CiJing-E2E-${runID}!`;
 let userID;
 
@@ -45,25 +43,16 @@ function wordPayload(term, meaning, sentence) {
 }
 
 try {
-  if (adminBootstrap) {
-    const created = await request("/auth/v1/admin/users", {
-      method: "POST", admin: true, body: { email, password, email_confirm: true },
-    });
-    userID = created.id;
-  } else {
-    const signup = await request("/auth/v1/signup", { method: "POST", body: { email, password } });
-    userID = signup.user?.id;
-    if (!userID) throw new Error("注册未返回用户 ID");
-    if (signup.access_token) throw new Error("生产邮箱确认策略未生效");
-    await request(`/auth/v1/admin/users/${userID}`, {
-      method: "PUT", admin: true, body: { email_confirm: true },
-    });
-  }
+  const signup = await request("/auth/v1/signup", { method: "POST", body: { email, password } });
+  userID = signup.user?.id;
+  if (!userID) throw new Error("注册未返回用户 ID");
+  if (!signup.access_token) throw new Error("注册未直接返回会话，请确认生产项目已关闭邮箱确认");
+
   const session = await request("/auth/v1/token?grant_type=password", {
     method: "POST", body: { email, password },
   });
   const token = session.access_token;
-  if (!token) throw new Error("邮箱确认后仍无法登录");
+  if (!token) throw new Error("邮箱密码登录未返回会话");
 
   const profileRows = await request("/rest/v1/profiles?select=*", { token });
   if (profileRows.length !== 1 || profileRows[0].id !== userID) throw new Error("注册未自动创建 profile");
@@ -114,7 +103,7 @@ try {
 
   console.log(JSON.stringify({
     status: "ok",
-    checks: [adminBootstrap ? "admin_test_bootstrap" : "signup_requires_confirmation", "email_confirm", "login", "profile_trigger", "save_word", "daily_plan", "learning_targets", "apply_review", "ai_lookup", "ai_reading", "complete_reading", "daily_activity"],
+    checks: ["signup_without_email_confirmation", "account_password_login", "profile_trigger", "save_word", "daily_plan", "learning_targets", "apply_review", "ai_lookup", "ai_reading", "complete_reading", "daily_activity"],
   }, null, 2));
 } finally {
   if (userID) {

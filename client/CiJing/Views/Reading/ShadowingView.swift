@@ -25,7 +25,7 @@ struct ShadowingView: View {
                 Spacer()
                 VStack(spacing: 20) {
                     Text(current).font(.system(size: 25, weight: .semibold, design: .serif)).lineSpacing(7).multilineTextAlignment(.center)
-                    Button { speech.speak(current, slow: true) } label: { Label("播放标准美音", systemImage: "speaker.wave.2.fill") }.buttonStyle(.borderedProminent)
+                    Button { speech.speak(current, slow: true) } label: { Label("播放示范发音", systemImage: "speaker.wave.2.fill") }.buttonStyle(.borderedProminent)
                 }.frame(maxWidth: .infinity).cijingCard()
                 VStack(alignment: .leading, spacing: 12) {
                     HStack { Text("我读到的内容").font(.caption.bold()).foregroundStyle(CiJingTheme.secondary); Spacer(); if !recognizer.transcript.isEmpty { Text("匹配 \(Int(accuracy * 100))%").font(.caption.bold()).foregroundStyle(accuracy > 0.78 ? CiJingTheme.green : .orange) } }
@@ -51,4 +51,3 @@ struct ShadowingView: View {
         else { Label("先放慢速度，留意漏读或替换的词", systemImage: "ear").foregroundStyle(.orange) }
     }
 }
-

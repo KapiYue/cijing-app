@@ -20,7 +20,7 @@ struct AuthView: View {
                             .frame(width: 58, height: 58).background(CiJingTheme.green, in: RoundedRectangle(cornerRadius: 18))
                         VStack(alignment: .leading) {
                             Text("词鲸背单词").font(.system(size: 35, weight: .bold, design: .rounded))
-                            Text("READ TO REMEMBER").font(.caption2.bold()).tracking(1.2).foregroundStyle(CiJingTheme.secondary)
+                            Text("READ TO REMEMBER").font(.system(size: 11, weight: .bold)).tracking(1.2).foregroundStyle(CiJingTheme.secondary)
                         }
                     }
                     VStack(alignment: .leading, spacing: 8) {
@@ -39,27 +39,29 @@ struct AuthView: View {
                         Button(isSignUp ? "已有账号？登录" : "第一次使用？创建账号") { errorMessage = nil; successMessage = nil; isSignUp.toggle() }
                             .font(.subheadline.bold()).foregroundStyle(CiJingTheme.green)
                     }.cijingCard()
-                    Text("账号数据通过 Supabase 安全同步，仅用于保存你的个人词库和学习进度。")
-                        .font(.caption).foregroundStyle(CiJingTheme.secondary).padding(.horizontal, 5)
+                    Text("邮箱账号会在浏览器扩展与 iOS App 之间安全同步；后续启用邮箱验证时，无需更换账号。")
+                        .font(.system(size: 13)).foregroundStyle(CiJingTheme.secondary).padding(.horizontal, 5)
                 }.padding(24)
             }
         }
     }
 
     private func authenticate() async {
-        guard email.contains("@"), password.count >= 6 else { errorMessage = "请输入有效邮箱和至少 6 位密码。"; return }
-        errorMessage = nil
-        successMessage = nil
         do {
+            let mode: AuthenticationMode = isSignUp ? .signUp : .signIn
+            let credentials = try AuthCredentialRules.validate(email: email, password: password, mode: mode)
+            email = credentials.email
+            errorMessage = nil
+            successMessage = nil
             if isSignUp {
-                let requiresConfirmation = try await api.signUp(email: email, password: password)
-                if requiresConfirmation {
-                    successMessage = "注册成功。请打开确认邮件完成验证，然后在此登录。"
+                let result = try await api.signUp(email: credentials.email, password: credentials.password)
+                if result == .emailConfirmationRequired {
+                    successMessage = "注册成功，请打开验证邮件完成确认后再登录。"
                     password = ""
                     isSignUp = false
                 }
             } else {
-                try await api.signIn(email: email, password: password)
+                try await api.signIn(email: credentials.email, password: credentials.password)
             }
         }
         catch { errorMessage = error.localizedDescription }
@@ -70,7 +72,17 @@ private struct AuthField: View {
     let title, icon: String; @Binding var text: String; let secure: Bool
     var body: some View {
         HStack { Image(systemName: icon).foregroundStyle(CiJingTheme.green).frame(width: 24)
-            Group { if secure { SecureField(title, text: $text) } else { TextField(title, text: $text).textInputAutocapitalization(.never).keyboardType(.emailAddress) } }
+            Group {
+                if secure {
+                    SecureField(title, text: $text).textContentType(.password)
+                } else {
+                    TextField(title, text: $text)
+                        .textContentType(.emailAddress)
+                        .textInputAutocapitalization(.never)
+                        .keyboardType(.emailAddress)
+                        .autocorrectionDisabled()
+                }
+            }
         }.padding(14).background(CiJingTheme.paper.opacity(0.75), in: RoundedRectangle(cornerRadius: 14))
     }
 }

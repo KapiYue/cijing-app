@@ -1,6 +1,11 @@
 import { getConfig } from "./config.js";
+import { compatibilityPassword, validateCredentials } from "./auth.js";
 
 const SESSION_KEY = "cijingSession";
+
+function authMessage(payload) {
+  return payload.message || payload.error_description || payload.msg || payload.error || "";
+}
 
 async function getSession() {
   const value = await chrome.storage.local.get(SESSION_KEY);
@@ -41,6 +46,7 @@ async function authenticatedFetch(path, options = {}) {
   const { config, session } = await validSession();
   if (!session?.access_token) throw new Error("AUTH_REQUIRED");
   const response = await fetch(`${config.supabaseUrl}${path}`, {
+    cache: "no-store",
     ...options,
     headers: {
       apikey: config.supabasePublishableKey,
@@ -59,26 +65,51 @@ async function authenticatedFetch(path, options = {}) {
 
 export async function signUp(email, password) {
   const config = await getConfig();
+  const credentials = validateCredentials(email, password, { isSignUp: true });
   const response = await fetch(`${config.supabaseUrl}/auth/v1/signup`, {
     method: "POST",
     headers: { apikey: config.supabasePublishableKey, "Content-Type": "application/json" },
-    body: JSON.stringify({ email, password })
+    body: JSON.stringify(credentials)
   });
   const payload = await response.json().catch(() => ({}));
-  if (!response.ok) throw new Error(payload.msg || payload.error_description || "注册失败");
-  if (payload.access_token) await setSession(payload);
-  return payload;
+  if (!response.ok) {
+    const message = authMessage(payload);
+    if (/user already registered|already been registered/i.test(message)) throw new Error("该邮箱已注册，请直接登录。");
+    throw new Error(message || "注册失败");
+  }
+  const hasSession = Boolean(payload.access_token && payload.refresh_token);
+  if (hasSession) await setSession(payload);
+  return {
+    confirmationRequired: !hasSession,
+    email: credentials.email,
+    session: hasSession ? payload : null
+  };
 }
 
 export async function signIn(email, password) {
   const config = await getConfig();
-  const response = await fetch(`${config.supabaseUrl}/auth/v1/token?grant_type=password`, {
+  const credentials = validateCredentials(email, password);
+  const request = (candidate) => fetch(`${config.supabaseUrl}/auth/v1/token?grant_type=password`, {
     method: "POST",
-    headers: { apikey: config.supabasePublishableKey, "Content-Type": "application/json" },
-    body: JSON.stringify({ email, password })
+    cache: "no-store",
+    credentials: "omit",
+    headers: { apikey: config.supabasePublishableKey, "Content-Type": "application/json", Accept: "application/json" },
+    body: JSON.stringify({ email: credentials.email, password: candidate })
   });
-  const payload = await response.json().catch(() => ({}));
-  if (!response.ok) throw new Error(payload.error_description || payload.msg || "邮箱或密码不正确");
+  let response = await request(credentials.password);
+  let payload = await response.json().catch(() => ({}));
+  const cleanedPassword = compatibilityPassword(credentials.password);
+  if (!response.ok && /invalid login credentials/i.test(authMessage(payload)) && cleanedPassword !== credentials.password) {
+    response = await request(cleanedPassword);
+    payload = await response.json().catch(() => ({}));
+  }
+  if (!response.ok) {
+    const message = authMessage(payload);
+    if (/email not confirmed/i.test(message)) throw new Error("邮箱尚未验证，请先打开验证邮件完成确认。");
+    if (/invalid login credentials/i.test(message)) throw new Error("邮箱或密码不正确。");
+    throw new Error(message || "登录失败");
+  }
+  if (!payload.access_token || !payload.refresh_token) throw new Error("登录成功但服务器未返回完整会话，请重试。");
   await setSession(payload);
   return payload;
 }

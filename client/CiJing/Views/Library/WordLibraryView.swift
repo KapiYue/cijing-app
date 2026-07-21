@@ -50,10 +50,10 @@ struct WordLibraryView: View {
                 .padding(.horizontal, 18)
                 .padding(.bottom, 112)
             }
-            .refreshable { await store.refreshAll() }
+            .refreshable { await store.refreshLibrary() }
         }
         .toolbar(.hidden, for: .navigationBar)
-        .task { if store.words.isEmpty { await store.refreshAll() } }
+        .task { await store.refreshLibrary() }
     }
 
     private var filters: some View {
@@ -79,8 +79,8 @@ struct WordLibraryView: View {
                 .frame(width: 37, height: 37)
                 .background(Color(red: 1, green: 241 / 255, blue: 228 / 255), in: RoundedRectangle(cornerRadius: 13))
             VStack(alignment: .leading, spacing: 3) {
-                Text("学习火焰已点亮").font(.caption.bold()).foregroundStyle(CiJingTheme.ink)
-                Text("完成学习后，词库里的单词也更有生命力了").font(.caption2).foregroundStyle(CiJingTheme.secondary)
+                Text("学习火焰已点亮").font(CiJingTypography.label).foregroundStyle(CiJingTheme.ink)
+                Text("完成学习后，词库里的单词也更有生命力了").font(CiJingTypography.supporting).foregroundStyle(CiJingTheme.secondary)
             }
             Spacer()
         }
@@ -111,7 +111,7 @@ struct WordLibraryView: View {
                 .background(CiJingTheme.purpleSoft, in: RoundedRectangle(cornerRadius: 25))
             Text(searchText.isEmpty ? "这里还没有单词" : "没有匹配结果").font(.headline)
             Text(searchText.isEmpty ? "从 Chrome 扩展收藏，或在设置中导入演示词库。" : "换个关键词或筛选条件试试。")
-                .font(.caption).foregroundStyle(CiJingTheme.secondary).multilineTextAlignment(.center)
+                .font(CiJingTypography.supporting).foregroundStyle(CiJingTheme.secondary).multilineTextAlignment(.center)
         }.frame(maxWidth: .infinity)
     }
 
@@ -119,9 +119,9 @@ struct WordLibraryView: View {
         HStack(alignment: .top, spacing: 9) {
             Text("💡")
             VStack(alignment: .leading, spacing: 3) {
-                Text("温馨提示").font(.caption.bold())
+                Text("温馨提示").font(CiJingTypography.label)
                 Text("在 Chrome 扩展中收藏的单词会自动同步到这里；完成学习后，复习状态与掌握度也会同步更新。")
-                    .font(.caption2).lineSpacing(3)
+                    .font(.system(size: 13)).lineSpacing(3)
             }
         }
         .foregroundStyle(Color(red: 140 / 255, green: 118 / 255, blue: 95 / 255))
@@ -165,7 +165,7 @@ private struct LibraryFilterChip: View {
                 Circle().fill(selected ? .white : color).frame(width: 5, height: 5)
                 Text("\(title) \(count)")
             }
-            .font(.system(size: 10, weight: .bold))
+            .font(CiJingTypography.label)
             .foregroundStyle(selected ? .white : color)
             .padding(.horizontal, 9).padding(.vertical, 8)
             .background(selected ? color : soft, in: RoundedRectangle(cornerRadius: 11))
@@ -181,11 +181,11 @@ private struct LibraryWordRow: View {
         HStack(alignment: .center, spacing: 10) {
             VStack(alignment: .leading, spacing: 5) {
                 HStack(alignment: .firstTextBaseline, spacing: 6) {
-                    Text(word.term).font(.system(size: 15, weight: .bold, design: .rounded)).foregroundStyle(CiJingTheme.ink)
-                    if let phonetic = word.phonetic, !phonetic.isEmpty { Text("/\(phonetic)/").font(.system(size: 9, design: .monospaced)).foregroundStyle(CiJingTheme.secondary) }
+                    Text(word.term).font(.system(size: 17, weight: .bold, design: .rounded)).foregroundStyle(CiJingTheme.ink)
+                    if let phonetic = word.phonetic, !phonetic.isEmpty { Text("/\(phonetic)/").font(.system(size: 11, design: .monospaced)).foregroundStyle(CiJingTheme.secondary) }
                 }
                 Text("\(word.parts.first?.partOfSpeech ?? "") \(word.displayMeaning)")
-                    .font(.system(size: 11)).foregroundStyle(Color(red: 121 / 255, green: 114 / 255, blue: 124 / 255)).lineLimit(1)
+                    .font(.system(size: 13)).foregroundStyle(Color(red: 121 / 255, green: 114 / 255, blue: 124 / 255)).lineLimit(1)
             }
             Spacer(minLength: 8)
             VStack(alignment: .trailing, spacing: 6) {
@@ -193,7 +193,7 @@ private struct LibraryWordRow: View {
                     StatusBadge(title: word.status == .weak ? "薄弱" : word.status.title, status: word.status)
                 }
                 Text("\(Int(word.strength * 100))% · \(dueLabel)")
-                    .font(.system(size: 9, weight: .medium)).foregroundStyle(word.status == .weak ? CiJingTheme.danger : CiJingTheme.secondary)
+                    .font(.system(size: 11, weight: .medium)).foregroundStyle(word.status == .weak ? CiJingTheme.danger : CiJingTheme.secondary)
             }
         }
         .padding(.horizontal, 16).padding(.vertical, 15)
@@ -213,7 +213,7 @@ private struct StatusBadge: View {
     let status: WordStatus
     var body: some View {
         Text(title)
-            .font(.system(size: 9, weight: .medium))
+            .font(.system(size: 11, weight: .semibold))
             .foregroundStyle(status == .weak ? CiJingTheme.danger : status == .new ? CiJingTheme.purple : Color(red: 188 / 255, green: 115 / 255, blue: 52 / 255))
             .padding(.horizontal, 8).padding(.vertical, 5)
             .background(status == .weak ? Color(red: 252 / 255, green: 236 / 255, blue: 239 / 255) : status == .new ? CiJingTheme.purpleSoft : Color(red: 1, green: 241 / 255, blue: 228 / 255), in: RoundedRectangle(cornerRadius: 8))

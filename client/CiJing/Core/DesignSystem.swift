@@ -31,6 +31,17 @@ enum CiJingTheme {
     )
 }
 
+/// Shared type scale. It follows the same readable 12–18 pt body hierarchy used by miaoji.
+enum CiJingTypography {
+    static let pageTitle = Font.system(size: 30, weight: .bold, design: .rounded)
+    static let sectionTitle = Font.system(size: 19, weight: .bold, design: .rounded)
+    static let rowTitle = Font.system(size: 15, weight: .semibold)
+    static let body = Font.system(size: 15)
+    static let supporting = Font.system(size: 12)
+    static let label = Font.system(size: 12, weight: .semibold)
+    static let tab = Font.system(size: 12, weight: .semibold)
+}
+
 struct PaperBackground: View {
     var body: some View {
         ZStack {
@@ -54,11 +65,11 @@ struct PageHeader: View {
         HStack(alignment: .center, spacing: 12) {
             VStack(alignment: .leading, spacing: 5) {
                 Text(title)
-                    .font(.system(size: 28, weight: .bold, design: .rounded))
+                    .font(CiJingTypography.pageTitle)
                     .tracking(-1.1)
                     .foregroundStyle(CiJingTheme.ink)
                 Text(subtitle)
-                    .font(.system(size: 13))
+                    .font(CiJingTypography.body)
                     .foregroundStyle(CiJingTheme.secondary)
             }
             Spacer(minLength: 8)
@@ -127,7 +138,7 @@ struct SearchField: View {
                     .disabled(text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
             }
         }
-        .font(.system(size: 14))
+        .font(CiJingTypography.body)
         .padding(.horizontal, 14)
         .frame(height: 48)
         .background(.white.opacity(0.86), in: RoundedRectangle(cornerRadius: 15, style: .continuous))
@@ -141,9 +152,9 @@ struct SectionHeading: View {
 
     var body: some View {
         HStack {
-            Text(title).font(.system(size: 17, weight: .bold, design: .rounded)).foregroundStyle(CiJingTheme.ink)
+            Text(title).font(CiJingTypography.sectionTitle).foregroundStyle(CiJingTheme.ink)
             Spacer()
-            if let detail { Text(detail).font(.caption).foregroundStyle(CiJingTheme.purple) }
+            if let detail { Text(detail).font(CiJingTypography.label).foregroundStyle(CiJingTheme.purple) }
         }
     }
 }

@@ -1,6 +1,48 @@
-<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>词鲸背单词设置</title><link rel="stylesheet" href="options.css"></head><body><main>
-<div class="brand">词鲸背单词 <span>连接设置</span></div><h1>Supabase 配置</h1><p>配置由项目根目录 <code>.env</code> 统一生成。修改后运行 <code>make config</code>，再刷新扩展。</p>
-<label>Supabase URL<input id="url" readonly></label><label>Publishable key<textarea id="key" rows="5" readonly></textarea></label>
-<div class="actions"><button id="test">测试当前连接</button></div><div id="status"></div>
-<section><h2>隐私说明</h2><p>词鲸背单词只在你主动双击/选择单词时读取所处句子和附近段落。网页上下文仅用于生成语境解释，并在你点击收藏后保存到个人词库。</p></section>
-</main><script type="module" src="options.js"></script></body></html>
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>词鲸背单词 · 扩展偏好</title>
+  <link rel="stylesheet" href="options.css">
+</head>
+<body>
+<main>
+  <header><div class="mark">鲸</div><div><h1>扩展偏好</h1><p>让查词和收藏更符合你的阅读习惯</p></div></header>
+
+  <section class="account-card">
+    <div><span>当前账号</span><strong id="account">尚未登录</strong></div>
+    <button id="test" class="secondary">检查同步</button>
+  </section>
+  <div id="status" class="status" hidden></div>
+
+  <section class="card">
+    <h2>查词与收藏</h2>
+    <p class="section-copy">这些偏好会立即应用到所有已打开的网页。</p>
+    <label class="toggle-row"><span><strong>自动保存查过的词</strong><small>查询成功后直接加入个人词库</small></span><input id="auto-save" type="checkbox"></label>
+    <label class="toggle-row"><span><strong>保存网页语境</strong><small>收藏当前句子和页面来源，帮助回忆</small></span><input id="save-context" type="checkbox"></label>
+    <label class="toggle-row"><span><strong>隐私模式</strong><small>不向服务发送或保存网页上下文</small></span><input id="privacy-mode" type="checkbox"></label>
+  </section>
+
+  <section class="card">
+    <h2>卡片主题</h2>
+    <p class="section-copy">选择扩展弹窗和网页查词卡片的强调色。</p>
+    <div id="themes" class="themes"></div>
+  </section>
+
+  <section class="card">
+    <h2>已停用的网站</h2>
+    <p class="section-copy">在这些网站双击单词时不会弹出查词卡片。</p>
+    <div id="disabled-sites" class="disabled-sites"></div>
+  </section>
+
+  <section class="privacy-card">
+    <h2>隐私说明</h2>
+    <p>默认仅在你主动双击或选择单词时处理附近句子。关闭“保存网页语境”后，收藏不会包含页面来源；开启隐私模式后，查询也不会发送上下文。</p>
+  </section>
+
+  <button id="reset" class="reset">恢复默认设置</button>
+</main>
+<script type="module" src="options.js"></script>
+</body>
+</html>

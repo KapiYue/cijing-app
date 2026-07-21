@@ -57,10 +57,10 @@ const report = {
   auth: {
     emailEnabled: authSettings.external?.email ?? authSettings.disable_signup === false,
     signupDisabled: authSettings.disable_signup ?? null,
-    emailConfirmationRequired: authSettings.mailer_autoconfirm === false,
+    emailAutoConfirmed: authSettings.mailer_autoconfirm === true,
   },
   testResidue: {
-    users: (adminUsers.users ?? []).filter((user) => user.email?.startsWith("cijing-e2e-")).length,
+    users: (adminUsers.users ?? []).filter((user) => user.email?.startsWith("cijing_e2e_")).length,
     words: testWords.length,
   },
 };
@@ -69,3 +69,4 @@ console.log(JSON.stringify(report, null, 2));
 if (Object.values(report.tables).includes("missing") || Object.values(report.rpcs).includes("missing")) process.exitCode = 2;
 if (Object.values(report.edgeFunctions).includes("missing")) process.exitCode = 3;
 if (report.testResidue.users > 0 || report.testResidue.words > 0) process.exitCode = 4;
+if (!report.auth.emailEnabled || report.auth.signupDisabled || !report.auth.emailAutoConfirmed) process.exitCode = 5;

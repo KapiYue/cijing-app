@@ -59,7 +59,7 @@ OPENROUTER_MODEL=qwen/qwen3.6-flash
 1. 打开 `chrome://extensions`。
 2. 打开“开发者模式”。
 3. 点击“加载已解压的扩展程序”，选择仓库内的 `extension/`。
-4. 点击工具栏“词鲸背单词”图标，注册账号或登录。
+4. 点击工具栏“词鲸背单词”图标，使用邮箱和密码注册或登录。
 5. 在英文网页双击单词。卡片支持查询、发音和收藏；设置页可查看并测试当前 `.env` 生成的连接。
 
 修改扩展后，在扩展管理页点击刷新。
@@ -69,7 +69,7 @@ OPENROUTER_MODEL=qwen/qwen3.6-flash
 1. 用 Xcode 打开 `client/CiJing.xcodeproj`。
 2. 选择 iOS 17+ 模拟器。
 3. 运行 `CiJing` scheme。
-4. 使用与 Chrome 扩展相同的邮箱登录。
+4. 使用与 Chrome 扩展相同的邮箱和密码登录。
 
 麦克风与语音识别权限仅在进入跟读模式时请求。
 

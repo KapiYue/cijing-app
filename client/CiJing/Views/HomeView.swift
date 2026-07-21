@@ -53,7 +53,7 @@ struct HomeView: View {
             .refreshable { await store.refreshAll() }
         }
         .toolbar(.hidden, for: .navigationBar)
-        .task { if store.words.isEmpty { await store.refreshAll() } }
+        .task { await store.refreshAll() }
         .fullScreenCover(isPresented: $showingSetup) { NavigationStack { ReadingSetupView() } }
         .alert("提示", isPresented: Binding(get: { notice != nil || store.errorMessage != nil }, set: { if !$0 { notice = nil; store.errorMessage = nil } })) {
             Button("知道了") { notice = nil; store.errorMessage = nil }
@@ -75,8 +75,8 @@ struct HomeView: View {
             Text("今日留白，等你点亮")
                 .font(.system(size: 24, weight: .bold, design: .rounded))
                 .tracking(-0.8)
-            Text("已从浏览器同步 (store.words.filter { $0.status == .new }.count) 个新词。先认识它们，再让 AI 把单词写进一篇只属于你的短文。")
-                .font(.system(size: 14))
+            Text("已从浏览器同步 \(store.words.filter { $0.status == .new }.count) 个新词。先认识它们，再让 AI 把单词写进一篇只属于你的短文。")
+                .font(CiJingTypography.body)
                 .foregroundStyle(CiJingTheme.secondary)
                 .lineSpacing(6)
                 .padding(.top, 10)
@@ -140,8 +140,8 @@ struct HomeView: View {
                 .frame(width: 40, height: 40)
                 .background(Color(red: 1, green: 241 / 255, blue: 228 / 255), in: RoundedRectangle(cornerRadius: 13))
             VStack(alignment: .leading, spacing: 3) {
-                Text("还没有完成的短文").font(.subheadline).foregroundStyle(CiJingTheme.secondary)
-                Text("今天的第一篇，会在这里出现").font(.caption2).foregroundStyle(CiJingTheme.secondary)
+                Text("还没有完成的短文").font(CiJingTypography.rowTitle).foregroundStyle(CiJingTheme.secondary)
+                Text("今天的第一篇，会在这里出现").font(CiJingTypography.supporting).foregroundStyle(CiJingTheme.secondary)
             }
             Spacer()
         }.cijingCard()
@@ -158,7 +158,7 @@ struct HomeView: View {
                     VStack(alignment: .leading, spacing: 4) {
                         Text(reading.title).font(.subheadline.bold()).foregroundStyle(CiJingTheme.ink).lineLimit(1)
                         Text("\(ReadingOptions.label(for: reading.theme)) · \(reading.estimatedMinutes) 分钟 · \(reading.targetTerms.count) 个目标词")
-                            .font(.caption2).foregroundStyle(CiJingTheme.secondary).lineLimit(1)
+                            .font(CiJingTypography.supporting).foregroundStyle(CiJingTheme.secondary).lineLimit(1)
                     }
                     Spacer()
                     Image(systemName: "chevron.right").foregroundStyle(CiJingTheme.secondary.opacity(0.55))
@@ -173,7 +173,7 @@ struct HomeView: View {
         HStack(alignment: .top, spacing: 10) {
             Text(store.plan.completedToday ? "🔥" : "💡")
             Text(store.plan.completedToday ? "词库互动火焰已点亮。继续学习，火焰会随着连续天数长大。" : "温馨提示：浏览器扩展收藏的单词会自动出现在词库，并优先安排进今日学习。")
-                .font(.caption).foregroundStyle(Color(red: 129 / 255, green: 121 / 255, blue: 134 / 255)).lineSpacing(4)
+                .font(.system(size: 13)).foregroundStyle(Color(red: 129 / 255, green: 121 / 255, blue: 134 / 255)).lineSpacing(4)
         }
         .padding(15)
         .frame(maxWidth: .infinity, alignment: .leading)
@@ -188,7 +188,7 @@ struct HomeView: View {
 
     private var greeting: String {
         let name = store.profile?.displayName?.trimmingCharacters(in: .whitespacesAndNewlines)
-        let visibleName = name?.isEmpty == false ? name! : String(api.currentEmail.split(separator: "@").first ?? "学习者")
+        let visibleName = name?.isEmpty == false ? name! : api.currentEmail
         let hour = Calendar.current.component(.hour, from: .now)
         return "\(hour < 11 ? "早上好" : hour < 18 ? "下午好" : "晚上好")，\(visibleName)"
     }
@@ -212,7 +212,7 @@ private struct PlanMetric: View {
     var body: some View {
         VStack(spacing: 4) {
             Text(number).font(.system(size: 19, weight: .bold, design: .rounded)).foregroundStyle(CiJingTheme.ink)
-            Text(label).font(.caption2).foregroundStyle(CiJingTheme.secondary)
+            Text(label).font(CiJingTypography.supporting).foregroundStyle(CiJingTheme.secondary)
         }
         .frame(maxWidth: .infinity)
         .padding(.vertical, 13)
@@ -241,11 +241,11 @@ private struct ExploreCard: View {
                     .frame(width: 34, height: 34)
                     .background(item.soft, in: RoundedRectangle(cornerRadius: 12))
                 Spacer()
-                Text(item.badge).font(.system(size: 8, weight: .heavy)).foregroundStyle(item.tint).padding(.horizontal, 6).padding(.vertical, 4).background(item.soft, in: RoundedRectangle(cornerRadius: 7))
+                Text(item.badge).font(.system(size: 11, weight: .heavy)).foregroundStyle(item.tint).padding(.horizontal, 6).padding(.vertical, 4).background(item.soft, in: RoundedRectangle(cornerRadius: 7))
             }
             Spacer(minLength: 8)
             Text(item.title).font(.system(size: 14, weight: .bold, design: .rounded)).foregroundStyle(CiJingTheme.ink)
-            Text(item.subtitle).font(.system(size: 10)).foregroundStyle(CiJingTheme.secondary).padding(.top, 3)
+            Text(item.subtitle).font(CiJingTypography.supporting).foregroundStyle(CiJingTheme.secondary).padding(.top, 3)
         }
         .padding(15)
         .frame(maxWidth: .infinity, minHeight: 108, alignment: .leading)

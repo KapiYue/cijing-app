@@ -31,7 +31,7 @@ enable_anonymous_sign_ins = false
 
 [auth.email]
 enable_signup = true
-double_confirm_changes = true
+double_confirm_changes = false
 enable_confirmations = false
 
 [edge_runtime]
@@ -47,4 +47,3 @@ verify_jwt = false
 
 [functions.explain-reading-word]
 verify_jwt = false
-

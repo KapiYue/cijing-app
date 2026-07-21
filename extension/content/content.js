@@ -1,11 +1,14 @@
 (() => {
   const HOST_ID = "cijing-reader-card-host";
+  const DEFAULT_PREFERENCES = { autoSave: false, saveContext: true, privacyMode: false, disabledHosts: [], theme: "purple" };
+  let preferences = { ...DEFAULT_PREFERENCES };
   let lastSelection = null;
   let requestSerial = 0;
 
   const escapeHTML = (value = "") => String(value).replace(/[&<>'"]/g, (char) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", "'": "&#39;", '"': "&quot;" })[char]);
   const cleanWord = (value = "") => value.trim().replace(/^[^A-Za-z'-]+|[^A-Za-z'-]+$/g, "");
   const validWord = (value) => /^[A-Za-z][A-Za-z'-]{0,60}$/.test(value);
+  const currentHost = location.hostname.toLowerCase();
 
   function selectedPayload(forcedWord) {
     const selection = window.getSelection();
@@ -37,6 +40,10 @@
     }
   }
 
+  function volumeIcon() {
+    return '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9v6h4l5 4V5L8 9H4Z"></path><path class="wave" d="M16 8.2a5 5 0 0 1 0 7.6M18.8 5.5a9 9 0 0 1 0 13"></path></svg>';
+  }
+
   function shell(rect) {
     document.getElementById(HOST_ID)?.remove();
     const host = document.createElement("div");
@@ -44,78 +51,142 @@
     host.style.cssText = "all:initial;position:fixed;z-index:2147483647;left:0;top:0";
     const shadow = host.attachShadow({ mode: "open" });
     shadow.innerHTML = `<style>
-      :host{all:initial}.card{position:fixed;width:356px;max-height:min(560px,calc(100vh - 24px));overflow:auto;background:#fffdf8;color:#17201b;border:1px solid rgba(22,68,43,.14);border-radius:20px;box-shadow:0 22px 70px rgba(13,48,31,.24);font:14px/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;animation:in .16s ease-out}.inner{padding:18px}.brand{display:flex;justify-content:space-between;align-items:center;color:#46705a;font-size:12px;font-weight:700;letter-spacing:.08em}.close{border:0;background:#edf4ef;color:#365a47;width:27px;height:27px;border-radius:50%;cursor:pointer;font-size:16px}.head{display:flex;align-items:center;gap:9px;margin:12px 0 2px}.word{font:700 28px/1.1 Georgia,serif;color:#143f2a}.phonetic{color:#66756c}.speak{border:0;background:#dff3e6;color:#17653a;border-radius:10px;padding:7px 9px;cursor:pointer}.meaning{font-size:17px;font-weight:650;margin:12px 0 3px}.context{background:#f2f7f3;border-left:3px solid #4da774;border-radius:0 11px 11px 0;padding:10px 12px;margin:12px 0;color:#244c35}.part{display:flex;gap:8px;margin:5px 0}.pos{flex:none;color:#28734a;font-weight:700;font-size:12px;padding-top:2px}.definition{color:#647168;font-size:13px;margin:8px 0}.example{margin:12px 0 4px;padding-top:11px;border-top:1px solid #e8ece9}.translation{color:#67736b;margin-top:3px}.footer{display:flex;gap:9px;margin-top:15px}.primary,.secondary{border:0;border-radius:12px;padding:10px 14px;font-weight:700;cursor:pointer}.primary{flex:1;background:#175f3a;color:white}.primary:disabled{opacity:.55}.secondary{background:#eaf2ed;color:#315f46}.loading{padding:30px 0;text-align:center;color:#47715b}.dot{display:inline-block;width:8px;height:8px;border-radius:50%;background:#2b8b58;margin:0 3px;animation:pulse 1s infinite}.dot:nth-child(2){animation-delay:.15s}.dot:nth-child(3){animation-delay:.3s}.error{background:#fff1ed;color:#9a3f28;border-radius:12px;padding:12px;margin:13px 0}.hint{font-size:12px;color:#78827c;margin-top:8px}.login{display:block;text-align:center;background:#175f3a;color:#fff;text-decoration:none;border-radius:12px;padding:10px;margin-top:13px;cursor:pointer}@keyframes in{from{opacity:0;transform:translateY(7px) scale(.98)}}@keyframes pulse{0%,100%{opacity:.25}50%{opacity:1}}
-    </style><div class="card"><div class="inner"><div class="brand"><span>词鲸背单词</span><button class="close" aria-label="关闭">×</button></div><div id="body"></div></div></div>`;
+      :host{all:initial}.card{--accent:#7651c9;--accent-dark:#5f3faf;--accent-soft:#e9e0f8;position:fixed;width:min(380px,calc(100vw - 16px));max-height:calc(100vh - 16px);overflow:auto;overscroll-behavior:contain;scrollbar-gutter:stable;background:#fffdf8;color:#26212d;border:1px solid color-mix(in srgb,var(--accent) 20%,transparent);border-radius:20px;box-shadow:0 22px 70px rgba(73,47,99,.25);font:15px/1.55 -apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC",sans-serif;animation:in .16s ease-out}.card[data-theme="blue"]{--accent:#3977d6;--accent-dark:#275ba9;--accent-soft:#e4efff}.card[data-theme="green"]{--accent:#2d936c;--accent-dark:#207052;--accent-soft:#e0f4eb}.card[data-theme="orange"]{--accent:#d9823d;--accent-dark:#ae6127;--accent-soft:#fff0df}.card[data-theme="rose"]{--accent:#b95579;--accent-dark:#913d5d;--accent-soft:#f9e5ed}.inner{padding:18px}.brand{display:flex;justify-content:space-between;align-items:center;color:var(--accent-dark);font-size:13px;font-weight:750;letter-spacing:.06em}.close{border:0;background:var(--accent-soft);color:var(--accent-dark);width:31px;height:31px;border-radius:50%;cursor:pointer;font-size:18px;line-height:1}.head{display:flex;align-items:center;gap:10px;margin:12px 0 2px;min-width:0}.word{font:700 29px/1.1 Georgia,serif;color:#342448;overflow-wrap:anywhere}.phonetic{color:#817987;font-size:14px}.speak{display:grid;place-items:center;flex:none;border:0;background:var(--accent-soft);color:var(--accent-dark);border-radius:11px;width:38px;height:38px;cursor:pointer}.speak svg,.secondary svg{width:20px;height:20px;fill:currentColor}.speak .wave,.secondary .wave{fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round}.meaning{font-size:18px;font-weight:700;margin:13px 0 4px}.context{background:color-mix(in srgb,var(--accent-soft) 70%,white);border-left:3px solid var(--accent);border-radius:0 11px 11px 0;padding:11px 13px;margin:13px 0;color:#4f3a69}.part{display:flex;gap:8px;margin:6px 0}.pos{flex:none;color:var(--accent-dark);font-weight:700;font-size:13px;padding-top:1px}.definition{color:#6f6875;font-size:14px;margin:9px 0}.example{margin:13px 0 4px;padding-top:12px;border-top:1px solid #eee8f3}.translation{color:#746d7b;margin-top:4px}.footer{display:flex;gap:9px;margin-top:16px}.primary,.secondary{border:0;border-radius:12px;padding:11px 14px;font-size:14px;font-weight:750;cursor:pointer}.primary{flex:1;background:linear-gradient(135deg,var(--accent),var(--accent-dark));color:white}.primary:disabled{opacity:.62}.secondary{display:flex;align-items:center;justify-content:center;gap:6px;background:var(--accent-soft);color:var(--accent-dark)}.loading{padding:32px 0;text-align:center;color:var(--accent-dark)}.dot{display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--accent);margin:0 3px;animation:pulse 1s infinite}.dot:nth-child(2){animation-delay:.15s}.dot:nth-child(3){animation-delay:.3s}.error{background:#fff1ed;color:#9a3f28;border-radius:12px;padding:12px;margin:13px 0}.hint{font-size:12px;color:#817987;margin-top:9px}.login{display:block;text-align:center;background:linear-gradient(135deg,var(--accent),var(--accent-dark));color:#fff;text-decoration:none;border:0;border-radius:12px;padding:11px;margin-top:13px;cursor:pointer;font-weight:700}.privacy{display:inline-flex;align-items:center;gap:5px;color:var(--accent-dark);font-weight:650}@keyframes in{from{opacity:0;transform:translateY(7px) scale(.98)}}@keyframes pulse{0%,100%{opacity:.25}50%{opacity:1}}@media(max-width:330px){.inner{padding:14px}.footer{flex-direction:column}.secondary{width:100%}}
+    </style><div class="card" data-theme="${escapeHTML(preferences.theme)}"><div class="inner"><div class="brand"><span>词鲸背单词</span><button class="close" aria-label="关闭">×</button></div><div id="body"></div></div></div>`;
     document.documentElement.appendChild(host);
     const card = shadow.querySelector(".card");
-    const width = 356;
-    const left = Math.min(window.innerWidth - width - 12, Math.max(12, rect.left + (rect.right - rect.left) / 2 - width / 2));
-    const preferBelow = rect.bottom + 580 < window.innerHeight || rect.top < 300;
-    card.style.left = `${left}px`;
-    card.style.top = preferBelow ? `${Math.min(window.innerHeight - 100, rect.bottom + 10)}px` : "auto";
-    if (!preferBelow) card.style.bottom = `${Math.max(12, window.innerHeight - rect.top + 10)}px`;
+    host.reposition = () => positionCard(card, rect);
+    host.reposition();
     shadow.querySelector(".close").onclick = () => host.remove();
     return shadow;
+  }
+
+  function positionCard(card, rect) {
+    requestAnimationFrame(() => {
+      const margin = 8;
+      const viewportWidth = Math.max(document.documentElement.clientWidth, window.innerWidth || 0);
+      const viewportHeight = Math.max(document.documentElement.clientHeight, window.innerHeight || 0);
+      const width = Math.min(380, Math.max(280, viewportWidth - margin * 2));
+      card.style.width = `${width}px`;
+      card.style.maxHeight = `${Math.max(180, viewportHeight - margin * 2)}px`;
+      const height = Math.min(card.scrollHeight, Math.max(180, viewportHeight - margin * 2));
+      const left = Math.min(viewportWidth - width - margin, Math.max(margin, rect.left + (rect.right - rect.left - width) / 2));
+      const below = viewportHeight - rect.bottom - margin;
+      const above = rect.top - margin;
+      let top = below >= Math.min(height, 320) || below >= above ? rect.bottom + 8 : rect.top - height - 8;
+      top = Math.min(viewportHeight - height - margin, Math.max(margin, top));
+      card.style.left = `${Math.max(margin, left)}px`;
+      card.style.top = `${Math.max(margin, top)}px`;
+      card.style.bottom = "auto";
+    });
+  }
+
+  function reposition(root) {
+    root.host.reposition?.();
   }
 
   function showLoading(payload) {
     const root = shell(payload.rect);
     root.getElementById("body").innerHTML = `<div class="head"><span class="word">${escapeHTML(payload.word)}</span></div><div class="loading"><span class="dot"></span><span class="dot"></span><span class="dot"></span><div class="hint">正在理解当前语境…</div></div>`;
+    reposition(root);
     return root;
   }
 
   function showError(root, word, message) {
     const auth = message === "AUTH_REQUIRED" || message.includes("AUTH_");
-    root.getElementById("body").innerHTML = `<div class="head"><span class="word">${escapeHTML(word)}</span></div><div class="error">${auth ? "登录后即可查询并同步到 iOS App。" : escapeHTML(message || "查询失败，请稍后重试。")}</div>${auth ? '<a class="login" id="login">打开词鲸背单词并登录</a>' : '<button class="login" id="retry">重试</button>'}`;
-    root.getElementById("login")?.addEventListener("click", () => chrome.runtime.sendMessage({ type: "OPEN_LOGIN" }));
+    root.getElementById("body").innerHTML = `<div class="head"><span class="word">${escapeHTML(word)}</span></div><div class="error">${auth ? "登录后即可查询并同步到 iOS App。" : escapeHTML(message || "查询失败，请稍后重试。")}</div>${auth ? '<button class="login" id="login">打开词鲸背单词并登录</button>' : '<button class="login" id="retry">重试</button>'}`;
+    root.getElementById("login")?.addEventListener("click", () => {
+      document.getElementById(HOST_ID)?.remove();
+      chrome.runtime.sendMessage({ type: "OPEN_LOGIN" });
+    });
     root.getElementById("retry")?.addEventListener("click", () => lookup(lastSelection));
+    reposition(root);
   }
 
   function showResult(root, payload, result) {
     const data = result.data || result;
     const parts = (data.parts || []).map((item) => `<div class="part"><span class="pos">${escapeHTML(item.partOfSpeech)}</span><span>${escapeHTML(item.meaning)}</span></div>`).join("");
+    const privacyHint = preferences.privacyMode
+      ? '<span class="privacy">隐私模式 · 未使用网页上下文</span>'
+      : preferences.saveContext ? "将同时保存当前句子和页面来源" : "仅保存单词与释义";
     root.getElementById("body").innerHTML = `
-      <div class="head"><span class="word">${escapeHTML(data.term || payload.word)}</span><button class="speak" id="speak" title="美音发音">▶︎</button></div>
+      <div class="head"><span class="word">${escapeHTML(data.term || payload.word)}</span><button class="speak" id="speak" aria-label="播放发音" title="播放发音">${volumeIcon()}</button></div>
       <div class="phonetic">/${escapeHTML(data.phonetic || "")}/ · ${escapeHTML(data.lemma || "")}</div>
       <div class="meaning">${escapeHTML(data.primaryMeaning)}</div>${parts}
-      <div class="context"><strong>此处：</strong>${escapeHTML(data.contextualMeaning)}</div>
+      ${data.contextualMeaning ? `<div class="context"><strong>此处：</strong>${escapeHTML(data.contextualMeaning)}</div>` : ""}
       <div class="definition">${escapeHTML(data.englishDefinition)}</div>
       <div class="example"><div>${escapeHTML(data.exampleEnglish)}</div><div class="translation">${escapeHTML(data.exampleChinese)}</div></div>
-      <div class="footer"><button class="secondary" id="slow">慢速发音</button><button class="primary" id="save">＋ 保存到词库</button></div>
-      <div class="hint">将同时保存当前句子和页面来源</div>`;
+      <div class="footer"><button class="secondary" id="slow">${volumeIcon()}<span>慢速</span></button><button class="primary" id="save">＋ 保存到词库</button></div>
+      <div class="hint">${privacyHint}</div>`;
+
     const speak = (rate) => {
       speechSynthesis.cancel();
       const utterance = new SpeechSynthesisUtterance(data.term || payload.word);
-      utterance.lang = "en-US"; utterance.rate = rate;
+      utterance.lang = "en-US";
+      utterance.rate = rate;
       const voice = speechSynthesis.getVoices().find((item) => item.lang === "en-US");
       if (voice) utterance.voice = voice;
       speechSynthesis.speak(utterance);
     };
     root.getElementById("speak").onclick = () => speak(0.92);
     root.getElementById("slow").onclick = () => speak(0.68);
-    root.getElementById("save").onclick = async (event) => {
-      const button = event.currentTarget;
-      button.disabled = true; button.textContent = "正在保存…";
-      const saved = await chrome.runtime.sendMessage({ type: "SAVE_WORD", payload: {
-        term: data.term || payload.word, lemma: data.lemma || data.term || payload.word, phonetic: data.phonetic,
-        parts: data.parts || [], primary_meaning: data.primaryMeaning, contextual_meaning: data.contextualMeaning,
-        english_definition: data.englishDefinition, example_en: data.exampleEnglish, example_zh: data.exampleChinese,
-        context: payload.context, sentence: data.sentence || payload.sentence, source_url: payload.source_url, source_title: payload.source_title
-      }});
-      if (saved.ok) { button.textContent = "✓ 已保存并同步"; button.style.background = "#47715b"; }
-      else { button.disabled = false; button.textContent = "保存失败，重试"; button.title = saved.error; }
-    };
+    root.getElementById("save").onclick = () => saveWord(root, payload, data, false);
+    reposition(root);
+    if (preferences.autoSave) saveWord(root, payload, data, true);
+  }
+
+  async function saveWord(root, payload, data, automatic) {
+    const button = root.getElementById("save");
+    if (!button || button.disabled) return;
+    button.disabled = true;
+    button.textContent = automatic ? "正在自动保存…" : "正在保存…";
+    const includeContext = preferences.saveContext && !preferences.privacyMode;
+    const saved = await chrome.runtime.sendMessage({ type: "SAVE_WORD", payload: {
+      term: data.term || payload.word,
+      lemma: data.lemma || data.term || payload.word,
+      phonetic: data.phonetic,
+      parts: data.parts || [],
+      primary_meaning: data.primaryMeaning,
+      contextual_meaning: data.contextualMeaning,
+      english_definition: data.englishDefinition,
+      example_en: data.exampleEnglish,
+      example_zh: data.exampleChinese,
+      context: includeContext ? payload.context : null,
+      sentence: includeContext ? (data.sentence || payload.sentence) : null,
+      source_url: includeContext ? payload.source_url : null,
+      source_title: includeContext ? payload.source_title : null
+    }});
+    if (saved.ok) {
+      button.textContent = automatic ? "✓ 已自动保存" : "✓ 已保存并同步";
+      button.style.background = "var(--accent-dark)";
+    } else {
+      button.disabled = false;
+      button.textContent = "保存失败，重试";
+      button.title = saved.error;
+    }
+    reposition(root);
+  }
+
+  async function loadPreferences() {
+    const response = await chrome.runtime.sendMessage({ type: "GET_PREFERENCES" }).catch(() => null);
+    if (response?.ok) preferences = { ...DEFAULT_PREFERENCES, ...response.data };
+    return preferences;
   }
 
   async function lookup(payload) {
     if (!payload) return;
+    await loadPreferences();
+    if (preferences.disabledHosts.includes(currentHost)) return;
     lastSelection = payload;
     const serial = ++requestSerial;
+    const requestPayload = preferences.privacyMode
+      ? { ...payload, context: "", sentence: "", source_url: null, source_title: null }
+      : payload;
     const root = showLoading(payload);
-    const response = await chrome.runtime.sendMessage({ type: "LOOKUP_WORD", payload });
+    const response = await chrome.runtime.sendMessage({ type: "LOOKUP_WORD", payload: requestPayload });
     if (serial !== requestSerial || !document.getElementById(HOST_ID)) return;
-    if (!response?.ok) showError(root, payload.word, response?.error);
-    else showResult(root, payload, response.data);
+    if (!response?.ok) showError(root, payload.word, response?.error || "查询失败");
+    else showResult(root, requestPayload, response.data);
   }
 
   document.addEventListener("dblclick", (event) => {
@@ -129,7 +200,19 @@
     const host = document.getElementById(HOST_ID);
     if (host && event.target !== host && !host.contains(event.target)) host.remove();
   }, true);
+  window.addEventListener("resize", () => document.getElementById(HOST_ID)?.reposition?.());
   chrome.runtime.onMessage.addListener((message) => {
     if (message.type === "LOOKUP_SELECTED") lookup(selectedPayload(message.word));
   });
+  chrome.storage.onChanged.addListener((changes, areaName) => {
+    if (areaName !== "local") return;
+    if (changes.cijingSession?.newValue?.access_token) document.getElementById(HOST_ID)?.remove();
+    if (changes.cijingPreferences?.newValue) {
+      preferences = { ...DEFAULT_PREFERENCES, ...changes.cijingPreferences.newValue };
+      const card = document.getElementById(HOST_ID)?.shadowRoot?.querySelector(".card");
+      if (card) card.dataset.theme = preferences.theme;
+      if (preferences.disabledHosts.includes(currentHost)) document.getElementById(HOST_ID)?.remove();
+    }
+  });
+  loadPreferences();
 })();
