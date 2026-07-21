@@ -45,6 +45,7 @@
   }
 
   function shell(rect) {
+    stopPronunciation();
     document.getElementById(HOST_ID)?.remove();
     const host = document.createElement("div");
     host.id = HOST_ID;
@@ -57,7 +58,7 @@
     const card = shadow.querySelector(".card");
     host.reposition = () => positionCard(card, rect);
     host.reposition();
-    shadow.querySelector(".close").onclick = () => host.remove();
+    shadow.querySelector(".close").onclick = () => { stopPronunciation(); host.remove(); };
     return shadow;
   }
 
@@ -117,19 +118,30 @@
       <div class="definition">${escapeHTML(data.englishDefinition)}</div>
       <div class="example"><div>${escapeHTML(data.exampleEnglish)}</div><div class="translation">${escapeHTML(data.exampleChinese)}</div></div>
       <div class="footer"><button class="secondary" id="slow">${volumeIcon()}<span>慢速</span></button><button class="primary" id="save">＋ 保存到词库</button></div>
-      <div class="hint">${privacyHint}</div>`;
+      <div class="hint">${data.audioUrl ? "发音：公开词典真人录音 · " : "发音：Chrome 高质量英文语音 · "}${privacyHint}</div>`;
 
-    const speak = (rate) => {
+    const speakWithChrome = async (rate) => {
       speechSynthesis.cancel();
       const utterance = new SpeechSynthesisUtterance(data.term || payload.word);
       utterance.lang = "en-US";
       utterance.rate = rate;
-      const voice = speechSynthesis.getVoices().find((item) => item.lang === "en-US");
+      utterance.pitch = 1;
+      utterance.volume = 1;
+      const voice = await preferredEnglishVoice();
       if (voice) utterance.voice = voice;
       speechSynthesis.speak(utterance);
     };
-    root.getElementById("speak").onclick = () => speak(0.92);
-    root.getElementById("slow").onclick = () => speak(0.68);
+    const speak = async (rate) => {
+      speechSynthesis.cancel();
+      if (!data.audioUrl) {
+        speakWithChrome(rate);
+        return;
+      }
+      const response = await chrome.runtime.sendMessage({ type: "PLAY_PRONUNCIATION", url: data.audioUrl, rate: rate < 0.9 ? 0.78 : 1 }).catch(() => null);
+      if (!response?.ok) speakWithChrome(rate);
+    };
+    root.getElementById("speak").onclick = () => speak(0.96);
+    root.getElementById("slow").onclick = () => speak(0.72);
     root.getElementById("save").onclick = () => saveWord(root, payload, data, false);
     reposition(root);
     if (preferences.autoSave) saveWord(root, payload, data, true);
@@ -145,6 +157,7 @@
       term: data.term || payload.word,
       lemma: data.lemma || data.term || payload.word,
       phonetic: data.phonetic,
+      audio_url: data.audioUrl || null,
       parts: data.parts || [],
       primary_meaning: data.primaryMeaning,
       contextual_meaning: data.contextualMeaning,
@@ -165,6 +178,31 @@
       button.title = saved.error;
     }
     reposition(root);
+  }
+
+  async function preferredEnglishVoice() {
+    let voices = speechSynthesis.getVoices().filter((voice) => /^en(?:-|_)/i.test(voice.lang));
+    if (!voices.length) {
+      await new Promise((resolve) => {
+        const timeout = setTimeout(resolve, 350);
+        speechSynthesis.addEventListener("voiceschanged", () => { clearTimeout(timeout); resolve(); }, { once: true });
+      });
+      voices = speechSynthesis.getVoices().filter((voice) => /^en(?:-|_)/i.test(voice.lang));
+    }
+    const score = (voice) => {
+      const label = `${voice.name} ${voice.voiceURI}`.toLowerCase();
+      let value = /^en-US$/i.test(voice.lang) ? 80 : 25;
+      if (/google us english|microsoft (aria|jenny|guy)|samantha|ava|allison|siri/.test(label)) value += 60;
+      if (voice.localService) value += 14;
+      if (/compact|novelty|whisper|zarvox|bells|bad news/.test(label)) value -= 100;
+      return value;
+    };
+    return voices.sort((left, right) => score(right) - score(left))[0] || null;
+  }
+
+  function stopPronunciation() {
+    speechSynthesis.cancel();
+    chrome.runtime.sendMessage({ type: "STOP_PRONUNCIATION" }).catch(() => {});
   }
 
   async function loadPreferences() {
@@ -194,11 +232,11 @@
     setTimeout(() => lookup(selectedPayload()), 0);
   }, true);
   document.addEventListener("keydown", (event) => {
-    if (event.key === "Escape") document.getElementById(HOST_ID)?.remove();
+    if (event.key === "Escape") { stopPronunciation(); document.getElementById(HOST_ID)?.remove(); }
   });
   document.addEventListener("mousedown", (event) => {
     const host = document.getElementById(HOST_ID);
-    if (host && event.target !== host && !host.contains(event.target)) host.remove();
+    if (host && event.target !== host && !host.contains(event.target)) { stopPronunciation(); host.remove(); }
   }, true);
   window.addEventListener("resize", () => document.getElementById(HOST_ID)?.reposition?.());
   chrome.runtime.onMessage.addListener((message) => {

@@ -114,7 +114,7 @@ struct SettingsView: View {
     private var selectedVoiceName: String {
         guard !speechVoiceIdentifier.isEmpty,
               let voice = AVSpeechSynthesisVoice(identifier: speechVoiceIdentifier) else {
-            return "跟随系统（美式英语）"
+            return "自动优先增强音质（美式英语）"
         }
         return "\(voice.name) · \(voice.language)"
     }
@@ -141,12 +141,12 @@ private struct SpeechVoiceSettingsView: View {
                 VStack(alignment: .leading, spacing: 14) {
                     VStack(alignment: .leading, spacing: 7) {
                         Text("选择英文声音").font(.system(size: 24, weight: .bold, design: .rounded))
-                        Text("发音由苹果系统在本机合成，不会把朗读内容发送给大模型。可用声音取决于当前设备已安装的系统语音。")
+                        Text("发音由苹果系统在本机合成，不会把朗读内容发送给大模型。自动模式会优先使用设备已安装的增强或高级美式英语声音。")
                             .font(.system(size: 13)).foregroundStyle(CiJingTheme.secondary).lineSpacing(4)
                     }
 
                     VStack(spacing: 0) {
-                        voiceRow(identifier: "", title: "跟随系统", subtitle: "默认美式英语声音")
+                        voiceRow(identifier: "", title: "自动选择最佳声音", subtitle: "优先增强 / 高级美式英语声音")
                         ForEach(voices, id: \.identifier) { voice in
                             SettingsDivider()
                             voiceRow(identifier: voice.identifier, title: voice.name, subtitle: voiceSubtitle(voice))
@@ -193,7 +193,13 @@ private struct SpeechVoiceSettingsView: View {
         case .female: gender = "女声"
         default: gender = "系统声音"
         }
-        return "\(locale) · \(gender)"
+        let quality: String
+        switch voice.quality {
+        case .premium: quality = "高级"
+        case .enhanced: quality = "增强"
+        default: quality = "标准"
+        }
+        return "\(locale) · \(gender) · \(quality)"
     }
 }
 

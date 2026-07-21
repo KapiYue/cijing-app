@@ -31,7 +31,7 @@ struct ReadingHubView: View {
             }
         }.navigationTitle("AI 阅读").navigationBarTitleDisplayMode(.inline)
             .task { if store.recentReadings.isEmpty { await store.refreshAll() } }
-            .fullScreenCover(isPresented: $showingSetup) { NavigationStack { ReadingSetupView() } }
+            .fullScreenCover(isPresented: $showingSetup) { NavigationStack { ReadingSetupView(onFinish: { showingSetup = false }) } }
     }
 }
 
@@ -53,4 +53,3 @@ enum ReadingOptions {
     static let difficulties = [("beginner", "入门"), ("elementary", "初级"), ("intermediate", "中级"), ("upper_intermediate", "中高级"), ("advanced", "高级")]
     static func label(for value: String) -> String { themes.first { $0.0 == value }?.1 ?? styles.first { $0.0 == value }?.1 ?? difficulties.first { $0.0 == value }?.1 ?? value }
 }
-

@@ -1,6 +1,33 @@
 import * as api from "./shared/api.js";
 import { getPreferences } from "./shared/preferences.js";
 
+const OFFSCREEN_PATH = "offscreen/audio.html";
+
+async function ensureAudioDocument() {
+  const documentUrl = chrome.runtime.getURL(OFFSCREEN_PATH);
+  const contexts = await chrome.runtime.getContexts({ contextTypes: ["OFFSCREEN_DOCUMENT"], documentUrls: [documentUrl] });
+  if (contexts.length) return;
+  await chrome.offscreen.createDocument({
+    url: OFFSCREEN_PATH,
+    reasons: ["AUDIO_PLAYBACK"],
+    justification: "播放公开词典提供的单词真人发音"
+  });
+}
+
+async function playPronunciation(url, rate) {
+  const parsed = new URL(url);
+  const trustedHosts = new Set(["api.dictionaryapi.dev", "ssl.gstatic.com"]);
+  if (parsed.protocol !== "https:" || !trustedHosts.has(parsed.hostname)) throw new Error("UNTRUSTED_AUDIO_SOURCE");
+  await ensureAudioDocument();
+  return chrome.runtime.sendMessage({ target: "cijing-audio", type: "PLAY_AUDIO", url: parsed.href, rate });
+}
+
+async function stopPronunciation() {
+  const documentUrl = chrome.runtime.getURL(OFFSCREEN_PATH);
+  const contexts = await chrome.runtime.getContexts({ contextTypes: ["OFFSCREEN_DOCUMENT"], documentUrls: [documentUrl] });
+  if (contexts.length) await chrome.runtime.sendMessage({ target: "cijing-audio", type: "STOP_AUDIO" });
+}
+
 chrome.runtime.onInstalled.addListener(() => {
   chrome.contextMenus.create({ id: "cijing-lookup", title: "用词鲸背单词查询“%s”", contexts: ["selection"] });
 });
@@ -27,6 +54,8 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
     SAVE_WORD: () => api.saveWord(message.payload),
     GET_DASHBOARD: () => api.getDashboard(),
     GET_PREFERENCES: () => getPreferences(),
+    PLAY_PRONUNCIATION: () => playPronunciation(message.url, message.rate),
+    STOP_PRONUNCIATION: () => stopPronunciation(),
     TEST_CONNECTION: () => api.testConnection(),
     OPEN_LOGIN: () => chrome.action.openPopup()
   };

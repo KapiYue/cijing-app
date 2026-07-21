@@ -1,10 +1,10 @@
 {
   "manifest_version": 3,
   "name": "词鲸背单词",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "在真实英文阅读中双击查词，理解当前语境并同步到词鲸背单词 App。",
-  "permissions": ["storage", "contextMenus", "activeTab"],
-  "host_permissions": ["http://*/*", "https://*.supabase.co/*"],
+  "permissions": ["storage", "contextMenus", "activeTab", "offscreen"],
+  "host_permissions": ["http://*/*", "https://*.supabase.co/*", "https://api.dictionaryapi.dev/*", "https://ssl.gstatic.com/*"],
   "background": {
     "service_worker": "background.js",
     "type": "module"

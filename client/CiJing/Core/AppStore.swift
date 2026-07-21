@@ -74,7 +74,7 @@ final class AppStore: ObservableObject {
     }
 
     func saveReadingWord(_ explanation: ReadingWordExplanation, sentence: String, readingTitle: String) async throws -> Word {
-        let payload = SaveWordPayload(term: explanation.term, lemma: explanation.lemma, phonetic: explanation.phonetic,
+        let payload = SaveWordPayload(term: explanation.term, lemma: explanation.lemma, phonetic: explanation.phonetic, audioUrl: nil,
             parts: [LexiconPart(partOfSpeech: explanation.partOfSpeech, meaning: explanation.meaning)], primaryMeaning: explanation.meaning,
             contextualMeaning: explanation.contextualMeaning, englishDefinition: nil, exampleEn: sentence, exampleZh: nil,
             context: sentence, sentence: sentence, sourceUrl: nil, sourceTitle: "AI 阅读 · \(readingTitle)")
@@ -86,6 +86,7 @@ final class AppStore: ObservableObject {
             term: result.term,
             lemma: result.lemma,
             phonetic: result.phonetic,
+            audioUrl: result.audioUrl,
             parts: result.parts,
             primaryMeaning: result.primaryMeaning,
             contextualMeaning: result.contextualMeaning,
@@ -192,6 +193,6 @@ enum DemoLexicon {
         item("thrive", "θraɪv", "茁壮成长；兴旺", "People thrive when they feel trusted.", "人们在被信任时更容易蓬勃成长。", "v.")
     ]
     private static func item(_ term: String, _ phonetic: String, _ meaning: String, _ en: String, _ zh: String, _ pos: String) -> SaveWordPayload {
-        SaveWordPayload(term: term, lemma: term, phonetic: phonetic, parts: [LexiconPart(partOfSpeech: pos, meaning: meaning)], primaryMeaning: meaning, contextualMeaning: meaning, englishDefinition: nil, exampleEn: en, exampleZh: zh, context: en, sentence: en, sourceUrl: nil, sourceTitle: "词鲸背单词演示词库")
+        SaveWordPayload(term: term, lemma: term, phonetic: phonetic, audioUrl: nil, parts: [LexiconPart(partOfSpeech: pos, meaning: meaning)], primaryMeaning: meaning, contextualMeaning: meaning, englishDefinition: nil, exampleEn: en, exampleZh: zh, context: en, sentence: en, sourceUrl: nil, sourceTitle: "词鲸背单词演示词库")
     }
 }

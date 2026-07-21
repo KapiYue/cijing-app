@@ -1,5 +1,16 @@
 import SwiftUI
 
+private struct AppTabBarHiddenKey: EnvironmentKey {
+    static let defaultValue: Binding<Bool> = .constant(false)
+}
+
+extension EnvironmentValues {
+    var appTabBarHidden: Binding<Bool> {
+        get { self[AppTabBarHiddenKey.self] }
+        set { self[AppTabBarHiddenKey.self] = newValue }
+    }
+}
+
 /// Shared visual tokens from the 390 × 844 interactive prototype.
 enum CiJingTheme {
     static let purple = Color(red: 118 / 255, green: 81 / 255, blue: 201 / 255)

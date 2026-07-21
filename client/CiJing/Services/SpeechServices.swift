@@ -5,21 +5,30 @@ enum SpeechVoicePreference {
     static let storageKey = "speechVoiceIdentifier"
 
     static var selectedVoice: AVSpeechSynthesisVoice? {
-        guard let identifier = UserDefaults.standard.string(forKey: storageKey), !identifier.isEmpty else {
-            return AVSpeechSynthesisVoice(language: "en-US")
+        if let identifier = UserDefaults.standard.string(forKey: storageKey), !identifier.isEmpty,
+           let selected = AVSpeechSynthesisVoice(identifier: identifier) {
+            return selected
         }
-        return AVSpeechSynthesisVoice(identifier: identifier) ?? AVSpeechSynthesisVoice(language: "en-US")
+        return englishVoices.max { voiceScore($0) < voiceScore($1) } ?? AVSpeechSynthesisVoice(language: "en-US")
     }
 
     static var englishVoices: [AVSpeechSynthesisVoice] {
         AVSpeechSynthesisVoice.speechVoices()
             .filter { $0.language.lowercased().hasPrefix("en-") }
-            .sorted {
-                if $0.language == $1.language { return $0.name.localizedStandardCompare($1.name) == .orderedAscending }
-                if $0.language == "en-US" { return true }
-                if $1.language == "en-US" { return false }
-                return $0.language < $1.language
+            .sorted { left, right in
+                let leftScore = voiceScore(left), rightScore = voiceScore(right)
+                if leftScore != rightScore { return leftScore > rightScore }
+                return left.name.localizedStandardCompare(right.name) == .orderedAscending
             }
+    }
+
+    private static func voiceScore(_ voice: AVSpeechSynthesisVoice) -> Int {
+        let label = "\(voice.name) \(voice.identifier)".lowercased()
+        var score = voice.quality.rawValue * 100
+        if voice.language.lowercased() == "en-us" { score += 60 }
+        if label.contains("samantha") || label.contains("ava") || label.contains("allison") || label.contains("siri") { score += 20 }
+        if label.contains("compact") || label.contains("novelty") { score -= 200 }
+        return score
     }
 }
 
@@ -28,7 +37,6 @@ final class SpeechService: NSObject, ObservableObject, AVSpeechSynthesizerDelega
     @Published var isSpeaking = false
     @Published var isPaused = false
     @Published var currentText: String?
-    var rate: Float = AVSpeechUtteranceDefaultSpeechRate
 
     private let synthesizer = AVSpeechSynthesizer()
 
@@ -37,12 +45,24 @@ final class SpeechService: NSObject, ObservableObject, AVSpeechSynthesizerDelega
     }
 
     func speak(_ text: String, slow: Bool = false) {
+        speak(text, speed: slow ? 0.75 : 1)
+    }
+
+    func speak(_ text: String, speed: Double) {
+        let value = text.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !value.isEmpty else { return }
         synthesizer.stopSpeaking(at: .immediate)
-        let utterance = AVSpeechUtterance(string: text)
+        try? AVAudioSession.sharedInstance().setCategory(.playback, mode: .spokenAudio, options: [.duckOthers])
+        try? AVAudioSession.sharedInstance().setActive(true)
+        let utterance = AVSpeechUtterance(string: value)
         utterance.voice = SpeechVoicePreference.selectedVoice
-        utterance.rate = slow ? 0.38 : 0.49
+        utterance.rate = Self.utteranceRate(for: speed)
         utterance.pitchMultiplier = 1
-        currentText = text; synthesizer.speak(utterance)
+        utterance.volume = 1
+        utterance.preUtteranceDelay = 0.03
+        currentText = value
+        isPaused = false
+        synthesizer.speak(utterance)
     }
 
     func togglePause() {
@@ -51,7 +71,18 @@ final class SpeechService: NSObject, ObservableObject, AVSpeechSynthesizerDelega
     }
 
     func repeatCurrent(slow: Bool = false) { if let currentText { speak(currentText, slow: slow) } }
+    func repeatCurrent(speed: Double) { if let currentText { speak(currentText, speed: speed) } }
     func stop() { synthesizer.stopSpeaking(at: .immediate); isSpeaking = false; isPaused = false }
+
+    private static func utteranceRate(for speed: Double) -> Float {
+        switch speed {
+        case ...0.5: 0.33
+        case ...0.75: 0.41
+        case ...1.0: 0.49
+        case ...1.25: 0.56
+        default: 0.62
+        }
+    }
 
     nonisolated func speechSynthesizer(_ synthesizer: AVSpeechSynthesizer, didStart utterance: AVSpeechUtterance) {
         Task { @MainActor in self.isSpeaking = true; self.isPaused = false }

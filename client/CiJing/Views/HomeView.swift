@@ -54,7 +54,7 @@ struct HomeView: View {
         }
         .toolbar(.hidden, for: .navigationBar)
         .task { await store.refreshAll() }
-        .fullScreenCover(isPresented: $showingSetup) { NavigationStack { ReadingSetupView() } }
+        .fullScreenCover(isPresented: $showingSetup) { NavigationStack { ReadingSetupView(onFinish: { showingSetup = false }) } }
         .alert("提示", isPresented: Binding(get: { notice != nil || store.errorMessage != nil }, set: { if !$0 { notice = nil; store.errorMessage = nil } })) {
             Button("知道了") { notice = nil; store.errorMessage = nil }
         } message: { Text(notice ?? store.errorMessage ?? "") }

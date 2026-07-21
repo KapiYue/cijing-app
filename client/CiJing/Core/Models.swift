@@ -149,6 +149,7 @@ struct LookupResult: Codable {
     let term: String
     let lemma: String
     let phonetic: String
+    let audioUrl: String?
     let parts: [LexiconPart]
     let primaryMeaning: String
     let contextualMeaning: String
@@ -183,6 +184,7 @@ struct EmptyBody: Codable {}
 struct SaveWordPayload: Codable {
     let term, lemma: String
     let phonetic: String?
+    let audioUrl: String?
     let parts: [LexiconPart]
     let primaryMeaning: String
     let contextualMeaning: String?

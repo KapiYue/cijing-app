@@ -1,6 +1,7 @@
 import { handleOptions, jsonResponse } from "../_shared/cors.ts";
 import { requireUser } from "../_shared/auth.ts";
 import { openRouterJSON, sha256 } from "../_shared/openrouter.ts";
+import { fetchPublicDictionary, type PublicDictionaryEntry } from "../_shared/free-dictionary.ts";
 
 type Part = { partOfSpeech: string; meaning: string };
 type LookupResult = {
@@ -14,6 +15,7 @@ type LookupResult = {
   exampleEnglish: string;
   exampleChinese: string;
   sentence: string;
+  audioUrl?: string | null;
 };
 
 const lookupSchema = {
@@ -69,20 +71,48 @@ Deno.serve(async (request) => {
       .eq("context_hash", contextHash)
       .gt("expires_at", new Date().toISOString())
       .maybeSingle();
-    if (cached?.result) return jsonResponse({ data: cached.result, cached: true });
+    if (cached?.result) {
+      const cachedResult = cached.result as LookupResult;
+      if (cachedResult.audioUrl) return jsonResponse({ data: cachedResult, cached: true });
+      const publicEntry = await fetchPublicDictionary(term);
+      const refreshedResult = { ...cachedResult, audioUrl: publicEntry?.audioUrl ?? null };
+      if (publicEntry?.audioUrl) {
+        await client.from("lexicon_cache").update({ result: refreshedResult })
+          .eq("user_id", user.id).eq("normalized_term", normalized).eq("context_hash", contextHash);
+      }
+      return jsonResponse({ data: refreshedResult, cached: true });
+    }
 
-    const result = await openRouterJSON<LookupResult>({
-      schemaName: "word_lookup",
-      schema: lookupSchema,
-      system: [
-        "You are the lexicographer inside a Chinese English-learning product.",
-        "Explain the selected English word accurately and compactly for a Chinese learner.",
-        "Infer the meaning used in the supplied context. Use Simplified Chinese for Chinese fields.",
-        "Use General American IPA. The English example must be natural and different from the supplied sentence.",
-        "Never include markdown.",
-      ].join(" "),
-      user: `Selected word: ${term}\nSentence: ${sentence || "(not available)"}\nSurrounding context: ${context || "(not available)"}`,
-    });
+    // A public dictionary is the canonical source for pronunciation and English
+    // definitions. The language model only adds Chinese/contextual enrichment.
+    const publicEntry = await fetchPublicDictionary(term);
+
+    let result: LookupResult;
+    try {
+      const enriched = await openRouterJSON<LookupResult>({
+        schemaName: "word_lookup",
+        schema: lookupSchema,
+        system: [
+          "You are the lexicographer inside a Chinese English-learning product.",
+          "Explain the selected English word accurately and compactly for a Chinese learner.",
+          "Treat the supplied public-dictionary entry as the factual reference when present.",
+          "Infer the meaning used in the supplied context. Use Simplified Chinese for Chinese fields.",
+          "Use General American IPA. The English example must be natural and different from the supplied sentence.",
+          "Never include markdown.",
+        ].join(" "),
+        user: `Selected word: ${term}\nSentence: ${sentence || "(not available)"}\nSurrounding context: ${context || "(not available)"}\nPublic dictionary reference: ${publicEntry ? JSON.stringify(publicEntry) : "(not found)"}`,
+      });
+      result = {
+        ...enriched,
+        phonetic: publicEntry?.phonetic || enriched.phonetic,
+        englishDefinition: publicEntry?.definition || enriched.englishDefinition,
+        exampleEnglish: enriched.exampleEnglish || publicEntry?.example || sentence,
+        audioUrl: publicEntry?.audioUrl ?? null,
+      };
+    } catch (error) {
+      if (!publicEntry) throw error;
+      result = publicFallback(publicEntry, term, sentence);
+    }
 
     await client.from("lexicon_cache").upsert({
       user_id: user.id,
@@ -100,3 +130,22 @@ Deno.serve(async (request) => {
   }
 });
 
+function publicFallback(entry: PublicDictionaryEntry, term: string, sentence: string): LookupResult {
+  const parts = entry.parts.map((item) => ({
+    partOfSpeech: item.partOfSpeech,
+    meaning: `英文释义：${item.definition}`,
+  }));
+  return {
+    term: entry.term || term,
+    lemma: entry.term || term,
+    phonetic: entry.phonetic,
+    parts,
+    primaryMeaning: parts[0]?.meaning ?? `英文释义：${entry.definition}`,
+    contextualMeaning: `当前语境可参考：${entry.definition}`,
+    englishDefinition: entry.definition,
+    exampleEnglish: entry.example || sentence || `${entry.term || term} is used in this context.`,
+    exampleChinese: "中文释义暂时不可用，已展示公开词典释义。",
+    sentence,
+    audioUrl: entry.audioUrl,
+  };
+}

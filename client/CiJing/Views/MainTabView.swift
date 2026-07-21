@@ -42,6 +42,7 @@ struct MainTabView: View {
     @Environment(\.scenePhase) private var scenePhase
     @EnvironmentObject private var store: AppStore
     @State private var selection: AppTab = .home
+    @State private var tabBarHidden = false
 
     init() {
         let arguments = ProcessInfo.processInfo.arguments
@@ -55,11 +56,16 @@ struct MainTabView: View {
         ZStack(alignment: .bottom) {
             tabContent
 
-            tabBar
-                .padding(.horizontal, 12)
-                .padding(.bottom, 8)
+            if !tabBarHidden {
+                tabBar
+                    .padding(.horizontal, 12)
+                    .padding(.bottom, 8)
+                    .transition(.move(edge: .bottom).combined(with: .opacity))
+            }
         }
+        .environment(\.appTabBarHidden, $tabBarHidden)
         .tint(CiJingTheme.purple)
+        .animation(.easeInOut(duration: 0.2), value: tabBarHidden)
         .onChange(of: selection) { _, _ in Task { await refreshSelectedTab() } }
         .onChange(of: scenePhase) { _, phase in
             if phase == .active { Task { await refreshSelectedTab() } }

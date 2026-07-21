@@ -7,6 +7,7 @@ struct ReadingWordSheet: View {
     let selection: SelectedReadingWord
     let readingTitle: String
     @State private var explanation: ReadingWordExplanation?
+    @State private var lookupFallback: LookupResult?
     @State private var loading = true
     @State private var saved = false
     @State private var errorMessage: String?
@@ -23,6 +24,7 @@ struct ReadingWordSheet: View {
                         if loading { ProgressView("正在理解这个句子…").frame(maxWidth: .infinity).padding(.vertical, 50) }
                         else if let word = known { knownContent(word) }
                         else if let explanation { explanationContent(explanation) }
+                        else if let lookupFallback { lookupContent(lookupFallback) }
                         if let errorMessage { Text(errorMessage).font(.caption).foregroundStyle(CiJingTheme.danger).cijingCard() }
                     }.padding(20)
                 }
@@ -54,12 +56,33 @@ struct ReadingWordSheet: View {
         }.cijingCard()
     }
 
+    private func lookupContent(_ item: LookupResult) -> some View {
+        VStack(alignment: .leading, spacing: 13) {
+            Text("/\(item.phonetic)/ · 原形 \(item.lemma)").foregroundStyle(CiJingTheme.secondary)
+            Text(item.primaryMeaning).font(.title3.bold())
+            Label("这个句子里", systemImage: "scope").font(.caption.bold()).foregroundStyle(CiJingTheme.purple)
+            Text(item.contextualMeaning)
+            Text(selection.sentence).font(.body).padding(13).background(CiJingTheme.paper, in: RoundedRectangle(cornerRadius: 13))
+            if !item.englishDefinition.isEmpty {
+                Text(item.englishDefinition).font(.subheadline).foregroundStyle(CiJingTheme.secondary)
+            }
+            Button(saved ? "✓ 已保存到词库" : "＋ 保存为新词") { Task { await save(item) } }
+                .buttonStyle(PrimaryButtonStyle()).disabled(saved)
+        }.cijingCard()
+    }
+
     private func load() async {
         if known != nil { loading = false; return }
         do { explanation = try await store.api.explainReadingWord(selection.term, sentence: selection.sentence) }
-        catch { errorMessage = error.localizedDescription }
+        catch {
+            do {
+                lookupFallback = try await store.api.lookupWord(selection.term, context: selection.sentence, sentence: selection.sentence)
+            } catch {
+                errorMessage = "暂时没查到这个词，请检查网络后重试。\n\(error.localizedDescription)"
+            }
+        }
         loading = false
     }
     private func save(_ item: ReadingWordExplanation) async { do { _ = try await store.saveReadingWord(item, sentence: selection.sentence, readingTitle: readingTitle); saved = true } catch { errorMessage = error.localizedDescription } }
+    private func save(_ item: LookupResult) async { do { _ = try await store.saveLookup(item); saved = true } catch { errorMessage = error.localizedDescription } }
 }
-
