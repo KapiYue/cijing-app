@@ -1,6 +1,12 @@
 import SwiftUI
 import AVFoundation
 
+private enum AppLinks {
+    static let privacy = URL(string: "https://cijing.joy-coder.com/")!
+    static let support = URL(string: "https://cijing.joy-coder.com/support")!
+    static let contact = URL(string: "mailto:zdjoey@126.com")!
+}
+
 struct SettingsView: View {
     @EnvironmentObject private var store: AppStore
     @EnvironmentObject private var api: SupabaseAPI
@@ -9,6 +15,8 @@ struct SettingsView: View {
     @AppStorage("hapticFeedbackEnabled") private var hapticFeedback = true
     @AppStorage(SpeechVoicePreference.storageKey) private var speechVoiceIdentifier = ""
     @State private var importing = false
+    @State private var checkingUpdate = false
+    @State private var cacheSize = AppCache.formattedSize
     @State private var message: String?
 
     var body: some View {
@@ -48,28 +56,43 @@ struct SettingsView: View {
                         }.buttonStyle(.plain).disabled(importing)
                     }
 
-                    SettingsSectionTitle("关于与条款")
+                    SettingsSectionTitle("隐私与安全")
                     SettingsGroup {
-                        SettingsActionRow(icon: "arrow.up.circle", title: "版本更新", subtitle: "当前版本 1.0.0", status: "已是最新")
                         ForEach(Array(LegalDocument.allCases.enumerated()), id: \.element.id) { index, document in
-                            SettingsDivider()
+                            if index > 0 { SettingsDivider() }
                             NavigationLink { LegalDocumentView(document: document) } label: {
                                 SettingsActionRow(iconText: document.mark, title: document.rawValue, subtitle: document.subtitle)
                             }.buttonStyle(.plain)
                         }
+                    }
+
+                    SettingsSectionTitle("关于")
+                    SettingsGroup {
+                        NavigationLink { AboutCiJingView() } label: {
+                            SettingsActionRow(icon: "info.circle", title: "关于词鲸", subtitle: "了解产品理念与版本信息")
+                        }.buttonStyle(.plain)
                         SettingsDivider()
-                        Button { message = "帮助与反馈中心即将开放。" } label: {
-                            SettingsActionRow(iconText: "?", title: "帮助与反馈", subtitle: "常见问题与意见反馈")
+                        Button { Task { await checkForUpdates() } } label: {
+                            SettingsActionRow(icon: "arrow.up.circle", title: checkingUpdate ? "正在检查…" : "检查更新", subtitle: "当前版本 \(AppMetadata.version)")
+                        }.buttonStyle(.plain).disabled(checkingUpdate)
+                        SettingsDivider()
+                        Button { clearCache() } label: {
+                            SettingsActionRow(icon: "trash", title: "清理缓存（\(cacheSize)）", subtitle: "释放图片、接口响应和临时文件占用")
                         }.buttonStyle(.plain)
                     }
 
-                    Button(role: .destructive) { Task { await api.signOut() } } label: {
+                    Button(role: .destructive) {
+                        Task {
+                            await api.signOut()
+                            store.clearSessionData()
+                        }
+                    } label: {
                         Text("退出登录").font(CiJingTypography.rowTitle).frame(maxWidth: .infinity).padding(.vertical, 16)
                     }
                     .background(.white.opacity(0.76), in: RoundedRectangle(cornerRadius: 17))
                     .padding(.top, 20)
 
-                    Text("词鲸背单词 1.0.0 · © 2026")
+                    Text("词鲸背单词 \(AppMetadata.version) · © 2026")
                         .font(CiJingTypography.supporting).foregroundStyle(CiJingTheme.secondary.opacity(0.72))
                         .frame(maxWidth: .infinity).padding(.vertical, 22)
                 }
@@ -125,6 +148,44 @@ struct SettingsView: View {
         importing = false
         message = store.errorMessage ?? "演示词库已导入。"
         store.errorMessage = nil
+    }
+
+    private func checkForUpdates() async {
+        checkingUpdate = true
+        defer { checkingUpdate = false }
+        do {
+            guard var components = URLComponents(string: "https://itunes.apple.com/lookup") else { throw URLError(.badURL) }
+            components.queryItems = [
+                URLQueryItem(name: "bundleId", value: AppMetadata.bundleIdentifier),
+                URLQueryItem(name: "country", value: "cn")
+            ]
+            guard let url = components.url else { throw URLError(.badURL) }
+            let (data, response) = try await URLSession.shared.data(from: url)
+            guard (response as? HTTPURLResponse).map({ 200..<300 ~= $0.statusCode }) == true else { throw URLError(.badServerResponse) }
+            let result = try JSONDecoder().decode(AppStoreLookupResponse.self, from: data)
+            guard let release = result.results.first else {
+                message = "当前版本 \(AppMetadata.version)。应用尚未在中国区 App Store 检索到。"
+                return
+            }
+            if release.version.compare(AppMetadata.version, options: .numeric) == .orderedDescending {
+                message = "发现新版本 \(release.version)，可前往 App Store 更新。"
+            } else {
+                message = "当前版本 \(AppMetadata.version) 已是最新版本。"
+            }
+        } catch {
+            message = "暂时无法检查更新，请确认网络连接后重试。"
+        }
+    }
+
+    private func clearCache() {
+        do {
+            try AppCache.clear()
+            cacheSize = AppCache.formattedSize
+            message = "缓存已清理。"
+        } catch {
+            cacheSize = AppCache.formattedSize
+            message = "部分缓存未能清理：\(error.localizedDescription)"
+        }
     }
 }
 
@@ -311,6 +372,19 @@ private struct ProfileSettingsView: View {
                         ProgressView("正在加载资料…").padding(40)
                     }
                     Text("登录邮箱：\(api.currentEmail)").font(.system(size: 13)).foregroundStyle(CiJingTheme.secondary)
+
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text("账户安全")
+                            .font(.caption)
+                            .foregroundStyle(CiJingTheme.secondary)
+                            .padding(.horizontal, 4)
+                        NavigationLink { DeleteAccountView() } label: {
+                            SettingsActionRow(icon: "person.crop.circle.badge.minus", title: "删除账号", subtitle: "永久删除账号及全部云端学习数据")
+                        }
+                        .buttonStyle(.plain)
+                        .background(Color(red: 249 / 255, green: 245 / 255, blue: 253 / 255).opacity(0.93), in: RoundedRectangle(cornerRadius: 18))
+                        .overlay(RoundedRectangle(cornerRadius: 18).stroke(CiJingTheme.line.opacity(0.82)))
+                    }
                 }.padding(18)
             }
         }
@@ -324,6 +398,105 @@ private struct ProfileSettingsView: View {
         guard let draft else { return }
         saving = true
         Task { defer { saving = false }; do { try await store.saveProfile(draft); message = "修改已保存。" } catch { message = error.localizedDescription } }
+    }
+}
+
+private struct DeleteAccountView: View {
+    @EnvironmentObject private var store: AppStore
+    @EnvironmentObject private var api: SupabaseAPI
+    @State private var emailConfirmation = ""
+    @State private var deleting = false
+    @State private var showingFinalConfirmation = false
+    @State private var message: String?
+
+    private var matchesEmail: Bool {
+        emailConfirmation.trimmingCharacters(in: .whitespacesAndNewlines)
+            .localizedCaseInsensitiveCompare(api.currentEmail) == .orderedSame
+    }
+
+    var body: some View {
+        ZStack {
+            PaperBackground()
+            ScrollView {
+                VStack(alignment: .leading, spacing: 18) {
+                    VStack(alignment: .leading, spacing: 12) {
+                        Label("删除后无法恢复", systemImage: "exclamationmark.triangle.fill")
+                            .font(.headline)
+                            .foregroundStyle(.red)
+                        Text("你的账号、个人资料、词库、复习记录、AI 短文、阅读进度和其他云端学习数据都会被永久删除。")
+                            .font(CiJingTypography.body)
+                            .foregroundStyle(CiJingTheme.secondary)
+                            .lineSpacing(5)
+                    }
+                    .cijingCard(padding: 20)
+
+                    VStack(alignment: .leading, spacing: 10) {
+                        Text("请输入当前登录邮箱以确认")
+                            .font(.subheadline.bold())
+                        Text(api.currentEmail)
+                            .font(.caption)
+                            .foregroundStyle(CiJingTheme.secondary)
+                        TextField("当前登录邮箱", text: $emailConfirmation)
+                            .textInputAutocapitalization(.never)
+                            .keyboardType(.emailAddress)
+                            .autocorrectionDisabled()
+                            .padding(13)
+                            .background(CiJingTheme.purpleSoft.opacity(0.55), in: RoundedRectangle(cornerRadius: 12))
+                    }
+                    .cijingCard(padding: 20)
+
+                    Button(role: .destructive) {
+                        showingFinalConfirmation = true
+                    } label: {
+                        HStack {
+                            if deleting { ProgressView().tint(.white) }
+                            Text(deleting ? "正在删除…" : "永久删除账号")
+                        }
+                        .font(.headline)
+                        .foregroundStyle(.white)
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 15)
+                        .background(matchesEmail && !deleting ? Color.red : Color.gray.opacity(0.55), in: RoundedRectangle(cornerRadius: 15))
+                    }
+                    .buttonStyle(.plain)
+                    .disabled(!matchesEmail || deleting)
+
+                    Link(destination: AppLinks.support) {
+                        Label("删除前需要帮助？访问支持页面", systemImage: "questionmark.circle")
+                            .font(.subheadline)
+                            .foregroundStyle(CiJingTheme.purple)
+                            .frame(maxWidth: .infinity)
+                    }
+                }
+                .padding(18)
+            }
+        }
+        .navigationTitle("删除账号")
+        .navigationBarTitleDisplayMode(.inline)
+        .confirmationDialog("确定永久删除账号？", isPresented: $showingFinalConfirmation, titleVisibility: .visible) {
+            Button("永久删除", role: .destructive) { deleteAccount() }
+            Button("取消", role: .cancel) {}
+        } message: {
+            Text("此操作无法撤销，所有账号及学习数据都将被删除。")
+        }
+        .alert("删除账号", isPresented: Binding(get: { message != nil }, set: { if !$0 { message = nil } })) {
+            Button("知道了") { message = nil }
+        } message: {
+            Text(message ?? "")
+        }
+    }
+
+    private func deleteAccount() {
+        deleting = true
+        Task {
+            do {
+                try await api.deleteAccount()
+                store.clearSessionData()
+            } catch {
+                message = "删除失败：\(error.localizedDescription)"
+            }
+            deleting = false
+        }
     }
 }
 
@@ -348,13 +521,53 @@ private struct ReadingPreferenceView: View {
 }
 
 private enum LegalDocument: String, CaseIterable, Identifiable {
-    case privacy = "隐私政策"
-    case terms = "用户协议"
+    case legalAndPrivacy = "法律信息及隐私管理"
     case collection = "个人信息收集清单"
-    case sharing = "第三方信息共享清单"
+    case localSharing = "地方信息数据共享"
+    case summary = "隐私政策摘要"
     var id: String { rawValue }
-    var mark: String { switch self { case .privacy: "隐"; case .terms: "约"; case .collection: "单"; case .sharing: "享" } }
-    var subtitle: String { switch self { case .privacy: "了解我们如何保护你的数据"; case .terms: "使用词鲸背单词前请仔细阅读"; case .collection: "查看信息类型、用途与范围"; case .sharing: "查看 SDK 与共享说明" } }
+    var mark: String { switch self { case .legalAndPrivacy: "法"; case .collection: "集"; case .localSharing: "享"; case .summary: "摘" } }
+    var subtitle: String {
+        switch self {
+        case .legalAndPrivacy: "管理数据权利并查看法律信息"
+        case .collection: "查看信息类型、场景、用途与范围"
+        case .localSharing: "了解数据共享对象、目的与边界"
+        case .summary: "快速了解我们如何保护你的信息"
+        }
+    }
+
+    var sections: [(String, String)] {
+        switch self {
+        case .legalAndPrivacy:
+            return [
+                ("适用范围", "本说明适用于词鲸背单词 iOS App 与配套浏览器扩展。我们遵循合法、正当、必要和诚信原则处理个人信息。"),
+                ("你的数据权利", "你可以访问、更正、删除学习数据，撤回非必要授权，或申请注销账号。设备的麦克风与语音识别权限可随时在系统设置中关闭。"),
+                ("数据安全与保存", "账号、词库、复习进度和阅读历史保存在受访问控制保护的云端；不同用户的数据通过行级权限隔离。仅在实现功能所需期限内保存信息。"),
+                ("未成年人保护", "未满十四周岁的用户应在监护人同意和指导下使用。若发现未经同意处理了儿童个人信息，我们会及时删除。")
+            ]
+        case .collection:
+            return [
+                ("账号信息", "收集邮箱地址，用于注册、登录、找回账号和保障账号安全。"),
+                ("学习与内容信息", "收集收藏单词、查询上下文、笔记、复习结果、学习偏好、AI 短文及阅读进度，用于提供词库、个性化阅读和间隔复习。"),
+                ("麦克风与语音识别", "仅在你主动使用跟读功能时请求系统权限，用于生成本次朗读的文字和准确度反馈；不会在后台持续录音。"),
+                ("设备与诊断信息", "网络请求可能包含 IP 地址、设备系统版本和必要日志，用于保障服务安全与排查故障。第一版不接入广告追踪。")
+            ]
+        case .localSharing:
+            return [
+                ("云服务", "学习数据存储和账号认证由 Supabase 提供，仅为完成登录、同步和数据保存而处理必要信息。"),
+                ("AI 内容生成", "生成词义解释或个性化短文时，会向 OpenRouter 传输必要的目标单词及相关上下文；不会传输你的密码。"),
+                ("系统能力", "朗读使用苹果设备的语音合成能力；跟读识别由系统语音识别能力提供，具体处理方式同时受设备系统设置约束。"),
+                ("地方或公共机构", "除非法律法规要求、司法或行政机关依法提出，或为保护用户与公众的重大合法权益，我们不会向地方机构共享个人信息。")
+            ]
+        case .summary:
+            return [
+                ("我们收集什么", "仅收集账号登录、词库同步、AI 学习、复习记录和你主动开启的跟读功能所必需的信息。"),
+                ("我们为什么收集", "用于跨端同步词库、生成个性化短文、安排复习计划、提供发音与跟读反馈，以及保障服务安全。"),
+                ("你可以做什么", "你可以关闭麦克风或语音识别权限，清理本机缓存，并联系我们访问、更正、导出或删除个人信息。"),
+                ("重要承诺", "我们不出售个人信息，不使用第三方广告追踪 SDK，不会把密码或无关个人资料发送给 AI 服务。")
+            ]
+        }
+    }
 }
 
 private struct LegalDocumentView: View {
@@ -367,25 +580,125 @@ private struct LegalDocumentView: View {
                     Text("更新日期：2026 年 7 月 20 日\n生效日期：2026 年 7 月 20 日").font(.caption2).foregroundStyle(CiJingTheme.secondary).lineSpacing(4)
                     VStack(alignment: .leading, spacing: 18) {
                         Text(document.rawValue).font(.system(size: 23, weight: .bold, design: .rounded))
+                        ForEach(Array(document.sections.enumerated()), id: \.offset) { index, section in
+                            Divider()
+                            LegalSection(title: "\(index + 1). \(section.0)", copy: section.1)
+                        }
                         Divider()
-                        LegalSection(title: "1. 我们如何处理信息", copy: firstCopy)
-                        Divider()
-                        LegalSection(title: "2. 你的权利与选择", copy: secondCopy)
-                        Divider()
-                        LegalSection(title: "联系我们", copy: "如有疑问，可通过“设置－帮助与反馈”联系我们。")
+                        VStack(alignment: .leading, spacing: 11) {
+                            Text("联系我们").font(.subheadline.bold())
+                            Text("如需行使个人信息权利、申请删除数据或反馈隐私问题，可通过以下渠道联系我们。")
+                                .font(.system(size: 12)).foregroundStyle(Color(red: 110 / 255, green: 101 / 255, blue: 115 / 255)).lineSpacing(6)
+                            Link("隐私政策网页", destination: AppLinks.privacy)
+                            Link("支持与帮助", destination: AppLinks.support)
+                            Link("zdjoey@126.com", destination: AppLinks.contact)
+                        }
+                        .font(.subheadline.bold())
+                        .foregroundStyle(CiJingTheme.purple)
                     }.cijingCard(padding: 22)
                 }.padding(18)
             }
         }.navigationTitle(document.rawValue).navigationBarTitleDisplayMode(.inline)
     }
-    private var firstCopy: String { document == .privacy ? "我们遵循最小必要原则处理收藏单词、学习进度与偏好设置。" : document.subtitle + "。" }
-    private var secondCopy: String { "你可以管理、导出或申请删除自己的学习数据。AI 生成内容仅用于语言学习。" }
 }
 
 private struct LegalSection: View {
     let title: String
     let copy: String
     var body: some View { VStack(alignment: .leading, spacing: 8) { Text(title).font(.subheadline.bold()); Text(copy).font(.system(size: 12)).foregroundStyle(Color(red: 110 / 255, green: 101 / 255, blue: 115 / 255)).lineSpacing(6) } }
+}
+
+private struct AboutCiJingView: View {
+    var body: some View {
+        ZStack {
+            PaperBackground()
+            ScrollView {
+                VStack(spacing: 18) {
+                    VStack(spacing: 12) {
+                        Image(systemName: "books.vertical.fill")
+                            .font(.system(size: 34, weight: .bold))
+                            .foregroundStyle(.white)
+                            .frame(width: 82, height: 82)
+                            .background(LinearGradient(colors: [CiJingTheme.purple, CiJingTheme.purpleDark], startPoint: .topLeading, endPoint: .bottomTrailing), in: RoundedRectangle(cornerRadius: 27))
+                        Text("词鲸背单词").font(.title2.bold())
+                        Text("版本 \(AppMetadata.version)（\(AppMetadata.build)）")
+                            .font(.caption).foregroundStyle(CiJingTheme.secondary)
+                    }
+                    .frame(maxWidth: .infinity)
+                    .cijingCard(padding: 24)
+
+                    VStack(alignment: .leading, spacing: 14) {
+                        Text("在真实语境里，把遇见的单词变成真正会用的语言。")
+                            .font(.system(size: 20, weight: .bold, design: .rounded))
+                        Text("词鲸把跨端查词、个人词库、AI 分级短文与间隔复习连成一个学习闭环。每一次收藏都会成为下一次阅读和练习的素材。")
+                            .font(CiJingTypography.body).foregroundStyle(CiJingTheme.secondary).lineSpacing(5)
+                        Link(destination: URL(string: "https://github.com/KapiYue/cijing-app")!) {
+                            Label("访问 GitHub 项目", systemImage: "arrow.up.right.square")
+                                .font(.subheadline.bold()).foregroundStyle(CiJingTheme.purple)
+                        }
+                    }.cijingCard(padding: 22)
+
+                    VStack(spacing: 0) {
+                        Link(destination: AppLinks.privacy) {
+                            SettingsActionRow(icon: "hand.raised", title: "隐私政策", subtitle: "cijing.joy-coder.com")
+                        }
+                        SettingsDivider()
+                        Link(destination: AppLinks.support) {
+                            SettingsActionRow(icon: "questionmark.circle", title: "支持与帮助", subtitle: "常见问题与账号删除说明")
+                        }
+                        SettingsDivider()
+                        Link(destination: AppLinks.contact) {
+                            SettingsActionRow(icon: "envelope", title: "联系我们", subtitle: "zdjoey@126.com")
+                        }
+                    }
+                    .buttonStyle(.plain)
+                    .background(Color(red: 249 / 255, green: 245 / 255, blue: 253 / 255).opacity(0.93), in: RoundedRectangle(cornerRadius: 22))
+                    .overlay(RoundedRectangle(cornerRadius: 22).stroke(CiJingTheme.line.opacity(0.82)))
+                    .clipShape(RoundedRectangle(cornerRadius: 22))
+                }.padding(18)
+            }
+        }
+        .navigationTitle("关于词鲸")
+        .navigationBarTitleDisplayMode(.inline)
+    }
+}
+
+private enum AppMetadata {
+    static var version: String { Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "1.0" }
+    static var build: String { Bundle.main.object(forInfoDictionaryKey: "CFBundleVersion") as? String ?? "1" }
+    static var bundleIdentifier: String { Bundle.main.bundleIdentifier ?? "com.joy-coder.cijingapp" }
+}
+
+private struct AppStoreLookupResponse: Decodable {
+    let results: [Release]
+    struct Release: Decodable { let version: String }
+}
+
+private enum AppCache {
+    private static var cacheDirectory: URL? { FileManager.default.urls(for: .cachesDirectory, in: .userDomainMask).first }
+
+    static var byteCount: Int64 {
+        let urlCacheBytes = Int64(URLCache.shared.currentDiskUsage + URLCache.shared.currentMemoryUsage)
+        guard let cacheDirectory,
+              let enumerator = FileManager.default.enumerator(at: cacheDirectory, includingPropertiesForKeys: [.fileSizeKey], options: [.skipsHiddenFiles]) else {
+            return urlCacheBytes
+        }
+        let fileBytes = enumerator.compactMap { item -> Int? in
+            guard let url = item as? URL else { return nil }
+            return try? url.resourceValues(forKeys: [.fileSizeKey]).fileSize
+        }.reduce(0, +)
+        return max(urlCacheBytes, Int64(fileBytes))
+    }
+
+    static var formattedSize: String { String(format: "%.2fM", Double(byteCount) / 1_048_576) }
+
+    static func clear() throws {
+        URLCache.shared.removeAllCachedResponses()
+        guard let cacheDirectory else { return }
+        for item in try FileManager.default.contentsOfDirectory(at: cacheDirectory, includingPropertiesForKeys: nil) {
+            try FileManager.default.removeItem(at: item)
+        }
+    }
 }
 
 #if DEBUG

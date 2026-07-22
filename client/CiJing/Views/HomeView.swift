@@ -31,19 +31,18 @@ struct HomeView: View {
 
                     if store.plan.completedToday { completedPlanCard } else { startCard }
 
-                    SectionHeading(title: store.plan.completedToday ? "探索" : "最近的短文", detail: store.plan.completedToday ? "换一种方式记住" : nil)
+                    SectionHeading(title: "最近的短文", detail: store.recentReadings.isEmpty ? nil : "已保存 \(store.recentReadings.count) 篇")
                         .padding(.top, 25)
                         .padding(.bottom, 13)
-
-                    if store.plan.completedToday { exploreGrid } else { recentEmpty }
+                    recentReading
 
                     if store.plan.completedToday {
-                        SectionHeading(title: "最近的短文", detail: store.recentReadings.isEmpty ? nil : "查看全部")
+                        SectionHeading(title: "探索", detail: "换一种方式记住")
                             .padding(.top, 25)
                             .padding(.bottom, 13)
+                        exploreGrid
                     }
 
-                    recentReading
                     tipCard
                         .padding(.top, 14)
                 }
@@ -108,7 +107,7 @@ struct HomeView: View {
                     .background(Color(red: 1, green: 241 / 255, blue: 228 / 255), in: RoundedRectangle(cornerRadius: 12))
             }
             HStack(spacing: 8) {
-                PlanMetric(number: "\(max(store.plan.learnedCount, store.plan.newSuggested))", label: "新词", tint: Color(red: 238 / 255, green: 228 / 255, blue: 251 / 255))
+                PlanMetric(number: "\(store.plan.newSuggested)", label: "新词", tint: Color(red: 238 / 255, green: 228 / 255, blue: 251 / 255))
                 PlanMetric(number: "\(store.plan.practiceToday)", label: "练习", tint: Color(red: 243 / 255, green: 232 / 255, blue: 248 / 255))
                 PlanMetric(number: "\(Int(store.plan.progress * 100))%", label: "完成", tint: Color(red: 234 / 255, green: 223 / 255, blue: 245 / 255))
             }
@@ -140,15 +139,15 @@ struct HomeView: View {
                 .frame(width: 40, height: 40)
                 .background(Color(red: 1, green: 241 / 255, blue: 228 / 255), in: RoundedRectangle(cornerRadius: 13))
             VStack(alignment: .leading, spacing: 3) {
-                Text("还没有完成的短文").font(CiJingTypography.rowTitle).foregroundStyle(CiJingTheme.secondary)
-                Text("今天的第一篇，会在这里出现").font(CiJingTypography.supporting).foregroundStyle(CiJingTheme.secondary)
+                Text("还没有生成短文").font(CiJingTypography.rowTitle).foregroundStyle(CiJingTheme.secondary)
+                Text("生成后的短文会长期保存在这里").font(CiJingTypography.supporting).foregroundStyle(CiJingTheme.secondary)
             }
             Spacer()
         }.cijingCard()
     }
 
     @ViewBuilder private var recentReading: some View {
-        if store.plan.completedToday, let reading = store.recentReadings.first {
+        if let reading = store.recentReadings.first {
             NavigationLink { ReadingSessionView(reading: reading) } label: {
                 HStack(spacing: 13) {
                     Image(systemName: "book.closed.fill")
@@ -164,7 +163,7 @@ struct HomeView: View {
                     Image(systemName: "chevron.right").foregroundStyle(CiJingTheme.secondary.opacity(0.55))
                 }.cijingCard()
             }.buttonStyle(.plain)
-        } else if store.plan.completedToday {
+        } else {
             recentEmpty
         }
     }

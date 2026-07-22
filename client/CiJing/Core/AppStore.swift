@@ -27,7 +27,13 @@ final class AppStore: ObservableObject {
             async let fetchedActivity = api.activity()
             async let fetchedProfile = api.profile()
             (plan, words, recentReadings, activity, profile) = try await (fetchedPlan, fetchedWords, readings, fetchedActivity, fetchedProfile)
-        } catch { errorMessage = error.localizedDescription }
+            errorMessage = nil
+        } catch {
+            // Reading history is valuable on its own. Keep it visible even if an
+            // unrelated plan/profile request is temporarily unavailable.
+            if let readings = try? await api.recentReadings() { recentReadings = readings }
+            errorMessage = error.localizedDescription
+        }
     }
 
     /// Refreshes the library independently so an unrelated home/profile request cannot leave it stale.
@@ -122,6 +128,16 @@ final class AppStore: ObservableObject {
         await refreshPlan()
     }
 
+    func clearSessionData() {
+        plan = DailyPlan()
+        words = []
+        recentReadings = []
+        activity = []
+        profile = nil
+        currentReading = nil
+        errorMessage = nil
+    }
+
     private func refreshPlan() async { if let next = try? await api.dailyPlan() { plan = next } }
     private func replace(_ word: Word) {
         if let index = words.firstIndex(where: { $0.id == word.id }) { words[index] = word } else { words.insert(word, at: 0) }
@@ -129,16 +145,18 @@ final class AppStore: ObservableObject {
 
     func loadPreviewData() {
         plan.completedToday = true
-        plan.streakDays = 7
-        plan.learnedCount = 8
-        plan.masteredCount = 5
-        plan.reviewedToday = 12
+        plan.streakDays = 18
+        plan.learnedCount = 146
+        plan.masteredCount = 68
+        plan.reviewedToday = 24
         plan.practiceToday = 12
-        plan.readingToday = 1
+        plan.readingToday = 2
+        plan.reviewDue = 16
         plan.newSuggested = 8
         profile = Profile(id: UUID(), displayName: "Qing", dailyNewGoal: 8, dailyReviewGoal: 20, preferredDifficulty: "intermediate", preferredTheme: "daily_life", preferredStyle: "story", timezone: "Asia/Shanghai")
         words = PreviewContent.words
-        recentReadings = [PreviewContent.reading(words: words)]
+        recentReadings = PreviewContent.readings(words: words)
+        activity = PreviewContent.activity
     }
 }
 
@@ -170,14 +188,50 @@ private enum PreviewContent {
         }
     }
 
-    static func reading(words: [Word]) -> ReadingSession {
+    static func readings(words: [Word]) -> [ReadingSession] {
         let now = ISO8601DateFormatter().string(from: .now)
-        return ReadingSession(
-            id: UUID(), userId: nil, title: "A Quiet Kind of Progress", subtitle: "一种安静的进步",
-            theme: "daily_life", style: "story", difficulty: "intermediate", targetWordIds: words.map(\.id), targetTerms: words.map(\.term),
-            paragraphs: [ReadingParagraph(english: "Small daily efforts can outperform sudden bursts of motivation.", chinese: "每天微小的努力能够胜过一时的热情。")],
-            estimatedMinutes: 2, cacheKey: nil, isCached: true, translationsVisible: false, completedAt: now, createdAt: now
-        )
+        let earlier = ISO8601DateFormatter().string(from: .now.addingTimeInterval(-86_400))
+        let oldest = ISO8601DateFormatter().string(from: .now.addingTimeInterval(-172_800))
+        return [
+            ReadingSession(
+                id: UUID(), userId: nil, title: "A Quiet Kind of Progress", subtitle: "一种安静的进步",
+                theme: "daily_life", style: "story", difficulty: "intermediate", targetWordIds: words.map(\.id), targetTerms: words.map(\.term),
+                paragraphs: [
+                    ReadingParagraph(english: "Small daily efforts can outperform sudden bursts of motivation. Mei stopped trying to estimate how quickly her English would improve and focused on one thoughtful page each morning.", chinese: "每天微小的努力能够胜过一时的热情。小梅不再估算英语能多快进步，而是专注于每天清晨认真读完一页。"),
+                    ReadingParagraph(english: "This independent routine became an investment in her future. Automated reminders helped, but the real change came from choosing a sustainable alternative to cramming.", chinese: "这个独立的习惯成了她对未来的投资。自动提醒有所帮助，但真正的改变来自她选择了可持续的学习方式，而不是突击。"),
+                    ReadingParagraph(english: "Weeks later, she could defend her ideas with clearer words and a long-horizon perspective. Her progress was quiet, but unmistakable.", chinese: "几周后，她能用更清晰的词语表达并捍卫自己的观点，也拥有了更长远的视角。她的进步很安静，却清晰可见。")
+                ],
+                estimatedMinutes: 4, cacheKey: nil, isCached: true, translationsVisible: false, completedAt: now, createdAt: now
+            ),
+            ReadingSession(
+                id: UUID(), userId: nil, title: "The Train Beyond the Rain", subtitle: "驶出雨幕的列车",
+                theme: "travel", style: "story", difficulty: "upper_intermediate", targetWordIds: Array(words.prefix(6).map(\.id)), targetTerms: Array(words.prefix(6).map(\.term)),
+                paragraphs: [ReadingParagraph(english: "A delayed train gave Lina an unexpected afternoon in a mountain town. Instead of treating it as wasted time, she wandered into a family café and listened to the stories around her.", chinese: "晚点的列车让莉娜意外地在山城多停留了一个下午。她没有把这当作浪费，而是走进一家家庭咖啡馆，倾听身边的故事。")],
+                estimatedMinutes: 5, cacheKey: nil, isCached: true, translationsVisible: false, completedAt: earlier, createdAt: earlier
+            ),
+            ReadingSession(
+                id: UUID(), userId: nil, title: "Designing Time for Deep Work", subtitle: "为深度工作设计时间",
+                theme: "workplace", style: "article", difficulty: "advanced", targetWordIds: Array(words.suffix(5).map(\.id)), targetTerms: Array(words.suffix(5).map(\.term)),
+                paragraphs: [ReadingParagraph(english: "Protecting attention is less about perfect discipline than deliberate design. A team can reduce interruptions by agreeing on quiet hours and making communication expectations explicit.", chinese: "保护注意力与其说依赖完美的自律，不如说依赖有意识的设计。团队可以约定安静时段，并明确沟通预期，以减少干扰。")],
+                estimatedMinutes: 6, cacheKey: nil, isCached: true, translationsVisible: false, completedAt: oldest, createdAt: oldest
+            )
+        ]
+    }
+
+    static var activity: [DailyActivity] {
+        let calendar = Calendar(identifier: .gregorian)
+        let formatter = DateFormatter()
+        formatter.calendar = calendar
+        formatter.locale = Locale(identifier: "en_US_POSIX")
+        formatter.dateFormat = "yyyy-MM-dd"
+        return (0..<18).map { offset in
+            let date = calendar.date(byAdding: .day, value: -offset, to: .now) ?? .now
+            return DailyActivity(
+                activityDate: formatter.string(from: date), learnedCount: 5 + (offset % 5),
+                reviewedCount: 14 + (offset % 8), readingCount: offset % 3 == 0 ? 2 : 1,
+                practiceCount: 8 + (offset % 7), minutes: 18 + (offset % 6) * 4, completed: true
+            )
+        }
     }
 }
 

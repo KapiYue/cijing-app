@@ -24,7 +24,7 @@ const requiredTables = [
   "practice_attempts", "voice_attempts", "daily_activity", "lexicon_cache",
 ];
 const requiredRPCs = ["save_word", "apply_review", "get_daily_plan", "get_learning_targets", "mark_reading_complete"];
-const requiredFunctions = ["lookup-word", "generate-reading", "explain-reading-word"];
+const requiredFunctions = ["lookup-word", "generate-reading", "explain-reading-word", "delete-account"];
 
 const residueQuery = new URLSearchParams({
   select: "id",

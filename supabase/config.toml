@@ -47,3 +47,6 @@ verify_jwt = false
 
 [functions.explain-reading-word]
 verify_jwt = false
+
+[functions.delete-account]
+verify_jwt = false

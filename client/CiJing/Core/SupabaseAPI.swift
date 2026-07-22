@@ -75,6 +75,18 @@ final class SupabaseAPI: ObservableObject {
         session = nil; KeychainStore.clear()
     }
 
+    func deleteAccount() async throws {
+        let token = try await validToken()
+        _ = try await sendData(
+            path: "/functions/v1/delete-account",
+            method: "POST",
+            body: try encoder.encode(EmptyBody()),
+            token: token
+        )
+        session = nil
+        KeychainStore.clear()
+    }
+
     private func persist(_ value: AuthSession) {
         session = value
         if let data = try? encoder.encode(value) { KeychainStore.save(data) }

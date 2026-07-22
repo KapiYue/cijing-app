@@ -33,6 +33,23 @@ struct LookupView: View {
             }
         }
         .toolbar(.hidden, for: .navigationBar)
+        .onAppear {
+            guard ProcessInfo.processInfo.arguments.contains("-ui-preview"), result == nil else { return }
+            query = "resilient"
+            result = LookupResult(
+                term: "resilient",
+                lemma: "resilient",
+                phonetic: "rɪˈzɪliənt",
+                audioUrl: nil,
+                parts: [LexiconPart(partOfSpeech: "adj.", meaning: "有韧性的；能迅速恢复的")],
+                primaryMeaning: "有韧性的；能迅速恢复的",
+                contextualMeaning: "在压力或变化后仍能恢复并继续前进",
+                englishDefinition: "Able to recover quickly from difficulty, change, or pressure.",
+                exampleEnglish: "The resilient learner returned to the lesson with fresh curiosity.",
+                exampleChinese: "这位坚韧的学习者带着新的好奇心回到了课堂。",
+                sentence: "The resilient learner returned to the lesson with fresh curiosity."
+            )
+        }
         .alert("暂时无法查询", isPresented: Binding(get: { errorMessage != nil }, set: { if !$0 { errorMessage = nil } })) {
             Button("知道了") { errorMessage = nil }
         } message: { Text(errorMessage ?? "") }
