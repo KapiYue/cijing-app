@@ -4,7 +4,7 @@ set -euo pipefail
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 APP_PATH="/tmp/cijing-derived/Build/Products/Debug-iphonesimulator/词鲸背单词.app"
 BUNDLE_ID="com.joy-coder.cijingapp"
-IPHONE_ID="${CIJING_IPHONE_SIMULATOR_ID:-6BAB82D2-9F6A-4CAF-8E67-81C71A248C8D}"
+IPHONE_ID="${CIJING_IPHONE_SIMULATOR_ID:-EBE81B35-E9F3-46CD-9209-F8F02C924C0A}"
 IPAD_ID="${CIJING_IPAD_SIMULATOR_ID:-D1547B6D-B368-425C-8F81-7BEE5B76809C}"
 OUTPUT_ROOT="$ROOT_DIR/docs/assets/app-store-connect/zh-Hans"
 
@@ -33,7 +33,22 @@ capture_device() {
   done
 }
 
-capture_device "$IPHONE_ID" "$OUTPUT_ROOT/iphone-6.9"
+capture_learning_flow() {
+  local device_id="$1"
+  local output_dir="$2"
+  local flows=(reading-setup reading practice shadowing progress)
+  local labels=(05-reading-setup 06-reading 07-practice 08-shadowing 09-progress)
+
+  for index in "${!flows[@]}"; do
+    xcrun simctl terminate "$device_id" "$BUNDLE_ID" >/dev/null 2>&1 || true
+    xcrun simctl launch "$device_id" "$BUNDLE_ID" -ui-preview -ui-flow "${flows[$index]}" >/dev/null
+    sleep 2
+    xcrun simctl io "$device_id" screenshot --type=jpeg --mask=black "$output_dir/${labels[$index]}.jpg"
+  done
+}
+
+capture_device "$IPHONE_ID" "$OUTPUT_ROOT/iphone-6.5"
+capture_learning_flow "$IPHONE_ID" "$OUTPUT_ROOT/iphone-6.5"
 capture_device "$IPAD_ID" "$OUTPUT_ROOT/ipad-13"
 
 echo "Captured App Store screenshots in $OUTPUT_ROOT"

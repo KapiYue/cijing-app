@@ -106,6 +106,7 @@ struct Profile: Codable {
     var preferredDifficulty: String
     var preferredTheme: String
     var preferredStyle: String
+    var preferredVoiceIdentifier: String
     var timezone: String
 }
 

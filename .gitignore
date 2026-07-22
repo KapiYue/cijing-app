@@ -16,3 +16,9 @@ client/*.xcodeproj/xcuserdata/
 server/venv/
 server/__pycache__/
 *.xcuserstate
+
+# Local prototypes and App Store submission materials (keep on disk only)
+/deliverables/
+/docs/APP_STORE_CHECKLIST_zh.md
+/docs/APP_STORE_METADATA_zh.md
+/docs/assets/app-store-connect/

@@ -9,6 +9,7 @@ final class AppStore: ObservableObject {
     @Published var profile: Profile?
     @Published var currentReading: ReadingSession?
     @Published var isLoading = false
+    @Published private(set) var hasLoadedAccountData = false
     @Published var errorMessage: String?
 
     let api: SupabaseAPI
@@ -19,21 +20,45 @@ final class AppStore: ObservableObject {
 
     func refreshAll() async {
         guard api.isSignedIn else { return }
-        isLoading = true; defer { isLoading = false }
-        do {
-            async let fetchedPlan = api.dailyPlan()
-            async let fetchedWords = api.words()
-            async let readings = api.recentReadings()
-            async let fetchedActivity = api.activity()
-            async let fetchedProfile = api.profile()
-            (plan, words, recentReadings, activity, profile) = try await (fetchedPlan, fetchedWords, readings, fetchedActivity, fetchedProfile)
-            errorMessage = nil
-        } catch {
-            // Reading history is valuable on its own. Keep it visible even if an
-            // unrelated plan/profile request is temporarily unavailable.
-            if let readings = try? await api.recentReadings() { recentReadings = readings }
-            errorMessage = error.localizedDescription
+        isLoading = true
+        defer {
+            isLoading = false
+            hasLoadedAccountData = true
         }
+        async let planResult = fetchResult { try await api.dailyPlan() }
+        async let wordsResult = fetchResult { try await api.words() }
+        async let readingsResult = fetchResult { try await api.recentReadings() }
+        async let activityResult = fetchResult { try await api.activity() }
+        async let profileResult = fetchResult { try await api.profile() }
+        let results = await (planResult, wordsResult, readingsResult, activityResult, profileResult)
+
+        var successfulRequests = 0
+        var firstError: Error?
+
+        switch results.0 {
+        case .success(let value): plan = value; successfulRequests += 1
+        case .failure(let error): firstError = firstError ?? error
+        }
+        switch results.1 {
+        case .success(let value): words = value; successfulRequests += 1
+        case .failure(let error): firstError = firstError ?? error
+        }
+        switch results.2 {
+        case .success(let value): recentReadings = value; successfulRequests += 1
+        case .failure(let error): firstError = firstError ?? error
+        }
+        switch results.3 {
+        case .success(let value): activity = value; successfulRequests += 1
+        case .failure(let error): firstError = firstError ?? error
+        }
+        switch results.4 {
+        case .success(let value): profile = value; applyAccountPreferences(); successfulRequests += 1
+        case .failure(let error): firstError = firstError ?? error
+        }
+
+        // 首页的词库、短文、计划和资料来自独立接口。只要其中一部分已成功，
+        // 就保留可用内容且不弹出阻断式错误；全部失败时才提示用户重试。
+        errorMessage = successfulRequests == 0 ? firstError?.localizedDescription : nil
     }
 
     /// Refreshes the library independently so an unrelated home/profile request cannot leave it stale.
@@ -125,6 +150,7 @@ final class AppStore: ObservableObject {
 
     func saveProfile(_ value: Profile) async throws {
         profile = try await api.updateProfile(value)
+        applyAccountPreferences()
         await refreshPlan()
     }
 
@@ -135,10 +161,16 @@ final class AppStore: ObservableObject {
         activity = []
         profile = nil
         currentReading = nil
+        hasLoadedAccountData = false
         errorMessage = nil
+        UserDefaults.standard.removeObject(forKey: SpeechVoicePreference.storageKey)
     }
 
     private func refreshPlan() async { if let next = try? await api.dailyPlan() { plan = next } }
+    private func fetchResult<T>(_ operation: () async throws -> T) async -> Result<T, Error> {
+        do { return .success(try await operation()) }
+        catch { return .failure(error) }
+    }
     private func replace(_ word: Word) {
         if let index = words.firstIndex(where: { $0.id == word.id }) { words[index] = word } else { words.insert(word, at: 0) }
     }
@@ -153,10 +185,15 @@ final class AppStore: ObservableObject {
         plan.readingToday = 2
         plan.reviewDue = 16
         plan.newSuggested = 8
-        profile = Profile(id: UUID(), displayName: "Qing", dailyNewGoal: 8, dailyReviewGoal: 20, preferredDifficulty: "intermediate", preferredTheme: "daily_life", preferredStyle: "story", timezone: "Asia/Shanghai")
+        profile = Profile(id: UUID(), displayName: "Qing", dailyNewGoal: 8, dailyReviewGoal: 20, preferredDifficulty: "intermediate", preferredTheme: "daily_life", preferredStyle: "story", preferredVoiceIdentifier: "", timezone: "Asia/Shanghai")
         words = PreviewContent.words
         recentReadings = PreviewContent.readings(words: words)
         activity = PreviewContent.activity
+        hasLoadedAccountData = true
+    }
+
+    private func applyAccountPreferences() {
+        SpeechVoicePreference.setSelectedIdentifier(profile?.preferredVoiceIdentifier ?? "")
     }
 }
 
@@ -201,7 +238,7 @@ private enum PreviewContent {
                     ReadingParagraph(english: "This independent routine became an investment in her future. Automated reminders helped, but the real change came from choosing a sustainable alternative to cramming.", chinese: "这个独立的习惯成了她对未来的投资。自动提醒有所帮助，但真正的改变来自她选择了可持续的学习方式，而不是突击。"),
                     ReadingParagraph(english: "Weeks later, she could defend her ideas with clearer words and a long-horizon perspective. Her progress was quiet, but unmistakable.", chinese: "几周后，她能用更清晰的词语表达并捍卫自己的观点，也拥有了更长远的视角。她的进步很安静，却清晰可见。")
                 ],
-                estimatedMinutes: 4, cacheKey: nil, isCached: true, translationsVisible: false, completedAt: now, createdAt: now
+                estimatedMinutes: 4, cacheKey: nil, isCached: true, translationsVisible: true, completedAt: now, createdAt: now
             ),
             ReadingSession(
                 id: UUID(), userId: nil, title: "The Train Beyond the Rain", subtitle: "驶出雨幕的列车",

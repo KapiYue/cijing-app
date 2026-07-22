@@ -2,7 +2,7 @@
 
 本目录准备了 App Store Connect 使用的两个公开页面：
 
-- `/`：隐私政策，对应 `https://cijing.joy-coder.com/`
+- `/privacy`：隐私政策，对应 `https://cijing.joy-coder.com/privacy`（`/` 同时保留政策页面）
 - `/support`：支持中心，对应 `https://cijing.joy-coder.com/support`
 
 页面为纯静态 HTML/CSS，可部署到任意静态托管或当前备案主体的 Web 服务。上线前需要：

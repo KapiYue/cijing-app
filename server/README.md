@@ -1,6 +1,6 @@
 # 词鲸背单词 trusted server
 
-This folder mirrors the trusted-service boundary used by the `miaoji` project. The current learning APIs run as Supabase Edge Functions under `supabase/functions/`; this Flask service supplies deployment health/readiness endpoints and is the home for future privileged jobs that cannot run in a mobile client.
+This folder defines the trusted-service boundary for 词鲸背单词. The current learning APIs run as Supabase Edge Functions under `supabase/functions/`; this Flask service supplies deployment health/readiness endpoints and is the home for future privileged jobs that cannot run in a mobile client.
 
 Production secrets belong in the hosting platform's environment, never in Git or the iOS bundle.
 

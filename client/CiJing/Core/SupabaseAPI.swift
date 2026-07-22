@@ -167,7 +167,7 @@ final class SupabaseAPI: ObservableObject {
     }
 
     func updateProfile(_ profile: Profile) async throws -> Profile {
-        let body = try encoder.encode(ProfilePatch(displayName: profile.displayName, dailyNewGoal: profile.dailyNewGoal, dailyReviewGoal: profile.dailyReviewGoal, preferredDifficulty: profile.preferredDifficulty, preferredTheme: profile.preferredTheme, preferredStyle: profile.preferredStyle, timezone: profile.timezone))
+        let body = try encoder.encode(ProfilePatch(displayName: profile.displayName, dailyNewGoal: profile.dailyNewGoal, dailyReviewGoal: profile.dailyReviewGoal, preferredDifficulty: profile.preferredDifficulty, preferredTheme: profile.preferredTheme, preferredStyle: profile.preferredStyle, preferredVoiceIdentifier: profile.preferredVoiceIdentifier, timezone: profile.timezone))
         let rows: [Profile] = try await send(path: "/rest/v1/profiles?id=eq.\(profile.id.uuidString)", method: "PATCH", body: body, headers: ["Prefer": "return=representation"])
         guard let value = rows.first else { throw CiJingAPIError.invalidResponse }; return value
     }
@@ -250,4 +250,4 @@ private struct LookupBody: Codable { let word, context, sentence: String }
 private struct ExplainBody: Codable { let word, sentence: String }
 private struct ReviewBody: Codable { let pWordId: UUID; let pQuality: Int; let pExerciseType: String; let pResponseTimeMs: Int?; let pAnswer: String?; let pExpectedAnswer: String? }
 private struct CompleteBody: Codable { let pReadingId: UUID; let pMinutes: Int }
-private struct ProfilePatch: Codable { let displayName: String?; let dailyNewGoal, dailyReviewGoal: Int; let preferredDifficulty, preferredTheme, preferredStyle, timezone: String }
+private struct ProfilePatch: Codable { let displayName: String?; let dailyNewGoal, dailyReviewGoal: Int; let preferredDifficulty, preferredTheme, preferredStyle, preferredVoiceIdentifier, timezone: String }

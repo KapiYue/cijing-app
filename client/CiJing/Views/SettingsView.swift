@@ -2,8 +2,6 @@ import SwiftUI
 import AVFoundation
 
 private enum AppLinks {
-    static let privacy = URL(string: "https://cijing.joy-coder.com/")!
-    static let support = URL(string: "https://cijing.joy-coder.com/support")!
     static let contact = URL(string: "mailto:zdjoey@126.com")!
 }
 
@@ -135,10 +133,10 @@ struct SettingsView: View {
         return "\(ReadingOptions.label(for: profile.preferredStyle)) · \(ReadingOptions.label(for: profile.preferredDifficulty)) · 中篇"
     }
     private var selectedVoiceName: String {
-        guard !speechVoiceIdentifier.isEmpty,
-              let voice = AVSpeechSynthesisVoice(identifier: speechVoiceIdentifier) else {
-            return "自动优先增强音质（美式英语）"
+        if speechVoiceIdentifier.isEmpty, let voice = SpeechVoicePreference.defaultVoice {
+            return "\(voice.name) · \(voice.language)（默认）"
         }
+        guard let voice = AVSpeechSynthesisVoice(identifier: speechVoiceIdentifier) else { return "Samantha · en-US（默认）" }
         return "\(voice.name) · \(voice.language)"
     }
 
@@ -190,8 +188,11 @@ struct SettingsView: View {
 }
 
 private struct SpeechVoiceSettingsView: View {
-    @AppStorage(SpeechVoicePreference.storageKey) private var selectedIdentifier = ""
+    @EnvironmentObject private var store: AppStore
     @StateObject private var speech = SpeechService()
+    @State private var selectedIdentifier = ""
+    @State private var savingIdentifier: String?
+    @State private var message: String?
 
     private var voices: [AVSpeechSynthesisVoice] { SpeechVoicePreference.englishVoices }
 
@@ -202,12 +203,12 @@ private struct SpeechVoiceSettingsView: View {
                 VStack(alignment: .leading, spacing: 14) {
                     VStack(alignment: .leading, spacing: 7) {
                         Text("选择英文声音").font(.system(size: 24, weight: .bold, design: .rounded))
-                        Text("发音由苹果系统在本机合成，不会把朗读内容发送给大模型。自动模式会优先使用设备已安装的增强或高级美式英语声音。")
+                        Text("发音由苹果系统在本机合成，不会把朗读内容发送给大模型。选择后会保存到当前账号，并同步到所有登录设备。")
                             .font(.system(size: 13)).foregroundStyle(CiJingTheme.secondary).lineSpacing(4)
                     }
 
                     VStack(spacing: 0) {
-                        voiceRow(identifier: "", title: "自动选择最佳声音", subtitle: "优先增强 / 高级美式英语声音")
+                        voiceRow(identifier: "", title: "Samantha 美式英语（推荐）", subtitle: "默认优先使用清晰、自然的 Samantha；不可用时自动选择最佳美式声音")
                         ForEach(voices, id: \.identifier) { voice in
                             SettingsDivider()
                             voiceRow(identifier: voice.identifier, title: voice.name, subtitle: voiceSubtitle(voice))
@@ -222,13 +223,20 @@ private struct SpeechVoiceSettingsView: View {
         }
         .navigationTitle("英文发音")
         .navigationBarTitleDisplayMode(.inline)
+        .task {
+            if store.profile == nil { await store.refreshAll() }
+            selectedIdentifier = store.profile?.preferredVoiceIdentifier ?? ""
+            SpeechVoicePreference.setSelectedIdentifier(selectedIdentifier)
+        }
         .onDisappear { speech.stop() }
+        .alert("发音偏好", isPresented: Binding(get: { message != nil }, set: { if !$0 { message = nil } })) {
+            Button("知道了") { message = nil }
+        } message: { Text(message ?? "") }
     }
 
     private func voiceRow(identifier: String, title: String, subtitle: String) -> some View {
         Button {
-            selectedIdentifier = identifier
-            speech.speak("Resilient learners grow stronger every day.")
+            saveVoice(identifier)
         } label: {
             HStack(spacing: 12) {
                 SettingsIcon(systemName: "speaker.wave.2.fill")
@@ -237,13 +245,47 @@ private struct SpeechVoiceSettingsView: View {
                     Text(subtitle).font(CiJingTypography.supporting).foregroundStyle(CiJingTheme.secondary)
                 }
                 Spacer()
-                Image(systemName: selectedIdentifier == identifier ? "checkmark.circle.fill" : "circle")
-                    .font(.system(size: 20)).foregroundStyle(selectedIdentifier == identifier ? CiJingTheme.purple : CiJingTheme.line)
+                if savingIdentifier == identifier {
+                    ProgressView().tint(CiJingTheme.purple)
+                } else {
+                    Image(systemName: selectedIdentifier == identifier ? "checkmark.circle.fill" : "circle")
+                        .font(.system(size: 20)).foregroundStyle(selectedIdentifier == identifier ? CiJingTheme.purple : CiJingTheme.line)
+                }
             }
             .padding(.horizontal, 15).frame(minHeight: 61).contentShape(Rectangle())
         }
         .buttonStyle(.plain)
+        .disabled(savingIdentifier != nil)
         .accessibilityAddTraits(selectedIdentifier == identifier ? .isSelected : [])
+    }
+
+    private func saveVoice(_ identifier: String) {
+        guard savingIdentifier == nil else { return }
+        let previousIdentifier = selectedIdentifier
+        selectedIdentifier = identifier
+        savingIdentifier = identifier
+        SpeechVoicePreference.setSelectedIdentifier(identifier)
+        speech.speak("Resilient learners grow stronger every day.")
+
+        Task {
+            guard var profile = store.profile else {
+                selectedIdentifier = previousIdentifier
+                savingIdentifier = nil
+                SpeechVoicePreference.setSelectedIdentifier(previousIdentifier)
+                message = "账号资料尚未加载，请稍后重试。"
+                return
+            }
+            profile.preferredVoiceIdentifier = identifier
+            do {
+                try await store.saveProfile(profile)
+                message = "声音已保存到当前账号，所有登录设备会在同步后应用。若某台设备未安装该系统声音，将自动使用最佳可用英文声音。"
+            } catch {
+                selectedIdentifier = previousIdentifier
+                SpeechVoicePreference.setSelectedIdentifier(previousIdentifier)
+                message = "声音预览成功，但账号同步失败：\(error.localizedDescription)"
+            }
+            savingIdentifier = nil
+        }
     }
 
     private func voiceSubtitle(_ voice: AVSpeechSynthesisVoice) -> String {
@@ -461,12 +503,12 @@ private struct DeleteAccountView: View {
                     .buttonStyle(.plain)
                     .disabled(!matchesEmail || deleting)
 
-                    Link(destination: AppLinks.support) {
-                        Label("删除前需要帮助？访问支持页面", systemImage: "questionmark.circle")
+                    NavigationLink { AppSupportView() } label: {
+                        Label("删除前需要帮助？查看应用内支持", systemImage: "questionmark.circle")
                             .font(.subheadline)
                             .foregroundStyle(CiJingTheme.purple)
                             .frame(maxWidth: .infinity)
-                    }
+                    }.buttonStyle(.plain)
                 }
                 .padding(18)
             }
@@ -589,8 +631,12 @@ private struct LegalDocumentView: View {
                             Text("联系我们").font(.subheadline.bold())
                             Text("如需行使个人信息权利、申请删除数据或反馈隐私问题，可通过以下渠道联系我们。")
                                 .font(.system(size: 12)).foregroundStyle(Color(red: 110 / 255, green: 101 / 255, blue: 115 / 255)).lineSpacing(6)
-                            Link("隐私政策网页", destination: AppLinks.privacy)
-                            Link("支持与帮助", destination: AppLinks.support)
+                            if document != .legalAndPrivacy {
+                                NavigationLink("查看法律信息及隐私管理") {
+                                    LegalDocumentView(document: .legalAndPrivacy)
+                                }
+                            }
+                            NavigationLink("支持与帮助") { AppSupportView() }
                             Link("zdjoey@126.com", destination: AppLinks.contact)
                         }
                         .font(.subheadline.bold())
@@ -632,20 +678,16 @@ private struct AboutCiJingView: View {
                             .font(.system(size: 20, weight: .bold, design: .rounded))
                         Text("词鲸把跨端查词、个人词库、AI 分级短文与间隔复习连成一个学习闭环。每一次收藏都会成为下一次阅读和练习的素材。")
                             .font(CiJingTypography.body).foregroundStyle(CiJingTheme.secondary).lineSpacing(5)
-                        Link(destination: URL(string: "https://github.com/KapiYue/cijing-app")!) {
-                            Label("访问 GitHub 项目", systemImage: "arrow.up.right.square")
-                                .font(.subheadline.bold()).foregroundStyle(CiJingTheme.purple)
-                        }
                     }.cijingCard(padding: 22)
 
                     VStack(spacing: 0) {
-                        Link(destination: AppLinks.privacy) {
-                            SettingsActionRow(icon: "hand.raised", title: "隐私政策", subtitle: "cijing.joy-coder.com")
-                        }
+                        NavigationLink { LegalDocumentView(document: .legalAndPrivacy) } label: {
+                            SettingsActionRow(icon: "hand.raised", title: "隐私与法律", subtitle: "在应用内查看数据处理与用户权利")
+                        }.buttonStyle(.plain)
                         SettingsDivider()
-                        Link(destination: AppLinks.support) {
+                        NavigationLink { AppSupportView() } label: {
                             SettingsActionRow(icon: "questionmark.circle", title: "支持与帮助", subtitle: "常见问题与账号删除说明")
-                        }
+                        }.buttonStyle(.plain)
                         SettingsDivider()
                         Link(destination: AppLinks.contact) {
                             SettingsActionRow(icon: "envelope", title: "联系我们", subtitle: "zdjoey@126.com")
@@ -659,6 +701,48 @@ private struct AboutCiJingView: View {
             }
         }
         .navigationTitle("关于词鲸")
+        .navigationBarTitleDisplayMode(.inline)
+    }
+}
+
+private struct AppSupportView: View {
+    private let questions: [(String, String)] = [
+        ("以前生成的短文在哪里？", "登录同一账号后，首页会自动加载已保存的短文。下拉刷新即可重新同步，退出 App 或更换设备不会删除云端记录。"),
+        ("怎样更换英文发音？", "前往“设置 → 英文发音声音”选择并试听。保存成功后，同一账号的其他登录设备会在同步后应用；设备缺少对应系统声音时会自动使用最佳可用英文声音。"),
+        ("怎样删除账号？", "前往“设置 → 顶部个人资料 → 账户安全 → 删除账号”，二次确认后会永久删除账号及学习数据，此操作无法撤销。"),
+        ("无法登录或同步怎么办？", "请检查网络并确认登录邮箱一致，然后下拉刷新。问题持续时，请邮件提供 App 版本、设备系统版本和发生时间，请勿发送密码。")
+    ]
+
+    var body: some View {
+        ZStack {
+            PaperBackground()
+            ScrollView {
+                VStack(alignment: .leading, spacing: 14) {
+                    VStack(alignment: .leading, spacing: 9) {
+                        Text("词鲸支持中心").font(.system(size: 24, weight: .bold, design: .rounded))
+                        Text("常见问题可直接在应用内查看，不会跳转到尚未正式上线的外部网页。")
+                            .font(CiJingTypography.body).foregroundStyle(CiJingTheme.secondary).lineSpacing(5)
+                    }.cijingCard(padding: 22)
+
+                    ForEach(Array(questions.enumerated()), id: \.offset) { _, item in
+                        VStack(alignment: .leading, spacing: 8) {
+                            Text(item.0).font(.subheadline.bold())
+                            Text(item.1).font(.system(size: 12)).foregroundStyle(CiJingTheme.secondary).lineSpacing(6)
+                        }
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .cijingCard(padding: 18)
+                    }
+
+                    Link(destination: AppLinks.contact) {
+                        Label("邮件联系 zdjoey@126.com", systemImage: "envelope.fill")
+                            .frame(maxWidth: .infinity)
+                    }
+                    .buttonStyle(PrimaryButtonStyle())
+                }
+                .padding(18)
+            }
+        }
+        .navigationTitle("支持与帮助")
         .navigationBarTitleDisplayMode(.inline)
     }
 }

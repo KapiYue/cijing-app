@@ -42,7 +42,7 @@ enum CiJingTheme {
     )
 }
 
-/// Shared type scale. It follows the same readable 12–18 pt body hierarchy used by miaoji.
+/// Shared type scale for the app's readable 12–18 pt body hierarchy.
 enum CiJingTypography {
     static let pageTitle = Font.system(size: 30, weight: .bold, design: .rounded)
     static let sectionTitle = Font.system(size: 19, weight: .bold, design: .rounded)

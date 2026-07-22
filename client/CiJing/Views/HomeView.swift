@@ -7,56 +7,83 @@ struct HomeView: View {
     @State private var notice: String?
 
     private let exploreItems: [ExploreItem] = [
-        .init(title: "自由练习", subtitle: "六种模式随心练", badge: "6 种", icon: "arrow.up.right", tint: CiJingTheme.purple, soft: CiJingTheme.purpleSoft),
-        .init(title: "闪卡速刷", subtitle: "左右滑快速过词", badge: "12 词", icon: "rectangle.stack", tint: Color(red: 192 / 255, green: 106 / 255, blue: 165 / 255), soft: Color(red: 248 / 255, green: 234 / 255, blue: 244 / 255)),
-        .init(title: "语境回顾", subtitle: "回到遇见它的句子", badge: "3 组", icon: "text.quote", tint: Color(red: 84 / 255, green: 173 / 255, blue: 120 / 255), soft: Color(red: 233 / 255, green: 248 / 255, blue: 239 / 255)),
-        .init(title: "磨耳朵", subtitle: "免动手的听读复习", badge: "8 min", icon: "headphones", tint: Color(red: 220 / 255, green: 139 / 255, blue: 67 / 255), soft: Color(red: 1, green: 241 / 255, blue: 228 / 255)),
-        .init(title: "错题本", subtitle: "逐个攻克易错词", badge: "3 题", icon: "exclamationmark", tint: CiJingTheme.danger, soft: Color(red: 252 / 255, green: 236 / 255, blue: 239 / 255)),
-        .init(title: "学习统计", subtitle: "看见每天的进步", badge: "+18%", icon: "chart.bar", tint: Color(red: 173 / 255, green: 99 / 255, blue: 180 / 255), soft: Color(red: 246 / 255, green: 234 / 255, blue: 247 / 255)),
-        .init(title: "成就", subtitle: "收藏你的学习时刻", badge: "1 枚", icon: "medal", tint: Color(red: 217 / 255, green: 155 / 255, blue: 55 / 255), soft: Color(red: 1, green: 246 / 255, blue: 223 / 255)),
-        .init(title: "AI 角色对话", subtitle: "把新词真正说出来", badge: "NEW", icon: "sparkles", tint: Color(red: 93 / 255, green: 143 / 255, blue: 201 / 255), soft: Color(red: 234 / 255, green: 243 / 255, blue: 251 / 255))
+        .init(destination: .readingSetup, title: "生成短文", subtitle: "把弱词写进故事", badge: "AI", icon: "wand.and.stars", tint: CiJingTheme.purple, soft: CiJingTheme.purpleSoft),
+        .init(destination: .practice, title: "巩固练习", subtitle: "读完立即练一轮", badge: "12 题", icon: "checkmark.circle", tint: Color(red: 192 / 255, green: 106 / 255, blue: 165 / 255), soft: Color(red: 248 / 255, green: 234 / 255, blue: 244 / 255)),
+        .init(destination: .progress, title: "学习进度", subtitle: "看见每天的积累", badge: "+18%", icon: "chart.bar", tint: Color(red: 84 / 255, green: 173 / 255, blue: 120 / 255), soft: Color(red: 233 / 255, green: 248 / 255, blue: 239 / 255)),
+        .init(destination: .weakWords, title: "薄弱词", subtitle: "优先攻克易错词", badge: "2 词", icon: "exclamationmark", tint: CiJingTheme.danger, soft: Color(red: 252 / 255, green: 236 / 255, blue: 239 / 255)),
+        .init(destination: .shadowing, title: "跟读训练", subtitle: "逐句听读与纠音", badge: "8 min", icon: "mic.fill", tint: Color(red: 220 / 255, green: 139 / 255, blue: 67 / 255), soft: Color(red: 1, green: 241 / 255, blue: 228 / 255)),
+        .init(destination: .readingHistory, title: "阅读历史", subtitle: "继续最近的短文", badge: "3 篇", icon: "clock.arrow.circlepath", tint: Color(red: 93 / 255, green: 143 / 255, blue: 201 / 255), soft: Color(red: 234 / 255, green: 243 / 255, blue: 251 / 255))
     ]
 
     var body: some View {
         ZStack {
             PaperBackground()
-            ScrollView {
-                LazyVStack(alignment: .leading, spacing: 0) {
-                    PageHeader(
-                        title: greeting,
-                        subtitle: store.plan.completedToday ? "今天也完成了一次小小的抵达" : "把今天收藏的词，读成一个故事",
-                        trailing: AnyView(avatar)
-                    )
-                    .padding(.bottom, 18)
+            if store.hasLoadedAccountData {
+                ScrollView {
+                    LazyVStack(alignment: .leading, spacing: 0) {
+                        PageHeader(
+                            title: greeting,
+                            subtitle: store.plan.completedToday ? "今天也完成了一次小小的抵达" : "把今天收藏的词，读成一个故事",
+                            trailing: AnyView(avatar)
+                        )
+                        .padding(.bottom, 18)
 
-                    if store.plan.completedToday { completedPlanCard } else { startCard }
+                        if store.plan.completedToday { completedPlanCard } else { startCard }
 
-                    SectionHeading(title: "最近的短文", detail: store.recentReadings.isEmpty ? nil : "已保存 \(store.recentReadings.count) 篇")
-                        .padding(.top, 25)
-                        .padding(.bottom, 13)
-                    recentReading
+                        learningSnapshot
+                            .padding(.top, 13)
 
-                    if store.plan.completedToday {
-                        SectionHeading(title: "探索", detail: "换一种方式记住")
+                        SectionHeading(title: "最近的短文", detail: store.recentReadings.isEmpty ? nil : "已保存 \(store.recentReadings.count) 篇")
                             .padding(.top, 25)
                             .padding(.bottom, 13)
-                        exploreGrid
-                    }
+                        recentReading
 
-                    tipCard
-                        .padding(.top, 14)
+                        if store.plan.completedToday {
+                            SectionHeading(title: "探索", detail: "换一种方式记住")
+                                .padding(.top, 25)
+                                .padding(.bottom, 13)
+                            exploreGrid
+                        }
+
+                        tipCard
+                            .padding(.top, 14)
+                    }
+                    .padding(.horizontal, 18)
+                    .padding(.bottom, 112)
                 }
-                .padding(.horizontal, 18)
-                .padding(.bottom, 112)
+                .refreshable { await store.refreshAll() }
+                .transition(.opacity)
+            } else {
+                initialLoading
+                    .transition(.opacity)
             }
-            .refreshable { await store.refreshAll() }
         }
+        .animation(.easeInOut(duration: 0.2), value: store.hasLoadedAccountData)
         .toolbar(.hidden, for: .navigationBar)
         .task { await store.refreshAll() }
         .fullScreenCover(isPresented: $showingSetup) { NavigationStack { ReadingSetupView(onFinish: { showingSetup = false }) } }
         .alert("提示", isPresented: Binding(get: { notice != nil || store.errorMessage != nil }, set: { if !$0 { notice = nil; store.errorMessage = nil } })) {
             Button("知道了") { notice = nil; store.errorMessage = nil }
         } message: { Text(notice ?? store.errorMessage ?? "") }
+    }
+
+    private var initialLoading: some View {
+        VStack(spacing: 16) {
+            OrbitMark()
+            ProgressView()
+                .controlSize(.large)
+                .tint(CiJingTheme.purple)
+            Text("正在同步学习记录")
+                .font(.system(size: 19, weight: .bold, design: .rounded))
+                .foregroundStyle(CiJingTheme.ink)
+            Text("正在读取你的词库、短文和学习进度…")
+                .font(CiJingTypography.supporting)
+                .foregroundStyle(CiJingTheme.secondary)
+        }
+        .padding(30)
+        .frame(maxWidth: .infinity)
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel("正在同步学习记录")
     }
 
     private var avatar: some View {
@@ -124,11 +151,50 @@ struct HomeView: View {
     private var exploreGrid: some View {
         LazyVGrid(columns: [GridItem(.flexible(), spacing: 11), GridItem(.flexible())], spacing: 11) {
             ForEach(exploreItems) { item in
-                Button { notice = "\(item.title)已准备好，完整交互将在后续学习流程中打开。" } label: {
+                NavigationLink { exploreDestination(item.destination) } label: {
                     ExploreCard(item: item)
                 }
                 .buttonStyle(.plain)
             }
+        }
+    }
+
+    private var learningSnapshot: some View {
+        HStack(spacing: 0) {
+            SnapshotMetric(value: "\(store.plan.learnedCount)", label: "已学习", icon: "books.vertical.fill")
+            SnapshotDivider()
+            SnapshotMetric(value: "\(store.plan.masteredCount)", label: "已掌握", icon: "checkmark.seal.fill")
+            SnapshotDivider()
+            SnapshotMetric(value: "\(store.recentReadings.count)", label: "短文", icon: "text.book.closed.fill")
+        }
+        .padding(.vertical, 14)
+        .background(Color.white.opacity(0.72), in: RoundedRectangle(cornerRadius: 19, style: .continuous))
+        .overlay(RoundedRectangle(cornerRadius: 19).stroke(CiJingTheme.line))
+    }
+
+    @ViewBuilder
+    private func exploreDestination(_ destination: ExploreDestination) -> some View {
+        switch destination {
+        case .readingSetup:
+            ReadingSetupView()
+        case .practice:
+            if let reading = store.recentReadings.first {
+                PracticeSessionView(reading: reading)
+            } else {
+                ContentUnavailableView("还没有可练习的短文", systemImage: "text.book.closed", description: Text("先生成并读完一篇短文，再开始巩固练习。"))
+            }
+        case .progress:
+            LearningProgressView()
+        case .weakWords:
+            WordLibraryView(initialFilter: .weak)
+        case .shadowing:
+            if let reading = store.recentReadings.first {
+                ShadowingView(reading: reading)
+            } else {
+                ContentUnavailableView("还没有可跟读的短文", systemImage: "mic", description: Text("先生成一篇短文，再进入逐句跟读。"))
+            }
+        case .readingHistory:
+            ReadingHubView()
         }
     }
 
@@ -221,12 +287,38 @@ private struct PlanMetric: View {
 
 private struct ExploreItem: Identifiable {
     let id = UUID()
+    let destination: ExploreDestination
     let title: String
     let subtitle: String
     let badge: String
     let icon: String
     let tint: Color
     let soft: Color
+}
+
+private enum ExploreDestination {
+    case readingSetup, practice, progress, weakWords, shadowing, readingHistory
+}
+
+private struct SnapshotMetric: View {
+    let value: String
+    let label: String
+    let icon: String
+
+    var body: some View {
+        VStack(spacing: 5) {
+            HStack(spacing: 5) {
+                Image(systemName: icon).font(.caption.bold()).foregroundStyle(CiJingTheme.purple)
+                Text(value).font(.system(size: 18, weight: .bold, design: .rounded)).foregroundStyle(CiJingTheme.ink)
+            }
+            Text(label).font(CiJingTypography.supporting).foregroundStyle(CiJingTheme.secondary)
+        }
+        .frame(maxWidth: .infinity)
+    }
+}
+
+private struct SnapshotDivider: View {
+    var body: some View { Rectangle().fill(CiJingTheme.line).frame(width: 1, height: 32) }
 }
 
 private struct ExploreCard: View {

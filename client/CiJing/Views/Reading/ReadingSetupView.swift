@@ -46,7 +46,14 @@ struct ReadingSetupView: View {
                     .zIndex(2)
             }
         }.toolbar { ToolbarItem(placement: .topBarLeading) { Button("取消") { dismiss() } } }
-            .task { targets = await store.loadTargets(limit: 14); selectedIDs = Set(targets.prefix(10).map(\.id)) }
+            .task {
+                if ProcessInfo.processInfo.arguments.contains("-ui-preview") {
+                    targets = store.words
+                } else {
+                    targets = await store.loadTargets(limit: 14)
+                }
+                selectedIDs = Set(targets.prefix(10).map(\.id))
+            }
             .task(id: generating) {
                 guard generating else { return }
                 while !Task.isCancelled && generating {

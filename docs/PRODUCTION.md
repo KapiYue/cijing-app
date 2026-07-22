@@ -1,6 +1,6 @@
 # 生产环境配置
 
-项目按 `miaoji` 的边界拆为三层：
+项目按职责边界拆为三层：
 
 - `client/`：SwiftUI iOS 客户端，只包含 Supabase URL 与 publishable key。
 - `supabase/`：Postgres、RLS、RPC 与 Edge Functions；OpenRouter 密钥只存在于 Edge Function secrets。
