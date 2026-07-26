@@ -8,7 +8,16 @@
 </head>
 <body>
 <script type="module">
-  const preferences = { autoSave: false, saveContext: true, privacyMode: false, disabledHosts: [], theme: "purple" };
+  const params = new URLSearchParams(location.search);
+  const signedIn = params.get("signedIn") !== "false";
+  const email = params.get("email") || "learner@cijing.app";
+  const preferences = {
+    autoSave: params.get("autoSave") === "true",
+    saveContext: true,
+    privacyMode: params.get("privacy") === "true",
+    disabledHosts: params.get("siteDisabled") === "true" ? ["example.com"] : [],
+    theme: params.get("theme") || "purple"
+  };
   globalThis.chrome = {
     storage: { local: {
       async get(key) { return { [key]: key === "cijingPreferences" ? preferences : null }; },
@@ -18,12 +27,13 @@
     runtime: {
       openOptionsPage() {},
       async sendMessage(message) {
-        if (message.type === "GET_SESSION") return { ok: true, data: { signedIn: true, email: "test5@qq.com" } };
+        if (message.type === "GET_SESSION") return { ok: true, data: signedIn ? { signedIn: true, email } : { signedIn: false } };
         if (message.type === "GET_DASHBOARD") return { ok: true, data: {
-          plan: { review_due: 2, new_suggested: 3, weak_count: 1 },
+          plan: { review_due: 6, new_suggested: 4, weak_count: 1 },
           recent: [
-            { term: "reasoning", primary_meaning: "推理；推理过程" },
-            { term: "roughly", primary_meaning: "大致地；粗略地" },
+            { term: "resilient", primary_meaning: "有韧性的；适应力强的" },
+            { term: "momentum", primary_meaning: "动力；势头" },
+            { term: "progress", primary_meaning: "进步；进展" },
             { term: "useful", primary_meaning: "有用的；有益的" }
           ]
         } };

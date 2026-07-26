@@ -6,7 +6,7 @@
   let requestSerial = 0;
 
   const escapeHTML = (value = "") => String(value).replace(/[&<>'"]/g, (char) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", "'": "&#39;", '"': "&quot;" })[char]);
-  const cleanWord = (value = "") => value.trim().replace(/^[^A-Za-z'-]+|[^A-Za-z'-]+$/g, "");
+  const { cleanWord, findSentence, formatPhonetic, prepareLookupPayload } = globalThis.CiJingTextUtils;
   const validWord = (value) => /^[A-Za-z][A-Za-z'-]{0,60}$/.test(value);
   const currentHost = location.hostname.toLowerCase();
 
@@ -28,16 +28,6 @@
       source_title: document.title,
       rect: rect && rect.width ? rect : { left: window.innerWidth / 2, right: window.innerWidth / 2, top: 120, bottom: 140 }
     };
-  }
-
-  function findSentence(context, word) {
-    if (!context) return "";
-    try {
-      const segments = [...new Intl.Segmenter("en", { granularity: "sentence" }).segment(context)];
-      return (segments.find((item) => item.segment.toLowerCase().includes(word.toLowerCase()))?.segment || context).trim().slice(0, 600);
-    } catch {
-      return (context.split(/(?<=[.!?])\s+/).find((part) => part.toLowerCase().includes(word.toLowerCase())) || context).slice(0, 600);
-    }
   }
 
   function volumeIcon() {
@@ -106,13 +96,14 @@
 
   function showResult(root, payload, result) {
     const data = result.data || result;
+    const phonetic = formatPhonetic(data.phonetic);
     const parts = (data.parts || []).map((item) => `<div class="part"><span class="pos">${escapeHTML(item.partOfSpeech)}</span><span>${escapeHTML(item.meaning)}</span></div>`).join("");
     const privacyHint = preferences.privacyMode
       ? '<span class="privacy">隐私模式 · 未使用网页上下文</span>'
       : preferences.saveContext ? "将同时保存当前句子和页面来源" : "仅保存单词与释义";
     root.getElementById("body").innerHTML = `
       <div class="head"><span class="word">${escapeHTML(data.term || payload.word)}</span><button class="speak" id="speak" aria-label="播放发音" title="播放发音">${volumeIcon()}</button></div>
-      <div class="phonetic">/${escapeHTML(data.phonetic || "")}/ · ${escapeHTML(data.lemma || "")}</div>
+      <div class="phonetic">${phonetic ? `${escapeHTML(phonetic)} · ` : ""}${escapeHTML(data.lemma || "")}</div>
       <div class="meaning">${escapeHTML(data.primaryMeaning)}</div>${parts}
       ${data.contextualMeaning ? `<div class="context"><strong>此处：</strong>${escapeHTML(data.contextualMeaning)}</div>` : ""}
       <div class="definition">${escapeHTML(data.englishDefinition)}</div>
@@ -217,9 +208,7 @@
     if (preferences.disabledHosts.includes(currentHost)) return;
     lastSelection = payload;
     const serial = ++requestSerial;
-    const requestPayload = preferences.privacyMode
-      ? { ...payload, context: "", sentence: "", source_url: null, source_title: null }
-      : payload;
+    const requestPayload = prepareLookupPayload(payload, preferences.privacyMode);
     const root = showLoading(payload);
     const response = await chrome.runtime.sendMessage({ type: "LOOKUP_WORD", payload: requestPayload });
     if (serial !== requestSerial || !document.getElementById(HOST_ID)) return;

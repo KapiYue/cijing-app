@@ -28,7 +28,7 @@
 软件只有首页、词库、查词和设置四个一级页面。首页把今日计划、累计成果、持久化短文记录和真实可用的学习入口集中在一屏，信息更完整，也能直接继续上一次学习。
 
 <p align="center">
-  <img src="docs/assets/app-store-connect/zh-Hans/iphone-6.5/01-home.jpg" width="330" alt="包含今日计划、累计成果、历史短文与学习入口的词鲸首页">
+  <img src="docs/assets/screenshots/home.png" width="330" alt="包含今日计划、累计成果、历史短文与学习入口的词鲸首页">
 </p>
 
 ### 四个一级页面
@@ -39,16 +39,16 @@
     <td align="center"><strong>词库</strong><br><sub>学习状态、熟练度、复习时间与语境单词</sub></td>
   </tr>
   <tr>
-    <td align="center"><img src="docs/assets/app-store-connect/zh-Hans/iphone-6.5/01-home.jpg" width="310" alt="词鲸首页"></td>
-    <td align="center"><img src="docs/assets/app-store-connect/zh-Hans/iphone-6.5/02-library.jpg" width="310" alt="词鲸词库"></td>
+    <td align="center"><img src="docs/assets/screenshots/home.png" width="310" alt="词鲸首页"></td>
+    <td align="center"><img src="docs/assets/screenshots/library.png" width="310" alt="词鲸词库"></td>
   </tr>
   <tr>
     <td align="center"><strong>查词</strong><br><sub>释义、发音、例句与一键收藏</sub></td>
     <td align="center"><strong>设置</strong><br><sub>学习偏好、隐私管理、缓存与账户</sub></td>
   </tr>
   <tr>
-    <td align="center"><img src="docs/assets/app-store-connect/zh-Hans/iphone-6.5/03-lookup.jpg" width="310" alt="词鲸查词"></td>
-    <td align="center"><img src="docs/assets/app-store-connect/zh-Hans/iphone-6.5/04-settings.jpg" width="310" alt="词鲸设置"></td>
+    <td align="center"><img src="docs/assets/screenshots/lookup.png" width="310" alt="词鲸查词"></td>
+    <td align="center"><img src="docs/assets/screenshots/settings.png" width="310" alt="词鲸设置"></td>
   </tr>
 </table>
 
@@ -63,9 +63,9 @@
     <td align="center"><strong>3 · 巩固练习</strong><br><sub>词义、语境、拼写与主动回忆</sub></td>
   </tr>
   <tr>
-    <td align="center"><img src="docs/assets/app-store-connect/zh-Hans/iphone-6.5/05-reading-setup.jpg" width="220" alt="选择阅读设置与目标词"></td>
-    <td align="center"><img src="docs/assets/app-store-connect/zh-Hans/iphone-6.5/06-reading.jpg" width="220" alt="阅读 AI 双语短文"></td>
-    <td align="center"><img src="docs/assets/app-store-connect/zh-Hans/iphone-6.5/07-practice.jpg" width="220" alt="完成阅读后的巩固练习"></td>
+    <td align="center"><img src="docs/assets/screenshots/reading-setup.jpg" width="220" alt="选择阅读设置与目标词"></td>
+    <td align="center"><img src="docs/assets/screenshots/reading.jpg" width="220" alt="阅读 AI 双语短文"></td>
+    <td align="center"><img src="docs/assets/screenshots/practice.jpg" width="220" alt="完成阅读后的巩固练习"></td>
   </tr>
   <tr>
     <td align="center"><strong>4 · 逐句跟读</strong><br><sub>听一句、读一句、查看匹配反馈</sub></td>
@@ -73,8 +73,8 @@
     <td align="center"><strong>学习闭环</strong><br><sub>收藏 → 阅读 → 练习 → 重遇</sub></td>
   </tr>
   <tr>
-    <td align="center"><img src="docs/assets/app-store-connect/zh-Hans/iphone-6.5/08-shadowing.jpg" width="220" alt="逐句跟读训练"></td>
-    <td align="center"><img src="docs/assets/app-store-connect/zh-Hans/iphone-6.5/09-progress.jpg" width="220" alt="学习进度与薄弱词页面"></td>
+    <td align="center"><img src="docs/assets/screenshots/shadowing.jpg" width="220" alt="逐句跟读训练"></td>
+    <td align="center"><img src="docs/assets/screenshots/progress.jpg" width="220" alt="学习进度与薄弱词页面"></td>
     <td align="center">已生成短文长期保存，重启或重新登录后仍可继续</td>
   </tr>
 </table>

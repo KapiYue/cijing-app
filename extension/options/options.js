@@ -37,8 +37,9 @@ function bindControls() {
 function render() {
   document.body.dataset.theme = preferences.theme;
   $("auto-save").checked = preferences.autoSave;
-  $("save-context").checked = preferences.saveContext;
+  $("save-context").checked = preferences.saveContext && !preferences.privacyMode;
   $("save-context").disabled = preferences.privacyMode;
+  $("save-context-copy").textContent = preferences.privacyMode ? "隐私模式开启时暂停" : "收藏当前句子和页面来源，帮助回忆";
   $("privacy-mode").checked = preferences.privacyMode;
 
   $("themes").innerHTML = THEME_OPTIONS.map((theme) =>

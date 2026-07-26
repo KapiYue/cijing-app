@@ -4,7 +4,7 @@
   "version": "1.0.1",
   "description": "在真实英文阅读中双击查词，理解当前语境并同步到词鲸背单词 App。",
   "permissions": ["storage", "contextMenus", "activeTab", "offscreen"],
-  "host_permissions": ["http://*/*", "https://*.supabase.co/*", "https://api.dictionaryapi.dev/*", "https://ssl.gstatic.com/*"],
+  "host_permissions": ["https://daudpwwdhdyvfodpwvny.supabase.co/*", "https://api.dictionaryapi.dev/*", "https://ssl.gstatic.com/*"],
   "background": {
     "service_worker": "background.js",
     "type": "module"
@@ -28,8 +28,8 @@
   "options_page": "options/options.html",
   "content_scripts": [
     {
-      "matches": ["<all_urls>"],
-      "js": ["content/content.js"],
+      "matches": ["http://*/*", "https://*/*"],
+      "js": ["shared/text-utils.js", "content/content.js"],
       "run_at": "document_idle",
       "all_frames": false
     }

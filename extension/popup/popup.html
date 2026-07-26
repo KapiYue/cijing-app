@@ -19,12 +19,18 @@
   <section id="auth" hidden>
     <h2>连接你的学习闭环</h2>
     <p class="muted">扩展和 iOS App 使用同一邮箱账号同步。</p>
+    <section class="data-disclosure" aria-labelledby="data-disclosure-title">
+      <h3 id="data-disclosure-title">登录与数据使用说明</h3>
+      <p>登录会将邮箱和密码经 HTTPS 发送至词鲸认证服务，并在本机保存登录令牌。你主动查词时会发送所选单词；仅在关闭隐私模式时，才会发送附近句子、页面标题和网址，用于生成语境释义和同步个人词库。数据不会出售或用于广告。</p>
+      <a id="privacy-policy-link" class="privacy-policy-link" aria-disabled="true">隐私政策（官网上线后开放）</a>
+    </section>
+    <label class="consent-row"><input id="data-consent" type="checkbox"><span>我已了解并同意上述数据处理方式</span></label>
     <label class="field">邮箱<input id="email" type="email" inputmode="email" autocomplete="email" autocapitalize="none" spellcheck="false" placeholder="name@example.com"></label>
     <label class="field">密码<input id="password" type="password" autocomplete="current-password" minlength="8" placeholder="至少 8 位"></label>
     <div id="auth-error" class="message error" hidden></div>
     <div id="auth-notice" class="message notice" hidden></div>
-    <button id="signin" class="primary full">登录</button>
-    <button id="signup" class="ghost full">创建账号</button>
+    <button id="signin" class="primary full" disabled>登录</button>
+    <button id="signup" class="ghost full" disabled>创建账号</button>
   </section>
 
   <section id="dashboard" hidden>
@@ -45,20 +51,21 @@
     <section id="preferences" class="preference-card">
       <div class="section-heading"><div><h3>扩展偏好</h3><p>控制查词、收藏和隐私</p></div><span class="badge">已同步</span></div>
 
+      <button id="site-toggle" class="site-action" disabled>当前页面不可设置</button>
+      <div id="site-status" class="site-status" role="status" hidden></div>
+
       <label class="toggle-row">
         <span><strong>自动保存查过的词</strong><small>查询成功后直接加入词库</small></span>
         <span class="switch"><input id="auto-save" type="checkbox"><i></i></span>
       </label>
       <label class="toggle-row">
-        <span><strong>保存网页语境</strong><small>收藏当前句子和页面来源</small></span>
+        <span><strong>保存网页语境</strong><small id="save-context-copy">收藏当前句子和页面来源</small></span>
         <span class="switch"><input id="save-context" type="checkbox"><i></i></span>
       </label>
       <label class="toggle-row">
         <span><strong>隐私模式</strong><small>不发送或保存网页上下文</small></span>
         <span class="switch"><input id="privacy-mode" type="checkbox"><i></i></span>
       </label>
-
-      <button id="site-toggle" class="site-action" disabled>当前页面不可设置</button>
 
       <div class="theme-row">
         <span><strong>主题</strong><small>选择查词卡片强调色</small></span>

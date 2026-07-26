@@ -28,7 +28,7 @@
 CiJing has four focused top-level areas. Home brings the daily plan, accumulated progress, persistent reading history, and real learning entry points together in one glance.
 
 <p align="center">
-  <img src="docs/assets/app-store-connect/zh-Hans/iphone-6.5/01-home.jpg" width="330" alt="CiJing home with a completed plan, learning totals, saved readings, and study entry points">
+  <img src="docs/assets/screenshots/home.png" width="330" alt="CiJing home with a completed plan, learning totals, saved readings, and study entry points">
 </p>
 
 ### Four top-level areas
@@ -39,16 +39,16 @@ CiJing has four focused top-level areas. Home brings the daily plan, accumulated
     <td align="center"><strong>Library</strong><br><sub>Learning states, strength, due dates, and contextual vocabulary</sub></td>
   </tr>
   <tr>
-    <td align="center"><img src="docs/assets/app-store-connect/zh-Hans/iphone-6.5/01-home.jpg" width="310" alt="CiJing home screen"></td>
-    <td align="center"><img src="docs/assets/app-store-connect/zh-Hans/iphone-6.5/02-library.jpg" width="310" alt="CiJing word library"></td>
+    <td align="center"><img src="docs/assets/screenshots/home.png" width="310" alt="CiJing home screen"></td>
+    <td align="center"><img src="docs/assets/screenshots/library.png" width="310" alt="CiJing word library"></td>
   </tr>
   <tr>
     <td align="center"><strong>Lookup</strong><br><sub>Definitions, pronunciation, examples, and one-tap saving</sub></td>
     <td align="center"><strong>Settings</strong><br><sub>Learning preferences, privacy controls, cache, and account</sub></td>
   </tr>
   <tr>
-    <td align="center"><img src="docs/assets/app-store-connect/zh-Hans/iphone-6.5/03-lookup.jpg" width="310" alt="CiJing word lookup"></td>
-    <td align="center"><img src="docs/assets/app-store-connect/zh-Hans/iphone-6.5/04-settings.jpg" width="310" alt="CiJing settings"></td>
+    <td align="center"><img src="docs/assets/screenshots/lookup.png" width="310" alt="CiJing word lookup"></td>
+    <td align="center"><img src="docs/assets/screenshots/settings.png" width="310" alt="CiJing settings"></td>
   </tr>
 </table>
 
@@ -63,9 +63,9 @@ The top-level navigation stays simple, while each reading opens a focused sequen
     <td align="center"><strong>3 · Practise</strong><br><sub>Meaning, context, spelling, and recall</sub></td>
   </tr>
   <tr>
-    <td align="center"><img src="docs/assets/app-store-connect/zh-Hans/iphone-6.5/05-reading-setup.jpg" width="220" alt="Choose reading settings and target words"></td>
-    <td align="center"><img src="docs/assets/app-store-connect/zh-Hans/iphone-6.5/06-reading.jpg" width="220" alt="Read a bilingual AI story"></td>
-    <td align="center"><img src="docs/assets/app-store-connect/zh-Hans/iphone-6.5/07-practice.jpg" width="220" alt="Complete reading-based practice"></td>
+    <td align="center"><img src="docs/assets/screenshots/reading-setup.jpg" width="220" alt="Choose reading settings and target words"></td>
+    <td align="center"><img src="docs/assets/screenshots/reading.jpg" width="220" alt="Read a bilingual AI story"></td>
+    <td align="center"><img src="docs/assets/screenshots/practice.jpg" width="220" alt="Complete reading-based practice"></td>
   </tr>
   <tr>
     <td align="center"><strong>4 · Shadow</strong><br><sub>Listen, speak, and compare sentence by sentence</sub></td>
@@ -73,8 +73,8 @@ The top-level navigation stays simple, while each reading opens a focused sequen
     <td align="center"><strong>One continuous loop</strong><br><sub>Every saved reading remains available after relaunch</sub></td>
   </tr>
   <tr>
-    <td align="center"><img src="docs/assets/app-store-connect/zh-Hans/iphone-6.5/08-shadowing.jpg" width="220" alt="Sentence shadowing practice"></td>
-    <td align="center"><img src="docs/assets/app-store-connect/zh-Hans/iphone-6.5/09-progress.jpg" width="220" alt="Learning progress dashboard"></td>
+    <td align="center"><img src="docs/assets/screenshots/shadowing.jpg" width="220" alt="Sentence shadowing practice"></td>
+    <td align="center"><img src="docs/assets/screenshots/progress.jpg" width="220" alt="Learning progress dashboard"></td>
     <td align="center">Save → Read → Practise → Revisit</td>
   </tr>
 </table>

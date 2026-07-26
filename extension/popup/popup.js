@@ -3,6 +3,7 @@ import { getPreferences, isHostDisabled, THEME_OPTIONS, updatePreferences } from
 
 const $ = (id) => document.getElementById(id);
 const send = (message) => chrome.runtime.sendMessage(message);
+const PRIVACY_POLICY_URL = "";
 let activeHost = "";
 let preferences;
 
@@ -11,11 +12,14 @@ async function init() {
     if (!$("dashboard").hidden) $("preferences").scrollIntoView({ behavior: "smooth", block: "start" });
     else chrome.runtime.openOptionsPage();
   };
+  configurePrivacyPolicyLink();
+  $("data-consent").onchange = () => updateAuthButtons();
   $("signin").onclick = () => authenticate("SIGN_IN");
   $("signup").onclick = () => authenticate("SIGN_UP");
   $("signout").onclick = async () => { await send({ type: "SIGN_OUT" }); showAuth(); };
   $("more-settings").onclick = () => chrome.runtime.openOptionsPage();
   bindPreferenceControls();
+  updateAuthButtons();
 
   [preferences, activeHost] = await Promise.all([getPreferences(), getActiveHost()]);
   renderPreferences(preferences);
@@ -37,13 +41,17 @@ async function authenticate(type) {
   $("email").value = email;
   $("auth-error").hidden = true;
   $("auth-notice").hidden = true;
+  if (!$("data-consent").checked) {
+    $("auth-error").textContent = "请先确认数据使用说明。";
+    $("auth-error").hidden = false;
+    return;
+  }
   try { validateCredentials(email, password, { isSignUp: type === "SIGN_UP" }); }
   catch (error) { $("auth-error").textContent = error.message; $("auth-error").hidden = false; return; }
 
-  const button = type === "SIGN_IN" ? $("signin") : $("signup");
-  button.disabled = true;
-  const response = await send({ type, email, password });
-  button.disabled = false;
+  setAuthBusy(true);
+  const response = await send({ type, email, password }).catch(() => null);
+  setAuthBusy(false);
   if (!response?.ok) { $("auth-error").textContent = response?.error || "操作失败"; $("auth-error").hidden = false; return; }
   if (type === "SIGN_UP" && response.data.confirmationRequired) {
     $("password").value = "";
@@ -88,10 +96,27 @@ function bindPreferenceControls() {
   }
   $("site-toggle").onclick = async () => {
     if (!activeHost) return;
+    const siteButton = $("site-toggle");
+    const siteStatus = $("site-status");
+    const wasDisabled = isHostDisabled(preferences, activeHost);
+    siteButton.disabled = true;
+    siteStatus.hidden = true;
     const hosts = new Set(preferences.disabledHosts);
     if (hosts.has(activeHost)) hosts.delete(activeHost); else hosts.add(activeHost);
-    preferences = await updatePreferences({ disabledHosts: [...hosts] });
-    renderPreferences(preferences);
+    try {
+      preferences = await updatePreferences({ disabledHosts: [...hosts] });
+      renderPreferences(preferences);
+      siteStatus.textContent = wasDisabled
+        ? `✓ 已在 ${activeHost} 重新启用查词`
+        : `✓ 已在 ${activeHost} 停用查词`;
+      siteStatus.dataset.state = "success";
+      siteStatus.hidden = false;
+    } catch {
+      renderPreferences(preferences);
+      siteStatus.textContent = "设置没有保存成功，请重试。";
+      siteStatus.dataset.state = "error";
+      siteStatus.hidden = false;
+    }
   };
 }
 
@@ -99,13 +124,15 @@ function renderPreferences(value) {
   preferences = value;
   document.body.dataset.theme = value.theme;
   $("auto-save").checked = value.autoSave;
-  $("save-context").checked = value.saveContext;
+  $("save-context").checked = value.saveContext && !value.privacyMode;
   $("privacy-mode").checked = value.privacyMode;
   $("save-context").disabled = value.privacyMode;
+  $("save-context-copy").textContent = value.privacyMode ? "隐私模式开启时暂停" : "收藏当前句子和页面来源";
 
   const siteButton = $("site-toggle");
   siteButton.disabled = !activeHost;
   const disabled = isHostDisabled(value, activeHost);
+  siteButton.setAttribute("aria-pressed", String(disabled));
   siteButton.classList.toggle("active", !disabled && Boolean(activeHost));
   siteButton.textContent = !activeHost
     ? "当前页面不可设置"
@@ -120,6 +147,28 @@ function renderPreferences(value) {
       renderPreferences(preferences);
     };
   });
+}
+
+function configurePrivacyPolicyLink() {
+  const link = $("privacy-policy-link");
+  if (!PRIVACY_POLICY_URL) return;
+  link.href = PRIVACY_POLICY_URL;
+  link.target = "_blank";
+  link.rel = "noreferrer";
+  link.textContent = "查看完整隐私政策";
+  link.removeAttribute("aria-disabled");
+}
+
+function updateAuthButtons(busy = false) {
+  const disabled = busy || !$("data-consent").checked;
+  $("signin").disabled = disabled;
+  $("signup").disabled = disabled;
+}
+
+function setAuthBusy(busy) {
+  updateAuthButtons(busy);
+  $("email").disabled = busy;
+  $("password").disabled = busy;
 }
 
 async function getActiveHost() {

@@ -1,21 +1,44 @@
 <!doctype html>
 <html lang="en">
-<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Content card visual fixture</title></head>
-<body style="margin:0;padding:40px;font:18px/1.7 Georgia,serif;background:#172017;color:#f7f4ec;min-height:100vh">
-  <main><p id="sample">This useful feature provides a practical way to understand difficult words while reading.</p></main>
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Field Notes · Content card visual fixture</title>
+  <style>
+    *{box-sizing:border-box}body{margin:0;background:#f4f0e8;color:#193026;font:16px/1.7 -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;min-height:100vh}.topbar{height:66px;padding:0 42px;display:flex;align-items:center;justify-content:space-between;background:#173b2b;color:#fff}.logo{font:700 20px Georgia,serif;letter-spacing:.05em}.nav{display:flex;gap:25px;color:#d5e2d8;font-size:13px}.page{max-width:920px;margin:0 auto;padding:54px 48px 90px}.eyebrow{color:#52715f;font-size:12px;font-weight:800;letter-spacing:.15em;text-transform:uppercase}.title{max-width:760px;font:700 52px/1.08 Georgia,serif;margin:13px 0 18px;color:#163427}.dek{max-width:670px;color:#607169;font:20px/1.55 Georgia,serif;margin:0}.meta{display:flex;gap:20px;margin:28px 0 42px;padding-bottom:22px;border-bottom:1px solid #d9d4c9;color:#728078;font-size:13px}.article{max-width:710px}.article p{font:19px/1.85 Georgia,serif;color:#2e4138}.callout{margin:30px 0;padding:18px 20px;border-left:4px solid #dba948;background:#fffaf0;border-radius:0 12px 12px 0;color:#526159}.chips{display:flex;gap:9px;margin-top:28px}.chip{padding:7px 11px;border-radius:999px;background:#e5ede7;color:#365545;font-size:12px;font-weight:700}
+  </style>
+</head>
+<body>
+  <header class="topbar"><div class="logo">FIELD NOTES</div><nav class="nav"><span>Stories</span><span>Ideas</span><span>Archive</span></nav></header>
+  <main class="page">
+    <div class="eyebrow">Learning · 6 min read</div>
+    <h1 class="title">Small systems create lasting progress</h1>
+    <p class="dek">Why consistent, thoughtful practice often matters more than one perfect study session.</p>
+    <div class="meta"><span>July 22, 2026</span><span>By Clara Lin</span><span>Daily Practice</span></div>
+    <article class="article">
+      <p id="sample">This useful feature provides a practical way to understand difficult words while reading.</p>
+      <p>Each note becomes a small bridge between what you read today and what you can remember tomorrow. The goal is not to interrupt the article, but to make curiosity easier to follow.</p>
+      <div class="callout">A strong learning habit should feel light enough to repeat and useful enough to keep.</div>
+      <div class="chips"><span class="chip">Focused reading</span><span class="chip">Vocabulary</span><span class="chip">Daily systems</span></div>
+    </article>
+  </main>
   <script>
+    const params = new URLSearchParams(location.search);
+    const privacyMode = params.get("privacy") === "true";
+    const siteDisabled = params.get("siteDisabled") === "true";
     const listeners = [];
     globalThis.chrome = {
       runtime: {
         async sendMessage(message) {
-          if (message.type === "GET_PREFERENCES") return { ok: true, data: { autoSave: false, saveContext: true, privacyMode: false, disabledHosts: [], theme: "purple" } };
-          if (message.type === "LOOKUP_WORD") return { ok: true, data: { data: {
-            term: "useful", lemma: "useful", phonetic: "ˈjuːsfəl", primaryMeaning: "有用的；有益的",
-            contextualMeaning: "此处指能够帮助读者理解文本", englishDefinition: "helpful for doing or achieving something",
-            exampleEnglish: "This feature is useful for focused reading.", exampleChinese: "这个功能对专注阅读很有用。",
-            sentence: "This useful feature provides a practical way to understand difficult words while reading.",
-            parts: [{ partOfSpeech: "adjective", meaning: "helpful; serving a practical purpose" }]
-          } } };
+          if (message.type === "GET_PREFERENCES") return { ok: true, data: { autoSave: false, saveContext: true, privacyMode, disabledHosts: siteDisabled ? [location.hostname] : [], theme: "purple" } };
+          if (message.type === "LOOKUP_WORD") {
+            document.body.dataset.lookupPayload = JSON.stringify(message.payload);
+            return { ok: true, data: { data: {
+              term: "useful", lemma: "useful", phonetic: "//ˈjuːsfəl//", primaryMeaning: "有用的；有益的",
+              contextualMeaning: message.payload.context ? "此处指能够帮助读者在阅读中理解难词" : "", englishDefinition: "helpful for doing or achieving something",
+              exampleEnglish: "This feature is useful for focused reading.", exampleChinese: "这个功能对专注阅读很有用。",
+              sentence: "This useful feature provides a practical way to understand difficult words while reading.",
+              parts: [{ partOfSpeech: "adjective", meaning: "helpful; serving a practical purpose" }]
+            } } };
+          }
           if (message.type === "SAVE_WORD") return { ok: true, data: {} };
           return { ok: true, data: {} };
         },
@@ -24,6 +47,7 @@
       storage: { onChanged: { addListener() {} } }
     };
   </script>
+  <script src="../../shared/text-utils.js"></script>
   <script src="../../content/content.js"></script>
   <script>
     window.addEventListener("load", () => setTimeout(() => {
