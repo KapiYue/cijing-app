@@ -6,8 +6,21 @@ script_directory=$(CDPATH= cd "$(dirname "$0")" && pwd)
 repository_path=${CI_PRIMARY_REPOSITORY_PATH:-$(CDPATH= cd "$script_directory/../.." && pwd)}
 output_path="$repository_path/client/CiJing/Core/GeneratedClientConfig.swift"
 
-supabase_url=${SUPABASE_URL:-}
-supabase_publishable_key=${SUPABASE_PUBLISHABLE_KEY:-${SUPABASE_ANON_KEY:-}}
+strip_surrounding_quotes() {
+    value=$1
+    case "$value" in
+        \"*\") value=${value#\"}; value=${value%\"} ;;
+        \'*\') value=${value#\'}; value=${value%\'} ;;
+        “*”) value=${value#“}; value=${value%”} ;;
+        ‘*’) value=${value#‘}; value=${value%’} ;;
+    esac
+    printf '%s' "$value"
+}
+
+# Match scripts/load-env.mjs so values copied from a quoted .env entry behave
+# the same way locally and in Xcode Cloud.
+supabase_url=$(strip_surrounding_quotes "${SUPABASE_URL:-}")
+supabase_publishable_key=$(strip_surrounding_quotes "${SUPABASE_PUBLISHABLE_KEY:-${SUPABASE_ANON_KEY:-}}")
 
 if [ -z "$supabase_url" ]; then
     echo "error: SUPABASE_URL is not configured for this Xcode Cloud workflow." >&2
