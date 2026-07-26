@@ -54,7 +54,7 @@
 
 ### 完整学习过程
 
-一级导航保持克制，进入学习后形成完整闭环：选词定制短文、双语阅读、语境练习、逐句跟读，再回到进度页查看积累。以下全部是 App 内真实页面，不是概念图。
+一级导航保持克制，进入学习后形成完整闭环：选词定制短文、双语阅读、语境练习、逐句跟读、查看积累，并可在 App 重启后继续已保存的短文。以下全部是 App 内真实页面，不是概念图。
 
 <table>
   <tr>
@@ -70,12 +70,12 @@
   <tr>
     <td align="center"><strong>4 · 逐句跟读</strong><br><sub>听一句、读一句、查看匹配反馈</sub></td>
     <td align="center"><strong>5 · 查看成长</strong><br><sub>活跃趋势、词库状态与薄弱词</sub></td>
-    <td align="center"><strong>学习闭环</strong><br><sub>收藏 → 阅读 → 练习 → 重遇</sub></td>
+    <td align="center"><strong>6 · 重启后继续</strong><br><sub>随时打开已保存的短文接着阅读</sub></td>
   </tr>
   <tr>
     <td align="center"><img src="docs/assets/screenshots/shadowing.jpg" width="220" alt="逐句跟读训练"></td>
     <td align="center"><img src="docs/assets/screenshots/progress.jpg" width="220" alt="学习进度与薄弱词页面"></td>
-    <td align="center">已生成短文长期保存，重启或重新登录后仍可继续</td>
+    <td align="center"><img src="docs/assets/screenshots/reading.jpg" width="220" alt="App 重启后继续阅读已保存的短文"></td>
   </tr>
 </table>
 

@@ -54,7 +54,7 @@ CiJing has four focused top-level areas. Home brings the daily plan, accumulated
 
 ### The complete learning loop
 
-The top-level navigation stays simple, while each reading opens a focused sequence: choose target words, read with optional translations, practise retrieval, shadow sentence by sentence, and review progress.
+The top-level navigation stays simple, while each reading opens a focused sequence: choose target words, read with optional translations, practise retrieval, shadow sentence by sentence, review progress, and resume saved readings after relaunch.
 
 <table>
   <tr>
@@ -70,12 +70,12 @@ The top-level navigation stays simple, while each reading opens a focused sequen
   <tr>
     <td align="center"><strong>4 · Shadow</strong><br><sub>Listen, speak, and compare sentence by sentence</sub></td>
     <td align="center"><strong>5 · Improve</strong><br><sub>Activity, vocabulary states, and weak words</sub></td>
-    <td align="center"><strong>One continuous loop</strong><br><sub>Every saved reading remains available after relaunch</sub></td>
+    <td align="center"><strong>6 · Resume</strong><br><sub>Continue any saved reading after relaunch</sub></td>
   </tr>
   <tr>
     <td align="center"><img src="docs/assets/screenshots/shadowing.jpg" width="220" alt="Sentence shadowing practice"></td>
     <td align="center"><img src="docs/assets/screenshots/progress.jpg" width="220" alt="Learning progress dashboard"></td>
-    <td align="center">Save → Read → Practise → Revisit</td>
+    <td align="center"><img src="docs/assets/screenshots/reading.jpg" width="220" alt="Resume a saved reading after relaunch"></td>
   </tr>
 </table>
 
