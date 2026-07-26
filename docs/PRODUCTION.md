@@ -33,6 +33,17 @@
 6. 如部署 Flask 服务，将 `.env` 中的 `SUPABASE_URL`、`SUPABASE_SECRET_KEY` 和 `PORT` 注入托管平台，使用 `server/Dockerfile` 构建。
 7. 用 Release 配置归档 iOS App；生产包不依赖开发设置页中的本地覆盖值。
 
+### Xcode Cloud
+
+在 Xcode Cloud workflow 的 Environment Variables 中配置以下两个公开变量：
+
+- `SUPABASE_URL`
+- `SUPABASE_PUBLISHABLE_KEY`
+
+仓库中的 `client/ci_scripts/ci_post_clone.sh` 会在云端检出代码后生成被
+`.gitignore` 排除的 `GeneratedClientConfig.swift`。无需提交生成文件；如果变量缺失或格式
+错误，post-clone 步骤会直接给出明确错误，避免等到 Swift 编译阶段才失败。
+
 部署后先执行 `make production-audit` 核对表、RPC、认证策略和 Edge Functions，再执行
 `make production-smoke` 跑邮箱注册、密码登录、词库、复习、AI 查词与 AI 阅读的端到端验收；
 `make delete-account-smoke` 使用独立临时账号验证自助删除、删除后拒绝登录和 Auth 用户移除。
