@@ -32,7 +32,11 @@ struct ReadingWordSheet: View {
             .toolbar { ToolbarItem(placement: .topBarTrailing) { Button("完成") { dismiss() } } }
         }
         .presentationDetents([.medium, .large])
-        .task { await load() }
+        .task {
+            if store.autoPronunciationEnabled { speech.speak(selection.term) }
+            await load()
+        }
+        .onDisappear { speech.stop() }
     }
 
     private func knownContent(_ word: Word) -> some View {

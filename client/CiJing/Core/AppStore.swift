@@ -11,7 +11,7 @@ final class AppStore: ObservableObject {
     @Published var isLoading = false
     @Published private(set) var hasLoadedAccountData = false
     @Published private(set) var preferredAppearance: String?
-    @Published private(set) var dailyReminderEnabled = true
+    @Published private(set) var dailyReminderEnabled = false
     @Published private(set) var autoPronunciationEnabled = true
     @Published private(set) var hapticFeedbackEnabled = true
     @Published private(set) var recentLookupTermsRaw = "serendipity,resilient,nuance"
@@ -68,6 +68,7 @@ final class AppStore: ObservableObject {
         // 首页的词库、短文、计划和资料来自独立接口。只要其中一部分已成功，
         // 就保留可用内容且不弹出阻断式错误；全部失败时才提示用户重试。
         errorMessage = successfulRequests == 0 ? firstError?.localizedDescription : nil
+        await reconcileDailyReminder()
     }
 
     /// Refreshes the library independently so an unrelated home/profile request cannot leave it stale.
@@ -172,7 +173,7 @@ final class AppStore: ObservableObject {
         currentReading = nil
         hasLoadedAccountData = false
         preferredAppearance = nil
-        dailyReminderEnabled = true
+        dailyReminderEnabled = false
         autoPronunciationEnabled = true
         hapticFeedbackEnabled = true
         recentLookupTermsRaw = Self.defaultRecentLookupTerms
@@ -186,8 +187,23 @@ final class AppStore: ObservableObject {
         UserDefaults.standard.set(appearance.rawValue, forKey: Self.accountStorageKey("appearance", userID: userID))
     }
 
-    func setDailyReminderEnabled(_ value: Bool) {
-        setLocalPreference(value, name: "daily-reminder") { dailyReminderEnabled = value }
+    func setDailyReminderEnabled(_ value: Bool) async -> String? {
+        guard api.currentUserID != nil else { return "请先登录后再设置学习提醒。" }
+        let result = await DailyReminderScheduler.setEnabled(value, requestAuthorization: value)
+        switch result {
+        case .scheduled:
+            setLocalPreference(value, name: "daily-reminder") { dailyReminderEnabled = value }
+            return nil
+        case .permissionDenied:
+            setLocalPreference(false, name: "daily-reminder") { dailyReminderEnabled = false }
+            return "通知权限已关闭。请前往 iPhone“设置”→“通知”→“词鲸背单词”允许通知后再开启。"
+        case .permissionNotRequested:
+            setLocalPreference(false, name: "daily-reminder") { dailyReminderEnabled = false }
+            return "尚未获得通知权限，请再次开启提醒并允许系统通知。"
+        case .failed(let detail):
+            setLocalPreference(false, name: "daily-reminder") { dailyReminderEnabled = false }
+            return "学习提醒设置失败：\(detail)"
+        }
     }
 
     func setAutoPronunciationEnabled(_ value: Bool) {
@@ -196,6 +212,31 @@ final class AppStore: ObservableObject {
 
     func setHapticFeedbackEnabled(_ value: Bool) {
         setLocalPreference(value, name: "haptic-feedback") { hapticFeedbackEnabled = value }
+    }
+
+    func playHaptic(_ event: LearningHaptic) {
+        guard hapticFeedbackEnabled else { return }
+        LearningHapticFeedback.play(event)
+    }
+
+    func reconcileDailyReminder() async {
+        guard api.currentUserID != nil else {
+            _ = await DailyReminderScheduler.setEnabled(false, requestAuthorization: false)
+            dailyReminderEnabled = false
+            return
+        }
+        guard dailyReminderEnabled else { return }
+        let result = await DailyReminderScheduler.setEnabled(true, requestAuthorization: false)
+        switch result {
+        case .scheduled:
+            break
+        case .permissionDenied, .permissionNotRequested, .failed:
+            setLocalPreference(false, name: "daily-reminder") { dailyReminderEnabled = false }
+        }
+    }
+
+    func clearDailyReminder() async {
+        _ = await DailyReminderScheduler.setEnabled(false, requestAuthorization: false)
     }
 
     func setRecentLookupTermsRaw(_ value: String) {
@@ -214,7 +255,7 @@ final class AppStore: ObservableObject {
     private func loadLocalAccountPreferences(migratingLegacyValues: Bool) {
         guard let userID = api.currentUserID else {
             preferredAppearance = nil
-            dailyReminderEnabled = true
+            dailyReminderEnabled = false
             autoPronunciationEnabled = true
             hapticFeedbackEnabled = true
             recentLookupTermsRaw = Self.defaultRecentLookupTerms
@@ -226,7 +267,7 @@ final class AppStore: ObservableObject {
             migrateLegacyPreferences(to: userID, defaults: defaults)
         }
         preferredAppearance = defaults.string(forKey: Self.accountStorageKey("appearance", userID: userID))
-        dailyReminderEnabled = defaults.object(forKey: Self.accountPreferenceStorageKey("daily-reminder", userID: userID)) as? Bool ?? true
+        dailyReminderEnabled = defaults.object(forKey: Self.accountPreferenceStorageKey("daily-reminder", userID: userID)) as? Bool ?? false
         autoPronunciationEnabled = defaults.object(forKey: Self.accountPreferenceStorageKey("auto-pronunciation", userID: userID)) as? Bool ?? true
         hapticFeedbackEnabled = defaults.object(forKey: Self.accountPreferenceStorageKey("haptic-feedback", userID: userID)) as? Bool ?? true
         recentLookupTermsRaw = defaults.string(forKey: Self.accountPreferenceStorageKey("recent-lookups", userID: userID)) ?? Self.defaultRecentLookupTerms
@@ -274,13 +315,14 @@ final class AppStore: ObservableObject {
     func loadPreviewData() {
         plan.completedToday = true
         plan.streakDays = 18
+        // Match the production review account used for App Store review.
         plan.learnedCount = 146
         plan.masteredCount = 68
-        plan.reviewedToday = 24
-        plan.practiceToday = 12
+        plan.reviewedToday = 14
+        plan.practiceToday = 8
         plan.readingToday = 2
-        plan.reviewDue = 16
-        plan.newSuggested = 8
+        plan.reviewDue = 7
+        plan.newSuggested = 1
         profile = Profile(id: UUID(), displayName: "Qing", dailyNewGoal: 8, dailyReviewGoal: 20, preferredDifficulty: "intermediate", preferredTheme: "daily_life", preferredStyle: "story", preferredVoiceIdentifier: "", timezone: "Asia/Shanghai")
         words = PreviewContent.words
         recentReadings = PreviewContent.readings(words: words)
@@ -305,9 +347,32 @@ private enum PreviewContent {
         ("long-horizon", "ˌlɔːŋ həˈraɪzn", "长期的；远期的", "adj.", .new, 0.08)
     ]
 
+    // These terms mirror the production review account's supplemental vocabulary.
+    // The first 68 are mastered; the remainder alternate between review and learning.
+    static let supplementalTerms = [
+        "resilient", "subtle", "navigate", "sustain", "inevitable", "perspective", "convey", "thrive",
+        "adapt", "allocate", "anticipate", "articulate", "assess", "attain", "coherent", "collaborate",
+        "compelling", "concise", "consensus", "constraint", "contemplate", "conventional", "crucial", "cultivate",
+        "deliberate", "demonstrate", "diminish", "diverse", "elaborate", "emerge", "empirical", "enhance",
+        "evaluate", "evident", "facilitate", "flexible", "formulate", "fundamental", "generate", "illustrate",
+        "implement", "imply", "incentive", "integrate", "interpret", "justify", "maintain", "mitigate",
+        "mutual", "objective", "perceive", "persist", "preliminary", "prioritize", "profound", "promote",
+        "refine", "relevant", "reliable", "reinforce", "resolve", "retain", "rigorous", "scarce",
+        "significant", "stable", "strategy", "transform", "accessible", "accumulate", "adjacent", "advocate",
+        "ambiguous", "analyze", "apparent", "approximate", "authentic", "autonomous", "beneficial", "capacity",
+        "clarify", "compatible", "comprehensive", "consistent", "contribute", "credible", "critical", "cumulative",
+        "derive", "dynamic", "efficient", "encounter", "establish", "ethical", "explicit", "framework",
+        "gradual", "hypothesis", "identify", "impact", "innovate", "insight", "interact", "internal",
+        "logical", "maximize", "minimize", "monitor", "motivate", "occur", "optimize", "outcome",
+        "overall", "parameter", "participate", "practical", "predict", "preserve", "pursue", "recover",
+        "regulate", "robust", "scope", "sequence", "simulate", "specify", "sufficient", "sustainable",
+        "synthesize", "tendency", "transition", "transparent", "valid", "versatile", "voluntary", "widespread",
+        "acknowledge", "acquire"
+    ]
+
     static var words: [Word] {
         let now = ISO8601DateFormatter().string(from: .now)
-        return samples.map { term, phonetic, meaning, pos, status, strength in
+        let coreWords = samples.map { term, phonetic, meaning, pos, status, strength in
             Word(
                 id: UUID(), userId: nil, term: term, normalizedTerm: term.lowercased(), lemma: term,
                 phonetic: phonetic, audioUrl: nil, parts: [LexiconPart(partOfSpeech: pos, meaning: meaning)],
@@ -319,16 +384,31 @@ private enum PreviewContent {
                 dueAt: now, lastReviewedAt: now, masteredAt: nil, createdAt: now, updatedAt: now
             )
         }
+        let supplementalWords = supplementalTerms.enumerated().map { index, term in
+            let status: WordStatus = index < 68 ? .mastered : (index.isMultiple(of: 3) ? .review : .learning)
+            return Word(
+                id: UUID(), userId: nil, term: term, normalizedTerm: term, lemma: term,
+                phonetic: nil, audioUrl: nil, parts: [], primaryMeaning: "审核演示词汇", contextualMeaning: nil,
+                englishDefinition: nil, exampleEn: nil, exampleZh: nil, firstContext: nil, firstSourceUrl: nil,
+                firstSourceTitle: "Chrome 扩展", notes: "", customMeaning: nil, status: status,
+                strength: status == .mastered ? 0.92 : 0.58, easeFactor: 2.5,
+                intervalDays: status == .mastered ? 45 : 7, repetitions: status == .mastered ? 6 : 2,
+                lapses: 0, lookupCount: 2, errorCount: 0, dueAt: now, lastReviewedAt: now,
+                masteredAt: status == .mastered ? now : nil, createdAt: now, updatedAt: now
+            )
+        }
+        return coreWords + supplementalWords
     }
 
     static func readings(words: [Word]) -> [ReadingSession] {
         let now = ISO8601DateFormatter().string(from: .now)
         let earlier = ISO8601DateFormatter().string(from: .now.addingTimeInterval(-86_400))
         let oldest = ISO8601DateFormatter().string(from: .now.addingTimeInterval(-172_800))
+        let coreWords = Array(words.prefix(samples.count))
         return [
             ReadingSession(
                 id: UUID(), userId: nil, title: "A Quiet Kind of Progress", subtitle: "一种安静的进步",
-                theme: "daily_life", style: "story", difficulty: "intermediate", targetWordIds: words.map(\.id), targetTerms: words.map(\.term),
+                theme: "daily_life", style: "story", difficulty: "intermediate", targetWordIds: coreWords.map(\.id), targetTerms: coreWords.map(\.term),
                 paragraphs: [
                     ReadingParagraph(english: "Small daily efforts can outperform sudden bursts of motivation. Mei stopped trying to estimate how quickly her English would improve and focused on one thoughtful page each morning.", chinese: "每天微小的努力能够胜过一时的热情。小梅不再估算英语能多快进步，而是专注于每天清晨认真读完一页。"),
                     ReadingParagraph(english: "This independent routine became an investment in her future. Automated reminders helped, but the real change came from choosing a sustainable alternative to cramming.", chinese: "这个独立的习惯成了她对未来的投资。自动提醒有所帮助，但真正的改变来自她选择了可持续的学习方式，而不是突击。"),
@@ -338,13 +418,13 @@ private enum PreviewContent {
             ),
             ReadingSession(
                 id: UUID(), userId: nil, title: "The Train Beyond the Rain", subtitle: "驶出雨幕的列车",
-                theme: "travel", style: "story", difficulty: "upper_intermediate", targetWordIds: Array(words.prefix(6).map(\.id)), targetTerms: Array(words.prefix(6).map(\.term)),
+                theme: "travel", style: "story", difficulty: "upper_intermediate", targetWordIds: Array(coreWords.prefix(6).map(\.id)), targetTerms: Array(coreWords.prefix(6).map(\.term)),
                 paragraphs: [ReadingParagraph(english: "A delayed train gave Lina an unexpected afternoon in a mountain town. Instead of treating it as wasted time, she wandered into a family café and listened to the stories around her.", chinese: "晚点的列车让莉娜意外地在山城多停留了一个下午。她没有把这当作浪费，而是走进一家家庭咖啡馆，倾听身边的故事。")],
                 estimatedMinutes: 5, cacheKey: nil, isCached: true, translationsVisible: false, completedAt: earlier, createdAt: earlier
             ),
             ReadingSession(
                 id: UUID(), userId: nil, title: "Designing Time for Deep Work", subtitle: "为深度工作设计时间",
-                theme: "workplace", style: "article", difficulty: "advanced", targetWordIds: Array(words.suffix(5).map(\.id)), targetTerms: Array(words.suffix(5).map(\.term)),
+                theme: "workplace", style: "article", difficulty: "advanced", targetWordIds: Array(coreWords.suffix(5).map(\.id)), targetTerms: Array(coreWords.suffix(5).map(\.term)),
                 paragraphs: [ReadingParagraph(english: "Protecting attention is less about perfect discipline than deliberate design. A team can reduce interruptions by agreeing on quiet hours and making communication expectations explicit.", chinese: "保护注意力与其说依赖完美的自律，不如说依赖有意识的设计。团队可以约定安静时段，并明确沟通预期，以减少干扰。")],
                 estimatedMinutes: 6, cacheKey: nil, isCached: true, translationsVisible: false, completedAt: oldest, createdAt: oldest
             )

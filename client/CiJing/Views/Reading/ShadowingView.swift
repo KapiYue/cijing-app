@@ -1,6 +1,7 @@
 import SwiftUI
 
 struct ShadowingView: View {
+    @EnvironmentObject private var store: AppStore
     @Environment(\.dismiss) private var dismiss
     @StateObject private var speech = SpeechService()
     @StateObject private var recognizer = ShadowingRecognizer()
@@ -106,11 +107,15 @@ struct ShadowingView: View {
                     Button(index == sentences.count - 1 ? "完成跟读" : "下一句") {
                         completed[index] = accuracy
                         if index < sentences.count - 1 {
+                            store.playHaptic(.step)
                             index += 1
                             recognizer.transcript = ""
                             recognizer.errorMessage = nil
                             speech.speak(current, slow: true)
-                        } else { dismiss() }
+                        } else {
+                            store.playHaptic(.completion)
+                            dismiss()
+                        }
                     }
                     .buttonStyle(PrimaryButtonStyle())
                     .disabled(recognizer.transcript.isEmpty || recognizer.isRecording || recognizer.isTranscribing)

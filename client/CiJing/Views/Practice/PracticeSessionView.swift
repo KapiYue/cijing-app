@@ -437,9 +437,11 @@ struct PracticeSessionView: View {
     }
 
     private func optionBackground(_ option: String, item: PracticeQuestion) -> Color {
-        if revealed && option == item.answer { return Color.green.opacity(0.1) }
-        if revealed && selected == option { return Color.red.opacity(0.1) }
-        return .white.opacity(0.9)
+        if revealed && option == item.answer { return CiJingTheme.success.opacity(0.12) }
+        if revealed && selected == option { return CiJingTheme.danger.opacity(0.12) }
+        // Keep the surface and `CiJingTheme.ink` adaptive as a pair. A hard-coded
+        // white background made the dark-mode ink (also light) nearly invisible.
+        return CiJingTheme.surface
     }
 
     private func optionBorder(_ option: String, item: PracticeQuestion) -> Color {
@@ -471,6 +473,7 @@ struct PracticeSessionView: View {
     private func recordOutcome(_ item: PracticeQuestion, quality: Int) {
         let correct = quality >= 4
         lastWasCorrect = correct
+        store.playHaptic(correct ? .answerCorrect : .answerIncorrect)
         attemptsByKind[item.kind, default: 0] += 1
         if correct { correctByKind[item.kind, default: 0] += 1 }
 
@@ -508,6 +511,7 @@ struct PracticeSessionView: View {
     private func showSummary() {
         feedbackPresented = false
         stage = .summary
+        store.playHaptic(.completion)
         Task {
             try? await Task.sleep(for: .milliseconds(280))
             showBadge = true

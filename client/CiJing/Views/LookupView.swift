@@ -52,6 +52,7 @@ struct LookupView: View {
         .alert("暂时无法查询", isPresented: Binding(get: { errorMessage != nil }, set: { if !$0 { errorMessage = nil } })) {
             Button("知道了") { errorMessage = nil }
         } message: { Text(errorMessage ?? "") }
+        .onDisappear { speech.stop() }
     }
 
     private var emptyState: some View {
@@ -167,7 +168,9 @@ struct LookupView: View {
         Task {
             defer { isLookingUp = false }
             do {
-                result = try await store.api.lookupWord(term)
+                let value = try await store.api.lookupWord(term)
+                result = value
+                if store.autoPronunciationEnabled { speech.speak(value.term) }
                 remember(term.lowercased())
             } catch { errorMessage = error.localizedDescription }
         }

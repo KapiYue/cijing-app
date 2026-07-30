@@ -276,6 +276,7 @@ struct ReadingSessionView: View {
     private func startPractice() {
         guard !startingPractice else { return }
         startingPractice = true
+        store.playHaptic(.completion)
         speech.stop()
         Task {
             await store.markReadingComplete(displayed)

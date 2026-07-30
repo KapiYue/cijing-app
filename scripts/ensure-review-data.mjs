@@ -192,7 +192,7 @@ if (!shouldApply) {
     activityDays: existingActivity.length,
     profileDisplayName: existingProfiles[0]?.display_name ?? null,
     screenshotCoreDatasetMatches: wordsMatch && readingsMatch && profileMatches && activityMatches,
-    previewOnlyTotals: "商品页截图中的 146/68 与首页 8 个新词是 -ui-preview 独立汇总值，不能由同一套 8 词生产数据同时推导。",
+    screenshotPlan: "商品页预览已校准为与当前 8 词审核数据一致：已学习 8、已掌握 0、今日新词 1。",
     nextStep: `node scripts/ensure-review-data.mjs --email=${email} --apply`,
   }, null, 2));
   process.exit(0);
@@ -330,5 +330,5 @@ console.log(JSON.stringify({
     && verification[1].length === 3
     && verification[2].length === 18
     && verification[3][0]?.display_name === "Qing",
-  previewOnlyTotals: "146/68 与首页 8 个新词属于 -ui-preview 独立汇总值；生产 RPC 会按当前 8 词真实计算为 8/0 与 1 个新词。",
+  screenshotPlan: "商品页预览与生产 RPC 一致：已学习 8、已掌握 0、今日新词 1。",
 }, null, 2));

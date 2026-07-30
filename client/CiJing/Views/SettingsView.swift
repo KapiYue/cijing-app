@@ -10,6 +10,7 @@ struct SettingsView: View {
     @EnvironmentObject private var api: SupabaseAPI
     @State private var importing = false
     @State private var checkingUpdate = false
+    @State private var updatingReminder = false
     @State private var cacheSize = AppCache.formattedSize
     @State private var message: String?
 
@@ -34,6 +35,7 @@ struct SettingsView: View {
                     SettingsSectionTitle("学习偏好")
                     SettingsGroup {
                         SettingsToggleRow(icon: "bell", title: "每日学习提醒", subtitle: "每天 20:30", isOn: dailyReminderBinding)
+                            .disabled(updatingReminder)
                         SettingsDivider()
                         SettingsToggleRow(icon: "speaker.wave.2", title: "自动播放发音", subtitle: "打开词条时自动朗读", isOn: autoPronunciationBinding)
                         SettingsDivider()
@@ -84,6 +86,7 @@ struct SettingsView: View {
 
                     Button(role: .destructive) {
                         Task {
+                            await store.clearDailyReminder()
                             await api.signOut()
                             store.clearSessionData()
                         }
@@ -135,7 +138,16 @@ struct SettingsView: View {
         AppAppearance.selection(for: store.preferredAppearance).title
     }
     private var dailyReminderBinding: Binding<Bool> {
-        Binding(get: { store.dailyReminderEnabled }, set: { store.setDailyReminderEnabled($0) })
+        Binding(get: { store.dailyReminderEnabled }, set: { value in
+            guard !updatingReminder else { return }
+            updatingReminder = true
+            Task {
+                defer { updatingReminder = false }
+                if let reminderMessage = await store.setDailyReminderEnabled(value) {
+                    message = reminderMessage
+                }
+            }
+        })
     }
     private var autoPronunciationBinding: Binding<Bool> {
         Binding(get: { store.autoPronunciationEnabled }, set: { store.setAutoPronunciationEnabled($0) })
@@ -597,6 +609,7 @@ private struct DeleteAccountView: View {
         deleting = true
         Task {
             do {
+                await store.clearDailyReminder()
                 try await api.deleteAccount()
                 store.clearSessionData()
             } catch {

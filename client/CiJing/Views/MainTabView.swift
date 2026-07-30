@@ -111,6 +111,7 @@ struct MainTabView: View {
     }
 
     private func refreshSelectedTab() async {
+        await store.reconcileDailyReminder()
         switch selection {
         case .library: await store.refreshLibrary()
         case .home: await store.refreshAll()

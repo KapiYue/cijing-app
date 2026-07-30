@@ -32,7 +32,14 @@ struct WordDetailView: View {
         }
         .navigationTitle(current.term).navigationBarTitleDisplayMode(.inline)
         .toolbar { ToolbarItem(placement: .topBarTrailing) { Menu { statusMenu; Divider(); Button("删除单词", role: .destructive) { confirmDelete = true } } label: { Image(systemName: "ellipsis.circle") } } }
-        .task { async let c = store.api.contexts(wordID: current.id); async let e = store.api.reviewEvents(wordID: current.id); do { contexts = try await c; events = try await e } catch { errorMessage = error.localizedDescription } }
+        .task {
+            if store.autoPronunciationEnabled { speech.speak(current.term) }
+            async let c = store.api.contexts(wordID: current.id)
+            async let e = store.api.reviewEvents(wordID: current.id)
+            do { contexts = try await c; events = try await e }
+            catch { errorMessage = error.localizedDescription }
+        }
+        .onDisappear { speech.stop() }
         .confirmationDialog("删除“\(current.term)”？", isPresented: $confirmDelete, titleVisibility: .visible) { Button("删除", role: .destructive) { Task { do { try await store.deleteWord(current); dismiss() } catch { errorMessage = error.localizedDescription } } } }
     }
 
@@ -94,4 +101,3 @@ struct WordDetailView: View {
 }
 
 private struct LearnMetric: View { let title, value: String; var body: some View { VStack(alignment: .leading, spacing: 3) { Text(value).font(.headline); Text(title).font(.caption2).foregroundStyle(CiJingTheme.secondary) }.frame(maxWidth: .infinity, alignment: .leading) } }
-
