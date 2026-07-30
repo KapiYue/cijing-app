@@ -43,7 +43,7 @@ async function findUser(targetEmail) {
   throw new Error(`未找到审核账号：${targetEmail}`);
 }
 
-const sourceTitle = "词鲸 · 持续进步主题词集";
+const sourceTitle = "Chrome 扩展";
 const now = Date.now();
 const isoDaysAgo = (days, hour = 9) => {
   const date = new Date(now - days * 86_400_000);
@@ -53,52 +53,52 @@ const isoDaysAgo = (days, hour = 9) => {
 
 const vocabulary = [
   {
-    term: "resilient", phonetic: "rɪˈzɪliənt", part: "adj.", meaning: "有韧性的；能够恢复的",
-    definition: "Able to recover and continue after difficulty.",
-    example: "A resilient learner treats mistakes as useful information.", exampleZh: "有韧性的学习者会把错误视为有用的信息。",
-    status: "learning", strength: 0.54, intervalDays: 3, repetitions: 2, lapses: 0, errorCount: 1,
+    term: "estimate", phonetic: "ˈestɪmeɪt", part: "v.", meaning: "估计；估算",
+    definition: "To form an approximate judgment or calculation.",
+    example: "Mei stopped trying to estimate how quickly her English would improve.", exampleZh: "小梅不再估算英语能多快进步。",
+    status: "weak", strength: 0.15, intervalDays: 1, repetitions: 1, lapses: 2, errorCount: 2,
   },
   {
-    term: "deliberate", phonetic: "dɪˈlɪbərət", part: "adj.", meaning: "有意识的；深思熟虑的",
-    definition: "Done consciously and with careful intention.",
-    example: "She made a deliberate choice to study for twenty minutes each morning.", exampleZh: "她有意识地选择每天早晨学习二十分钟。",
-    status: "review", strength: 0.66, intervalDays: 5, repetitions: 3, lapses: 0, errorCount: 0,
+    term: "investment", phonetic: "ɪnˈvestmənt", part: "n.", meaning: "投资；投入",
+    definition: "The use of time, effort, or money for a future benefit.",
+    example: "This routine became an investment in her future.", exampleZh: "这个习惯成了她对未来的投入。",
+    status: "weak", strength: 0.33, intervalDays: 1, repetitions: 1, lapses: 2, errorCount: 2,
   },
   {
-    term: "sustain", phonetic: "səˈsteɪn", part: "v.", meaning: "维持；支撑",
-    definition: "To keep an activity or process continuing over time.",
-    example: "Small goals are easier to sustain than sudden bursts of effort.", exampleZh: "小目标比突发式努力更容易长期维持。",
-    status: "weak", strength: 0.29, intervalDays: 1, repetitions: 1, lapses: 2, errorCount: 2,
+    term: "independent", phonetic: "ˌɪndɪˈpendənt", part: "adj.", meaning: "独立的；自主的",
+    definition: "Able to act or develop without depending on others.",
+    example: "This independent routine became part of her day.", exampleZh: "这个独立的习惯成了她每天生活的一部分。",
+    status: "learning", strength: 0.45, intervalDays: 2, repetitions: 2, lapses: 0, errorCount: 0,
   },
   {
-    term: "subtle", phonetic: "ˈsʌtl", part: "adj.", meaning: "细微的；不易察觉的",
-    definition: "Small but meaningful and not immediately obvious.",
-    example: "A subtle improvement appeared in her pronunciation after a week.", exampleZh: "一周后，她的发音出现了细微的进步。",
-    status: "new", strength: 0.12, intervalDays: 0, repetitions: 0, lapses: 0, errorCount: 0,
+    term: "outperform", phonetic: "ˌaʊtpərˈfɔːrm", part: "v.", meaning: "胜过；表现优于",
+    definition: "To perform better than someone or something else.",
+    example: "Small daily efforts can outperform sudden bursts of motivation.", exampleZh: "每天微小的努力能够胜过一时的热情。",
+    status: "review", strength: 0.33, intervalDays: 3, repetitions: 2, lapses: 0, errorCount: 0,
   },
   {
-    term: "consistent", phonetic: "kənˈsɪstənt", part: "adj.", meaning: "持续稳定的；一致的",
-    definition: "Continuing in a steady and reliable way.",
-    example: "Consistent practice made difficult sentences feel familiar.", exampleZh: "持续稳定的练习让困难的句子逐渐变得熟悉。",
-    status: "learning", strength: 0.48, intervalDays: 2, repetitions: 2, lapses: 0, errorCount: 1,
+    term: "automated", phonetic: "ˈɔːtəmeɪtɪd", part: "adj.", meaning: "自动化的",
+    definition: "Controlled or performed automatically by a system.",
+    example: "Automated reminders helped her maintain the routine.", exampleZh: "自动提醒帮助她维持这个习惯。",
+    status: "learning", strength: 0.52, intervalDays: 2, repetitions: 2, lapses: 0, errorCount: 0,
   },
   {
-    term: "reflect", phonetic: "rɪˈflekt", part: "v.", meaning: "反思；认真思考",
-    definition: "To think carefully about an experience or decision.",
-    example: "At night, he took a minute to reflect on what he had learned.", exampleZh: "晚上，他会花一分钟反思当天学到的内容。",
-    status: "mastered", strength: 0.91, intervalDays: 21, repetitions: 6, lapses: 0, errorCount: 0,
+    term: "alternative", phonetic: "ɔːlˈtɜːrnətɪv", part: "n.", meaning: "选择；替代方案",
+    definition: "One of two or more available possibilities.",
+    example: "She chose a sustainable alternative to cramming.", exampleZh: "她选择了可持续的学习方式来代替突击。",
+    status: "learning", strength: 0.41, intervalDays: 2, repetitions: 2, lapses: 0, errorCount: 0,
   },
   {
-    term: "progress", phonetic: "ˈprɑːɡres", part: "n.", meaning: "进步；进展",
-    definition: "Movement toward a better or more complete state.",
-    example: "Visible progress often grows from work that first feels ordinary.", exampleZh: "看得见的进步往往来自起初看似普通的努力。",
-    status: "review", strength: 0.71, intervalDays: 7, repetitions: 4, lapses: 0, errorCount: 0,
+    term: "defense", phonetic: "dɪˈfens", part: "n.", meaning: "防御；保护",
+    definition: "The act of protecting someone, something, or an idea.",
+    example: "Clearer words gave her a stronger defense of her ideas.", exampleZh: "更清晰的词语让她能更有力地表达和捍卫观点。",
+    status: "review", strength: 0.38, intervalDays: 3, repetitions: 2, lapses: 0, errorCount: 0,
   },
   {
-    term: "momentum", phonetic: "moʊˈmentəm", part: "n.", meaning: "动力；势头",
-    definition: "The force that keeps a process developing after it has begun.",
-    example: "Completing one short lesson gave her momentum for the next day.", exampleZh: "完成一节短课让她有了第二天继续学习的动力。",
-    status: "new", strength: 0.16, intervalDays: 0, repetitions: 0, lapses: 0, errorCount: 0,
+    term: "long-horizon", phonetic: "ˌlɔːŋ həˈraɪzn", part: "adj.", meaning: "长期的；远期的",
+    definition: "Focused on results or decisions over a long period.",
+    example: "She developed a long-horizon perspective on learning.", exampleZh: "她形成了看待学习的长期视角。",
+    status: "new", strength: 0.08, intervalDays: 0, repetitions: 0, lapses: 0, errorCount: 0,
   },
 ];
 
@@ -121,7 +121,7 @@ function wordRow(userID, item, index) {
     first_context: item.example,
     first_source_url: null,
     first_source_title: sourceTitle,
-    notes: "App Store 审核演示词集",
+    notes: "App Store 商品页截图审核演示词集",
     custom_meaning: null,
     status: item.status,
     strength: item.strength,
@@ -140,42 +140,82 @@ function wordRow(userID, item, index) {
 }
 
 function activityRows(userID) {
-  const values = [
-    [5, 8, 1, 4, 22], [3, 10, 1, 5, 25], [4, 7, 1, 4, 19], [2, 12, 2, 6, 31],
-    [3, 9, 1, 5, 24], [2, 6, 1, 3, 17], [1, 5, 1, 4, 18],
-  ];
-  return values.map(([learned, reviewed, reading, practice, minutes], index) => {
-    const date = new Date(now - (6 - index) * 86_400_000);
+  return Array.from({ length: 18 }, (_, offset) => {
+    const date = new Date(now - offset * 86_400_000);
     const activityDate = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
     return {
       user_id: userID,
       activity_date: activityDate,
-      learned_count: learned,
-      reviewed_count: reviewed,
-      reading_count: reading,
-      practice_count: practice,
-      minutes,
+      learned_count: 5 + (offset % 5),
+      reviewed_count: 14 + (offset % 8),
+      reading_count: offset % 3 === 0 ? 2 : 1,
+      practice_count: 8 + (offset % 7),
+      minutes: 18 + (offset % 6) * 4,
       completed: true,
-      updated_at: isoDaysAgo(6 - index, 21),
+      updated_at: isoDaysAgo(offset, 21),
     };
   });
 }
 
 const user = await findUser(email);
-const existingWords = await request(`/rest/v1/words?user_id=eq.${user.id}&select=id,normalized_term,status`);
-const existingReadings = await request(`/rest/v1/reading_sessions?user_id=eq.${user.id}&cache_key=eq.app-review-demo-v1&select=id,title,created_at&limit=1`);
+const [existingWords, existingReadings, existingProfiles, existingActivity] = await Promise.all([
+  request(`/rest/v1/words?user_id=eq.${user.id}&select=id,normalized_term,status,strength&order=created_at.asc`),
+  request(`/rest/v1/reading_sessions?user_id=eq.${user.id}&select=id,title,target_terms,paragraphs,created_at&order=created_at.desc`),
+  request(`/rest/v1/profiles?id=eq.${user.id}&select=display_name,daily_new_goal,daily_review_goal,preferred_difficulty,preferred_theme,preferred_style,timezone&limit=1`),
+  request(`/rest/v1/daily_activity?user_id=eq.${user.id}&select=activity_date,learned_count,reviewed_count,reading_count,practice_count,completed&order=activity_date.desc`),
+]);
+
+const expectedStatuses = new Map(vocabulary.map((item) => [item.term, item.status]));
+const expectedReadingTitles = ["A Quiet Kind of Progress", "The Train Beyond the Rain", "Designing Time for Deep Work"];
+const wordsMatch = existingWords.length === vocabulary.length
+  && existingWords.every((word) => expectedStatuses.get(word.normalized_term) === word.status);
+const readingsMatch = existingReadings.length === expectedReadingTitles.length
+  && expectedReadingTitles.every((title) => existingReadings.some((reading) => reading.title === title));
+const profileMatches = existingProfiles[0]?.display_name === "Qing"
+  && existingProfiles[0]?.daily_new_goal === 8
+  && existingProfiles[0]?.daily_review_goal === 20
+  && existingProfiles[0]?.preferred_difficulty === "intermediate"
+  && existingProfiles[0]?.preferred_theme === "daily_life"
+  && existingProfiles[0]?.preferred_style === "story"
+  && existingProfiles[0]?.timezone === "Asia/Shanghai";
+const activityMatches = existingActivity.length === 18
+  && existingActivity.every((activity) => activity.completed);
 
 if (!shouldApply) {
   console.log(JSON.stringify({
     mode: "check",
     email,
     existingWords: existingWords.length,
-    existingReviewVocabulary: existingWords.filter((word) => vocabulary.some((item) => item.term === word.normalized_term)).length,
-    existingReviewReading: existingReadings[0]?.title ?? null,
+    expectedWords: vocabulary.length,
+    existingReadings: existingReadings.map((reading) => reading.title),
+    expectedReadings: expectedReadingTitles,
+    activityDays: existingActivity.length,
+    profileDisplayName: existingProfiles[0]?.display_name ?? null,
+    screenshotCoreDatasetMatches: wordsMatch && readingsMatch && profileMatches && activityMatches,
+    previewOnlyTotals: "商品页截图中的 146/68 与首页 8 个新词是 -ui-preview 独立汇总值，不能由同一套 8 词生产数据同时推导。",
     nextStep: `node scripts/ensure-review-data.mjs --email=${email} --apply`,
   }, null, 2));
   process.exit(0);
 }
+
+await Promise.all([
+  request(`/rest/v1/reading_sessions?user_id=eq.${user.id}`, { method: "DELETE" }),
+  request(`/rest/v1/daily_activity?user_id=eq.${user.id}`, { method: "DELETE" }),
+]);
+await request(`/rest/v1/words?user_id=eq.${user.id}`, { method: "DELETE" });
+await request(`/rest/v1/profiles?id=eq.${user.id}`, {
+  method: "PATCH",
+  body: {
+    display_name: "Qing",
+    daily_new_goal: 8,
+    daily_review_goal: 20,
+    preferred_difficulty: "intermediate",
+    preferred_theme: "daily_life",
+    preferred_style: "story",
+    timezone: "Asia/Shanghai",
+  },
+  headers: { Prefer: "return=minimal" },
+});
 
 const savedWords = await request("/rest/v1/words?on_conflict=user_id,normalized_term", {
   method: "POST",
@@ -185,53 +225,84 @@ const savedWords = await request("/rest/v1/words?on_conflict=user_id,normalized_
 
 const wordsByTerm = new Map(savedWords.map((word) => [word.normalized_term, word]));
 const targetWordIDs = vocabulary.map((item) => wordsByTerm.get(item.term)?.id).filter(Boolean);
-const reading = {
-  user_id: user.id,
-  title: "The Garden of Steady Progress",
-  subtitle: "持续进步的花园",
-  theme: "daily_life",
-  style: "story",
-  difficulty: "intermediate",
-  target_word_ids: targetWordIDs,
-  target_terms: vocabulary.map((item) => item.term),
-  paragraphs: [
-    {
-      english: "Every morning, Lina made a deliberate plan to study for twenty quiet minutes. Her consistent routine felt small, but each page showed a little more progress.",
-      chinese: "每天早晨，莉娜都会有意识地安排二十分钟安静学习。她稳定的习惯看似微小，但每一页都能看见一点进步。",
-    },
-    {
-      english: "When a subtle mistake appeared, she did not feel defeated. She paused to reflect, corrected the sentence, and became more resilient each time.",
-      chinese: "当细微的错误出现时，她没有感到挫败。她停下来反思、改正句子，并在每一次练习中变得更有韧性。",
-    },
-    {
-      english: "After several weeks, the habit was easy to sustain. The momentum from one completed lesson carried naturally into the next, like a garden growing one leaf at a time.",
-      chinese: "几周后，这个习惯已经很容易坚持。完成一节课积累的动力自然延续到下一节，就像花园一次长出一片新叶。",
-    },
-  ],
-  estimated_minutes: 4,
-  cache_key: "app-review-demo-v1",
-  is_cached: true,
-  translations_visible: false,
-  completed_at: isoDaysAgo(1, 20),
-  created_at: isoDaysAgo(2, 9),
-};
+const readingRows = [
+  {
+    user_id: user.id,
+    title: "A Quiet Kind of Progress",
+    subtitle: "一种安静的进步",
+    theme: "daily_life",
+    style: "story",
+    difficulty: "intermediate",
+    target_word_ids: targetWordIDs,
+    target_terms: vocabulary.map((item) => item.term),
+    paragraphs: [
+      {
+        english: "Small daily efforts can outperform sudden bursts of motivation. Mei stopped trying to estimate how quickly her English would improve and focused on one thoughtful page each morning.",
+        chinese: "每天微小的努力能够胜过一时的热情。小梅不再估算英语能多快进步，而是专注于每天清晨认真读完一页。",
+      },
+      {
+        english: "This independent routine became an investment in her future. Automated reminders helped, but the real change came from choosing a sustainable alternative to cramming.",
+        chinese: "这个独立的习惯成了她对未来的投资。自动提醒有所帮助，但真正的改变来自她选择了可持续的学习方式，而不是突击。",
+      },
+      {
+        english: "Weeks later, she could defend her ideas with clearer words and a long-horizon perspective. Her progress was quiet, but unmistakable.",
+        chinese: "几周后，她能用更清晰的词语表达并捍卫自己的观点，也拥有了更长远的视角。她的进步很安静，却清晰可见。",
+      },
+    ],
+    estimated_minutes: 4,
+    cache_key: "app-review-screenshot-v2-home",
+    is_cached: true,
+    translations_visible: true,
+    completed_at: isoDaysAgo(0, 20),
+    created_at: isoDaysAgo(0, 9),
+  },
+  {
+    user_id: user.id,
+    title: "The Train Beyond the Rain",
+    subtitle: "驶出雨幕的列车",
+    theme: "travel",
+    style: "story",
+    difficulty: "upper_intermediate",
+    target_word_ids: targetWordIDs.slice(0, 6),
+    target_terms: vocabulary.slice(0, 6).map((item) => item.term),
+    paragraphs: [{
+      english: "A delayed train gave Lina an unexpected afternoon in a mountain town. Instead of treating it as wasted time, she wandered into a family café and listened to the stories around her.",
+      chinese: "晚点的列车让莉娜意外地在山城多停留了一个下午。她没有把这当作浪费，而是走进一家家庭咖啡馆，倾听身边的故事。",
+    }],
+    estimated_minutes: 5,
+    cache_key: "app-review-screenshot-v2-travel",
+    is_cached: true,
+    translations_visible: false,
+    completed_at: isoDaysAgo(1, 20),
+    created_at: isoDaysAgo(1, 9),
+  },
+  {
+    user_id: user.id,
+    title: "Designing Time for Deep Work",
+    subtitle: "为深度工作设计时间",
+    theme: "workplace",
+    style: "article",
+    difficulty: "advanced",
+    target_word_ids: targetWordIDs.slice(-5),
+    target_terms: vocabulary.slice(-5).map((item) => item.term),
+    paragraphs: [{
+      english: "Protecting attention is less about perfect discipline than deliberate design. A team can reduce interruptions by agreeing on quiet hours and making communication expectations explicit.",
+      chinese: "保护注意力与其说依赖完美的自律，不如说依赖有意识的设计。团队可以约定安静时段，并明确沟通预期，以减少干扰。",
+    }],
+    estimated_minutes: 6,
+    cache_key: "app-review-screenshot-v2-work",
+    is_cached: true,
+    translations_visible: false,
+    completed_at: isoDaysAgo(2, 20),
+    created_at: isoDaysAgo(2, 9),
+  },
+];
 
-let savedReading;
-if (existingReadings[0]) {
-  const rows = await request(`/rest/v1/reading_sessions?id=eq.${existingReadings[0].id}`, {
-    method: "PATCH",
-    body: reading,
-    headers: { Prefer: "return=representation" },
-  });
-  savedReading = rows[0];
-} else {
-  const rows = await request("/rest/v1/reading_sessions", {
-    method: "POST",
-    body: reading,
-    headers: { Prefer: "return=representation" },
-  });
-  savedReading = rows[0];
-}
+const savedReadings = await request("/rest/v1/reading_sessions", {
+  method: "POST",
+  body: readingRows,
+  headers: { Prefer: "return=representation" },
+});
 
 await request("/rest/v1/daily_activity?on_conflict=user_id,activity_date", {
   method: "POST",
@@ -240,21 +311,24 @@ await request("/rest/v1/daily_activity?on_conflict=user_id,activity_date", {
 });
 
 const verification = await Promise.all([
-  request(`/rest/v1/words?user_id=eq.${user.id}&select=id,normalized_term,status&order=created_at.asc`),
+  request(`/rest/v1/words?user_id=eq.${user.id}&select=id,normalized_term,status,strength&order=created_at.asc`),
   request(`/rest/v1/reading_sessions?user_id=eq.${user.id}&select=id,title,target_terms,paragraphs,completed_at&order=created_at.desc`),
-  request(`/rest/v1/daily_activity?user_id=eq.${user.id}&select=activity_date,reviewed_count,reading_count,minutes&order=activity_date.desc&limit=7`),
+  request(`/rest/v1/daily_activity?user_id=eq.${user.id}&select=activity_date,learned_count,reviewed_count,reading_count,practice_count,minutes,completed&order=activity_date.desc`),
+  request(`/rest/v1/profiles?id=eq.${user.id}&select=display_name,daily_new_goal,daily_review_goal,preferred_difficulty,preferred_theme,preferred_style,timezone&limit=1`),
 ]);
 
 console.log(JSON.stringify({
   status: "ok",
   email,
   words: verification[0].length,
-  reviewVocabulary: verification[0].filter((word) => vocabulary.some((item) => item.term === word.normalized_term)).map((word) => word.normalized_term),
-  reviewReading: {
-    id: savedReading.id,
-    title: savedReading.title,
-    paragraphs: savedReading.paragraphs.length,
-    completedAt: savedReading.completed_at,
-  },
+  reviewVocabulary: verification[0].map((word) => `${word.normalized_term}:${word.status}`),
+  reviewReadings: savedReadings.map((reading) => ({ title: reading.title, paragraphs: reading.paragraphs.length })),
   activityDays: verification[2].length,
+  recentSevenTotals: verification[2].slice(0, 7).reverse().map((day) => day.learned_count + day.reviewed_count + day.practice_count),
+  profile: verification[3][0],
+  screenshotCoreDatasetMatches: verification[0].length === 8
+    && verification[1].length === 3
+    && verification[2].length === 18
+    && verification[3][0]?.display_name === "Qing",
+  previewOnlyTotals: "146/68 与首页 8 个新词属于 -ui-preview 独立汇总值；生产 RPC 会按当前 8 词真实计算为 8/0 与 1 个新词。",
 }, null, 2));

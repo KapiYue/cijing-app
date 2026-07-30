@@ -1,6 +1,6 @@
 # 词鲸官网静态页面
 
-本目录准备了 App Store Connect 使用的公开页面：
+本目录准备了未来供 App Store Connect 使用的公开页面。当前域名与 App 备案仍在办理，页面尚未作为正式公开 URL 交付，App Store Connect 先保留 `【备案中，URL 待上线后回填】`：
 
 - `/`：政策与支持入口
 - `/privacy`：隐私政策，对应 `https://cijing.joy-coder.com/privacy`

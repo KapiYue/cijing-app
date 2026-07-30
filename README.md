@@ -88,6 +88,8 @@ The top-level navigation stays simple, while each reading opens a focused sequen
 - Schedules review with strength, ease factor, interval, lapse, and due-date signals.
 - Provides system pronunciation, shadowing, and short reading-based exercises.
 - Protects all user data with Supabase Row Level Security.
+- Follows the system appearance before sign-in and for unset accounts; signed-in appearance and local learning switches are isolated by user UUID, and the App Icon includes light/dark system variants.
+- Requires email verification for new accounts and rejects an unexpected session returned directly from sign-up.
 
 ## Repository layout
 
@@ -133,9 +135,26 @@ make functions
 
 Open `client/CiJing.xcodeproj`, select the `CiJing` scheme and an iOS 17+ simulator, then run. Load `extension/` as an unpacked extension from `chrome://extensions`.
 
-For a physical iPhone using production data, run `make server-start` and `make device-config` before rebuilding. The iOS app uses the Mac's stable Bonjour hostname, Flask forwards user-scoped requests to hosted Supabase, and the Chrome extension continues to use hosted Supabase directly. Once this device build is installed, changing Wi-Fi IP addresses requires only restarting Flask, not regenerating configuration. Run `make config` and `make config-check` before creating an Archive, TestFlight, or App Store build so release binaries use the production HTTPS URL directly.
-
 Configuration, database, Edge Function, and production instructions live in [supabase/README.md](supabase/README.md). Contribution workflow and physical-device troubleshooting live in [CONTRIBUTING.md](CONTRIBUTING.md).
+
+## Physical-device and release quick reference
+
+Once the iPhone has a device-integration build generated with `make device-config` and rebuilt in Xcode, routine local testing only requires this command from the repository root:
+
+```bash
+make server-start
+```
+
+Keep that terminal running and keep the iPhone and Mac on the same LAN. The device uses the Mac's Bonjour `.local` hostname, so a Wi-Fi IP change does not require regenerating configuration. For the first device setup, after switching back from release configuration, or after generated files were cleaned, run `make device-config` first and rebuild/reinstall the app in Xcode; starting Flask alone cannot change the URL embedded in an installed app.
+
+Before creating an Archive, TestFlight build, or App Store build, verify that `SUPABASE_URL` in the root `.env` is the hosted production HTTPS URL, then run:
+
+```bash
+make config
+make config-check
+```
+
+`make device-config` never changes the root `.env`, so `make config` restores the iOS client to the hosted URL from `.env`; `make config-check` verifies that generated files match it. Rebuild the Archive after both commands succeed—do not reuse a local device build that points to Flask. The release app does not require the local Flask server.
 
 ## Verification
 

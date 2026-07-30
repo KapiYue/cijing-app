@@ -88,6 +88,8 @@
 - 使用熟练度、易度系数、间隔、遗忘次数与到期时间安排复习。
 - 支持系统发音、跟读和基于短文的练习闭环。
 - 所有用户数据均由 Supabase Row Level Security 按账号隔离。
+- 未登录和未设置显示模式时默认跟随系统外观；登录后的显示选择及本机学习开关按用户 UUID 隔离，App Icon 随系统浅色/深色模式切换。
+- 新账号必须完成邮箱验证后登录；客户端会拒绝注册后异常建立的即时会话。
 
 ## 仓库结构
 
@@ -130,9 +132,26 @@ make functions
 
 用 Xcode 打开 `client/CiJing.xcodeproj`，选择 `CiJing` scheme 和 iOS 17+ 模拟器运行。Chrome 扩展可在 `chrome://extensions` 中选择“加载已解压的扩展程序”，然后载入 `extension/`。
 
-真机使用生产数据联调时，执行 `make server-start` 启动 Flask，并在首次构建联调版本前执行 `make device-config`。iOS 会通过 Mac 稳定的 Bonjour 主机名连接 Flask，由 Flask 以用户会话转发到线上 Supabase；Chrome 扩展仍直连线上 Supabase。此版本安装后，即使 Wi-Fi IP 改变也只需重启 Flask，不必重新生成配置。制作 Archive、TestFlight 或 App Store 构建前，运行 `make config` 和 `make config-check`，确保发布包恢复为生产 HTTPS 地址直连。
-
 配置、数据库、Edge Functions 与生产上线说明见 [supabase/README.md](supabase/README.md)；贡献流程和真机排障见 [CONTRIBUTING.md](CONTRIBUTING.md)。
+
+## 真机联调与正式归档速查
+
+如果 iPhone 上已经安装过通过 `make device-config` 生成并重新构建的真机联调版本，之后日常本地联调只需在项目根目录运行：
+
+```bash
+make server-start
+```
+
+保持该终端运行，并确保 iPhone 与 Mac 位于同一局域网。真机使用 Mac 的 Bonjour `.local` 主机名，Wi-Fi 更换 IP 后不需要重新生成配置。如果是首次配置真机、刚执行过正式配置，或者清理了生成文件，则先运行 `make device-config`，再用 Xcode 重新构建并安装一次；单独启动 Flask 不会改变已安装 App 的连接地址。
+
+正式 Archive、TestFlight 或 App Store 构建前，先确认根目录 `.env` 的 `SUPABASE_URL` 是线上生产 HTTPS 地址，然后运行：
+
+```bash
+make config
+make config-check
+```
+
+`make device-config` 不会修改根目录 `.env`，所以 `make config` 会把 iOS 配置恢复为 `.env` 中的线上地址；`make config-check` 负责确认生成文件与 `.env` 一致。两条命令成功后必须重新构建 Archive，不能复用之前指向 Flask 的本地联调包；正式包运行时也不需要启动本地 Flask。
 
 ## 验证
 

@@ -1,6 +1,6 @@
 # Supabase 架构、开发与生产运维
 
-本目录是词鲸的主要后端：PostgreSQL 迁移、Row Level Security（RLS）、RPC、种子说明和 Deno Edge Functions。iOS App 与 Chrome 扩展直接使用 Supabase Auth/PostgREST；需要 AI 或管理员权限的操作经 Edge Functions 完成。
+本目录是词鲸的主要后端：PostgreSQL 迁移、Row Level Security（RLS）、RPC、种子说明和 Deno Edge Functions。发布版 iOS App 与 Chrome 扩展直接使用 Supabase Auth/PostgREST；真机本地联调版 iOS 会先经过 Mac 上的 Flask 8000 透明转发。需要 AI 或管理员权限的操作经 Edge Functions 完成。
 
 ```text
 iOS App ─────┐
@@ -8,7 +8,7 @@ iOS App ─────┐
 Chrome 扩展 ─┘                 └──── Edge Functions ── OpenRouter / Qwen
 ```
 
-Flask 服务不在当前学习请求链路中，其边界和部署方式见 [`server/README.md`](../server/README.md)。
+Flask 只进入真机本地联调请求链路，不进入最终 App Store Release 包；它保留客户端 publishable key、用户会话和 Supabase RLS 边界。其边界和启动方式见 [`server/README.md`](../server/README.md)。
 
 ## 目录与职责
 
