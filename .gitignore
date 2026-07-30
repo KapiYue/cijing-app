@@ -1,24 +1,116 @@
+# ==============================
+# macOS
+# ==============================
 .DS_Store
-.env
-.env.*
-!.env.example
-supabase/.temp/
-node_modules/
-.tools/
-extension/dist/
-extension/shared/generated-client-config.js
+.AppleDouble
+.LSOverride
+Icon
+._*
+.Spotlight-V100
+.Trashes
+
+# ==============================
+# Xcode / Swift
+# ==============================
+build/
+DerivedData/
 client/DerivedData/
 client/DerivedDataSimulator/
 client/.derived-data/
-client/CiJing/Core/GeneratedClientConfig.swift
-client/*.xcworkspace/xcuserdata/
-client/*.xcodeproj/xcuserdata/
+*.moved-aside
+*.pbxuser
+*.mode1v3
+*.mode2v3
+*.perspectivev3
+!default.pbxuser
+!default.mode1v3
+!default.mode2v3
+!default.perspectivev3
+xcuserdata/
+*.xcuserstate
+*.xcscmblueprint
+*.xccheckout
+*.hmap
+.build/
+.swiftpm/
+
+# ==============================
+# Local/generated configuration
+# ==============================
+.env
+.env.*
+*.env
+*.env.*
+!.env.example
+!*.env.example
+/client/CiJing/Core/GeneratedClientConfig.swift
+/extension/shared/generated-client-config.js
+/supabase/.temp/
+
+# ==============================
+# Dependencies, caches and test output
+# ==============================
+node_modules/
+.tools/
+.cache/
+extension/dist/
 server/venv/
 server/__pycache__/
-*.xcuserstate
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
 
-# Local prototypes and App Store submission materials (keep on disk only)
+# ==============================
+# Local tools, editors and prototypes
+# ==============================
+.agents/
+.codex/
+.cursor/
+.claude/
+.vscode/
+.idea/
+*.code-workspace
+*.swp
+*~
+**/prototype/
+**/prototype_*/
+
+# ==============================
+# Archives, credentials and signing files
+# ==============================
+*.zip
+*.rar
+*.7z
+*.tar
+*.tar.gz
+*.tgz
+*.pem
+*.key
+*.p8
+*.p12
+*.pfx
+*.cer
+*.mobileprovision
+id_rsa
+id_rsa.*
+id_ed25519
+id_ed25519.*
+credentials.json
+service-account*.json
+secrets.yml
+secrets.yaml
+secrets.json
+
+# ==============================
+# Maintainer-only release material
+# ==============================
+# Keep public policies, component guides, and website sources tracked.
+# App Store forms, checklists, handoff notes and submission bundles stay local.
+/HANDOFF.md
+/HANDOFFmd
 /deliverables/
 /docs/APP_STORE_CHECKLIST_zh.md
 /docs/APP_STORE_METADATA_zh.md
 /docs/assets/app-store-connect/
+/docs/policy-site-deployment.md

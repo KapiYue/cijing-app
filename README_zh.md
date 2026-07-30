@@ -10,9 +10,9 @@
 
 <p align="center">
   <a href="README.md">English</a> ·
-  <a href="docs/DEVELOPMENT.md">开发指南</a> ·
-  <a href="docs/ARCHITECTURE.md">架构说明</a> ·
-  <a href="docs/PRODUCTION.md">生产部署</a> ·
+  <a href="CONTRIBUTING.md">参与贡献</a> ·
+  <a href="supabase/README.md">Supabase 指南</a> ·
+  <a href="server/README.md">可信服务</a> ·
   <a href="docs/APP_STORE_CHECKLIST_zh.md">App Store 清单</a>
 </p>
 
@@ -98,15 +98,27 @@
 ├── supabase/    # PostgreSQL 迁移、RLS、RPC 与 Edge Functions
 ├── server/      # 可信 Flask 服务边界与健康检查
 ├── scripts/     # 配置、审计与冒烟测试脚本
-├── docs/        # 开发、架构、生产部署与商店素材
+├── docs/        # 政策、运维指南、模型说明与商店素材
 └── website/     # 对外托管的隐私政策与支持页面
 ```
 
-iOS App 和扩展通过 Supabase Auth 与 PostgREST 共享账号和学习数据；通过身份校验的 Edge Functions 调用所配置的 OpenRouter 模型生成词义解释和分级短文。服务端密钥与 AI 服务密钥不会进入客户端安装包。
+## 架构与安全摘要
+
+```text
+iOS App ─────┐
+             ├─ Supabase Auth / PostgREST ── PostgreSQL + RLS + RPC
+Chrome 扩展 ─┘                    └────────── Edge Functions ── OpenRouter / Qwen
+
+Flask 服务 ── 可信健康检查与运维边界（不在当前用户请求链路中）
+```
+
+iOS App 和扩展复用同一个 Supabase 账号及按用户隔离的学习数据。所有业务表都启用 Row Level Security，数据库函数在已认证用户范围内执行。通过身份校验的 Edge Functions 只把词典补充或分级阅读所需的任务输入发送给配置的 OpenRouter 模型。Flask 服务是独立的可信边界，用于健康检查和未来的特权任务，当前不参与学习请求。
+
+根目录 `.env` 是本地配置的唯一来源，生成的 iOS 和扩展配置不会进入 Git。客户端包只含 Supabase URL 与 publishable key；Supabase secret key 和 OpenRouter API key 只存在于可信运行时。组件细节见 [Supabase 架构与运维指南](supabase/README.md)和[可信服务指南](server/README.md)。
 
 ## 快速开始
 
-需要 macOS、Xcode 16 或更新版本、Node.js 20+、Docker Desktop 和 Chrome。
+需要 macOS、Xcode 16 或更新版本、Node.js 20+、Docker Desktop 和 Chrome。仓库脚本会在首次使用时下载并缓存固定版本的 Supabase CLI。
 
 ```bash
 cp .env.example .env
@@ -120,6 +132,10 @@ make functions
 
 用 Xcode 打开 `client/CiJing.xcodeproj`，选择 `CiJing` scheme 和 iOS 17+ 模拟器运行。Chrome 扩展可在 `chrome://extensions` 中选择“加载已解压的扩展程序”，然后载入 `extension/`。
 
+真机连接本地环境时，先启动 Supabase，再执行 `make device-config` 后重新构建。该命令会把回环地址换成 Mac 当前的局域网地址，因此 iPhone 与 Mac 必须在同一网络。制作 Archive、TestFlight 或 App Store 构建前，应把 `.env` 恢复为生产 HTTPS URL，并重新运行 `make config` 和 `make config-check`。
+
+配置、数据库、Edge Functions 与生产上线说明见 [supabase/README.md](supabase/README.md)；贡献流程和真机排障见 [CONTRIBUTING.md](CONTRIBUTING.md)。
+
 ## 验证
 
 ```bash
@@ -130,6 +146,13 @@ make ios-build
 ```
 
 本地 Supabase 启动后可运行 `make smoke` 验证跨端 API 流程；生产部署完成后可运行 `make production-audit` 与 `make production-smoke`。
+
+## 文档导航
+
+- [Supabase 架构、本地开发与生产运维](supabase/README.md)
+- [数据库迁移指南](docs/supabase-migration-guide.md)与 [Qwen3.6 Flash 集成说明](docs/qwen/qwen3.6-flash.md)
+- [可信 Flask 服务](server/README.md)与[公开网站](website/README.md)
+- [隐私政策](docs/privacy-policy.md)、[使用条款](docs/terms-of-service.md)与[支持说明](docs/support.md)
 
 ## 参与贡献与安全
 

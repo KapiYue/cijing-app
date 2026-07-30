@@ -1,4 +1,5 @@
 import fs from "node:fs";
+import os from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { readEnvFile, setEnvValue } from "./load-env.mjs";
@@ -6,14 +7,45 @@ import { readEnvFile, setEnvValue } from "./load-env.mjs";
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const sourcePath = path.join(root, ".env");
 const isCheck = process.argv.includes("--check");
+const useLocalDeviceAddress = process.argv.includes("--local-device");
 const urlIndex = process.argv.indexOf("--url");
-const requestedURL = urlIndex >= 0 ? process.argv[urlIndex + 1] : undefined;
+let requestedURL = urlIndex >= 0 ? process.argv[urlIndex + 1] : undefined;
 
 if (urlIndex >= 0 && !requestedURL) {
   throw new Error("--url 后需要提供完整地址，例如 http://192.168.1.20:54321");
 }
 if (isCheck && requestedURL) {
   throw new Error("--check 不能与 --url 同时使用");
+}
+if (isCheck && useLocalDeviceAddress) {
+  throw new Error("--check 不能与 --local-device 同时使用");
+}
+if (requestedURL && useLocalDeviceAddress) {
+  throw new Error("--url 不能与 --local-device 同时使用");
+}
+
+if (useLocalDeviceAddress) {
+  const interfaceName = process.env.CIJING_NETWORK_INTERFACE || "en0";
+  const addresses = os.networkInterfaces()[interfaceName] || [];
+  const localIPv4 = addresses.find((entry) =>
+    entry.family === "IPv4"
+      && !entry.internal
+      && !entry.address.startsWith("169.254.")
+  );
+
+  if (!localIPv4) {
+    throw new Error(
+      `未能从 ${interfaceName} 读取可供真机访问的 IPv4 地址。请连接 Wi-Fi，或用 CIJING_NETWORK_INTERFACE 指定实际接口。`
+    );
+  }
+
+  const port = process.env.CIJING_LOCAL_SUPABASE_PORT || "54321";
+  if (!/^\d+$/.test(port) || Number(port) < 1 || Number(port) > 65535) {
+    throw new Error("CIJING_LOCAL_SUPABASE_PORT 必须是 1 到 65535 之间的端口号");
+  }
+
+  requestedURL = `http://${localIPv4.address}:${port}`;
+  console.log(`已读取本机 ${interfaceName} 地址：${localIPv4.address}`);
 }
 
 let config = readEnvFile(sourcePath);

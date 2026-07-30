@@ -10,9 +10,9 @@
 
 <p align="center">
   <a href="README_zh.md">简体中文</a> ·
-  <a href="docs/DEVELOPMENT.md">Development</a> ·
-  <a href="docs/ARCHITECTURE.md">Architecture</a> ·
-  <a href="docs/PRODUCTION.md">Production</a> ·
+  <a href="CONTRIBUTING.md">Contributing</a> ·
+  <a href="supabase/README.md">Supabase</a> ·
+  <a href="server/README.md">Trusted server</a> ·
   <a href="docs/APP_STORE_CHECKLIST_zh.md">App Store checklist</a>
 </p>
 
@@ -98,15 +98,27 @@ The top-level navigation stays simple, while each reading opens a focused sequen
 ├── supabase/    # PostgreSQL migrations, RLS, RPCs, and Edge Functions
 ├── server/      # Trusted Flask boundary and health checks
 ├── scripts/     # Configuration, audit, and smoke-test utilities
-├── docs/        # Development, architecture, production, and store assets
+├── docs/        # Policies, operations guides, model notes, and store assets
 └── website/     # Privacy policy and support pages for public hosting
 ```
 
-The iOS app and extension talk to Supabase Auth and PostgREST. Authenticated Edge Functions call the configured OpenRouter model for dictionary explanations and graded readings. Server-only and AI provider keys are never embedded in client bundles.
+## Architecture and security
+
+```text
+iOS app ─────┐
+             ├─ Supabase Auth / PostgREST ── PostgreSQL + RLS + RPC
+Chrome ──────┘                    └────────── Edge Functions ── OpenRouter / Qwen
+
+Flask server ── trusted health and operations boundary (outside the user request path)
+```
+
+The iOS app and extension share a Supabase account and user-scoped learning data. Every business table has Row Level Security, and database functions execute in the authenticated user's scope. Authenticated Edge Functions send only the task inputs needed for dictionary enrichment or graded reading generation to the configured OpenRouter model. The Flask service is a separate trusted boundary for health checks and future privileged jobs; it is not currently part of the learning request path.
+
+The root `.env` is the only local configuration source. Generated iOS and extension configuration is ignored by Git. Client bundles contain only the Supabase URL and publishable key; Supabase secret keys and the OpenRouter API key stay in trusted runtimes. See [Supabase architecture and operations](supabase/README.md) and the [trusted server guide](server/README.md) for component details.
 
 ## Quick start
 
-Requirements: macOS, Xcode 16 or newer, Node.js 20+, Docker Desktop, and Chrome.
+Requirements: macOS, Xcode 16 or newer, Node.js 20+, Docker Desktop, and Chrome. The repository wrapper downloads and caches its pinned Supabase CLI version on first use.
 
 ```bash
 cp .env.example .env
@@ -120,6 +132,10 @@ make functions
 
 Open `client/CiJing.xcodeproj`, select the `CiJing` scheme and an iOS 17+ simulator, then run. Load `extension/` as an unpacked extension from `chrome://extensions`.
 
+For a physical iPhone, start the local stack and run `make device-config` before rebuilding. This replaces the loopback URL with the Mac's current LAN address; the phone and Mac must be on the same network. Restore the production HTTPS URL in `.env`, then rerun `make config` and `make config-check`, before creating an Archive, TestFlight, or App Store build.
+
+Configuration, database, Edge Function, and production instructions live in [supabase/README.md](supabase/README.md). Contribution workflow and physical-device troubleshooting live in [CONTRIBUTING.md](CONTRIBUTING.md).
+
 ## Verification
 
 ```bash
@@ -130,6 +146,13 @@ make ios-build
 ```
 
 With Supabase running, `make smoke` verifies the cross-client API flow. Production environments can use `make production-audit` and `make production-smoke` after deployment.
+
+## Documentation
+
+- [Supabase architecture, local development, and production operations](supabase/README.md)
+- [Database migration guide](docs/supabase-migration-guide.md) and [Qwen3.6 Flash integration](docs/qwen/qwen3.6-flash.md)
+- [Trusted Flask server](server/README.md) and [public website](website/README.md)
+- [Privacy policy](docs/privacy-policy.md), [terms of service](docs/terms-of-service.md), and [support](docs/support.md)
 
 ## Contributing and security
 

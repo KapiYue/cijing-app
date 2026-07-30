@@ -3,45 +3,133 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
-  <meta name="description" content="词鲸背单词支持中心：登录、同步、AI 短文、权限与账号删除帮助。">
-  <title>支持与帮助｜词鲸背单词</title>
+  <meta name="description" content="词鲸背单词支持中心与使用条款：登录、同步、扩展、AI、权限和账号删除帮助。">
+  <title>支持与使用条款｜词鲸背单词</title>
   <link rel="icon" href="/favicon.svg" type="image/svg+xml">
   <link rel="stylesheet" href="/styles.css">
 </head>
 <body>
+  <!-- Public rendering of docs/support.md and docs/terms-of-service.md. Keep them in sync. -->
   <header class="shell nav">
     <a class="brand" href="/"><span class="mark">鲸</span><span>词鲸背单词</span></a>
-    <nav class="nav-links"><a href="/privacy">隐私政策</a><a href="/support">支持</a></nav>
+    <nav class="nav-links"><a href="/privacy">隐私政策</a><a href="#terms">使用条款</a><a aria-current="page" href="/support">支持</a></nav>
   </header>
   <main class="shell">
     <section class="hero">
       <div class="eyebrow">CIJING SUPPORT</div>
       <h1>有问题，我们一起把它理顺。</h1>
-      <p class="lead">这里汇总登录、同步、AI 短文、语音权限和账号删除的常见问题。联系时请勿发送密码、访问令牌或其他敏感信息。</p>
+      <p class="lead">这里汇总登录、同步、扩展、AI 短文、语音权限和账号删除帮助，并提供完整使用条款。</p>
+      <div class="meta"><span class="pill">更新日期：2026 年 7 月 30 日</span><span class="pill">通常 7 个工作日内确认收到</span></div>
       <div class="contact"><a class="button" href="mailto:zdjoey@126.com">联系支持：zdjoey@126.com</a></div>
+      <p class="notice">请勿发送密码、验证码、访问令牌、secret key、完整朗读录音或包含他人私人内容的网页文本。</p>
     </section>
 
-    <section class="card">
-      <h2>常见问题</h2>
-      <h3>为什么登录后没有看到以前的短文？</h3><p>先确认使用的是同一邮箱和稳定网络。首页会从云端加载该账号已生成的短文；下拉刷新或重启 App 后仍应保留。如问题持续，请附上 App 版本、设备系统版本和发生时间联系我们。</p>
-      <h3>AI 查词或短文生成暂时失败怎么办？</h3><p>检查网络后稍后重试。词库和已经保存的阅读历史不会因为一次生成失败而被清除。请不要在反馈中发送账号密码。</p>
-      <h3>如何关闭麦克风和语音识别？</h3><p>前往 iOS“设置”→“隐私与安全性”→“麦克风”或“语音识别”，关闭词鲸背单词权限。关闭后仅影响跟读，系统发音、查词与词库仍可使用。</p>
-      <h3>如何清理缓存？</h3><p>在 App 中打开“设置”→“关于”→“清理缓存”。该操作只删除设备上的临时文件，不删除云端词库与学习记录。</p>
+    <section class="card" id="troubleshooting">
+      <h2>快速排查</h2>
+      <h3>无法注册或登录</h3>
+      <p>确认邮箱格式正确、密码不少于 8 位且网络稳定。如果提示邮箱尚未确认，请先完成验证邮件中的步骤。iOS App 和扩展需要连接同一个 Supabase 环境；普通用户不应修改连接地址或 API key。</p>
+
+      <h3>登录后看不到原来的词库或短文</h3>
+      <p>确认使用的是原来的邮箱，并检查网络。下拉刷新或重启 App 后，首页应重新加载该账号的云端词库和短文历史。如果刚切换开发/生产环境，相同邮箱在两个环境中也是不同账号。</p>
+
+      <h3>AI 查词或短文生成失败</h3>
+      <p>检查网络后稍后重试。一次生成失败不会删除已经保存的词库与短文。若只有罕见单词失败，请提供该单词；若所有 AI 功能同时失败，请提供发生时间、客户端版本和错误提示，不要提供账号密码。</p>
+
+      <h3>扩展没有弹出查词卡片</h3>
+      <p>在 <code>chrome://extensions</code> 确认扩展已启用并刷新，检查当前站点是否在“暂停的网站”列表。浏览器内部页、扩展商店、部分 PDF 或禁止脚本注入的页面可能无法使用。隐私模式不会关闭查词，但会停止发送网页上下文和来源。</p>
+
+      <h3>如何关闭网页语境保存</h3>
+      <p>在扩展弹窗或设置中关闭“保存网页语境”。如希望查询时也不发送周边文本，开启“隐私模式”；请求发出前会清空上下文、句子、页面 URL 和标题。</p>
+
+      <h3>麦克风或语音识别不可用</h3>
+      <p>前往 iOS/iPadOS“设置 → 隐私与安全性 → 麦克风/语音识别”，允许词鲸使用相应权限。结束一次跟读后，App 会删除设备临时目录中的录音。关闭权限只影响跟读识别。</p>
+
+      <h3>如何清理缓存</h3>
+      <p>在 App 中打开“设置 → 关于 → 清理缓存”。该操作删除设备上的临时数据，不会删除云端词库与学习记录。扩展本地设置可通过扩展管理页清除；清除后需要重新登录和设置偏好。</p>
     </section>
 
-    <section class="card danger">
+    <section class="card danger" id="delete-account">
       <h2>删除账号与数据</h2>
-      <p><strong>App 内路径：</strong>设置 → 点击顶部个人资料 → 账户安全 → 删除账号。</p>
-      <p>输入当前登录邮箱并完成二次确认后，账号、个人资料、词库、复习记录、AI 短文、阅读进度和其他云端学习数据都会永久删除，且无法恢复。</p>
-      <p>如果无法登录，请使用注册邮箱发送邮件至 <a href="mailto:zdjoey@126.com">zdjoey@126.com</a>。为防止未经授权的删除，我们会先核验账号归属。</p>
+      <p><strong>App 内路径：设置 → 点击顶部个人资料 → 账户安全 → 删除账号。</strong></p>
+      <p>输入当前登录邮箱并完成二次确认后，会永久删除 Supabase Auth 账号，并级联删除个人资料、词库、网页语境、复习记录、AI 短文、阅读进度、练习、学习活动和用户缓存，无法恢复。删除前请自行保存仍需要的内容。</p>
+      <p>如果无法登录，请使用注册邮箱联系 <a href="mailto:zdjoey@126.com">zdjoey@126.com</a>。为防止未经授权删除，我们会先核验账号归属。</p>
+    </section>
+
+    <section class="card" id="contact-support">
+      <h2>联系支持时请提供</h2>
+      <ul>
+        <li>问题发生日期、时间和所在时区；</li>
+        <li>App/扩展版本与 iOS、iPadOS 或 Chrome 版本；</li>
+        <li>使用的客户端和能稳定复现的步骤；</li>
+        <li>完整错误文字和已隐藏私人信息的截图；</li>
+        <li>注册邮箱仅在确需定位账号时提供，绝不要提供密码或令牌。</li>
+      </ul>
+      <p>我们通常会在 7 个工作日内确认收到，但解决时间取决于复现、第三方服务和身份核验。安全漏洞请按照项目的 <a href="https://github.com/KapiYue/cijing-app/blob/main/SECURITY.md">Security Policy</a> 私下报告。</p>
+    </section>
+
+    <section class="terms-heading" id="terms">
+      <div class="eyebrow">TERMS OF SERVICE</div>
+      <h2>词鲸背单词使用条款</h2>
+      <p>更新日期与生效日期：2026 年 7 月 30 日</p>
     </section>
 
     <section class="card">
-      <h2>联系支持时建议提供</h2>
-      <ul><li>App 版本与 iOS/iPadOS 版本；</li><li>问题发生时间和可复现步骤；</li><li>已隐藏私人内容的截图；</li><li>注册邮箱（不要提供密码）。</li></ul>
-      <p>我们通常会在 7 个工作日内确认收到。安全漏洞请按照项目的 <a href="https://github.com/KapiYue/cijing-app/blob/main/SECURITY.md">Security Policy</a> 私下报告。</p>
+      <h2>一、接受条款与服务内容</h2>
+      <p>本条款适用于词鲸背单词 iOS App、配套 Chrome 扩展及政策与支持网站。使用词鲸即表示你已阅读并同意本条款与<a href="/privacy">隐私政策</a>；如不同意，请停止注册或使用。</p>
+      <p>词鲸提供英文查词与收藏、个人词库、学习进度、间隔复习、AI 双语阅读、练习、系统发音及跟读反馈。功能可能因客户端版本、设备、网络、第三方服务或测试阶段而不同。</p>
+      <p>AI 生成的词义、例句、翻译、短文和反馈可能不完整、不准确或不适合特定语境，应由你自行核对。词鲸是语言学习工具，不提供医疗、法律、金融等专业建议，也不保证特定考试、学业或职业结果。</p>
+    </section>
+
+    <section class="card">
+      <h2>二、账号与使用资格</h2>
+      <p>你应提供可正常接收邮件的地址，妥善保管密码、设备和会话，并对账号下的活动负责。发现未经授权使用时请及时退出其他设备并联系支持。不得出售、出租、共享或冒用他人账号，不得绕过身份验证或访问他人数据。</p>
+      <p>未满十四周岁的用户应在监护人同意和指导下使用。监护人同意未成年人使用时，应帮助其理解服务能力、AI 局限和个人信息处理方式。</p>
+    </section>
+
+    <section class="card">
+      <h2>三、允许内容与行为</h2>
+      <p>你保留对自己提交的笔记、查询上下文和其他合法内容所享有的权利，并授予词鲸在提供、同步、保护和改进当前服务所必需范围内处理这些内容的许可。该许可不允许词鲸出售你的内容或将其用于第三方广告画像。</p>
+      <p>你承诺拥有提交内容所需的权利，并不得利用词鲸：</p>
+      <ul>
+        <li>上传或处理违法、侵权、欺诈、骚扰、恶意或侵犯他人隐私的内容；</li>
+        <li>收集、推断或公开他人的密码、令牌、身份信息或其他敏感信息；</li>
+        <li>探测、绕过或破坏认证、RLS、速率限制、客户端限制或安全措施；</li>
+        <li>以自动化、批量或异常高频方式滥用接口、干扰服务或增加不合理成本；</li>
+        <li>逆向获取 secret key、攻击第三方服务，或将词鲸用于法律禁止的用途。</li>
+      </ul>
+      <p>扩展只应在你有权阅读和处理的网页上使用。保存网页句子、标题或 URL 前，请尊重网站条款、著作权和他人隐私；可关闭语境保存或开启隐私模式。</p>
+    </section>
+
+    <section class="card">
+      <h2>四、知识产权</h2>
+      <p>词鲸的软件、界面、品牌、文档及运营者提供的原创内容受适用知识产权法律保护；开源仓库中明确标注的代码按其许可证使用。第三方词典、模型输出、系统语音及其他第三方内容由各自权利人提供并受其条款约束。</p>
+      <p>本条款不转让词鲸品牌、未开源素材或第三方内容的所有权。你可在个人学习的合理范围内使用服务输出；发布或商业利用前，应自行确认事实准确性和相关权利。</p>
+    </section>
+
+    <section class="card">
+      <h2>五、第三方服务</h2>
+      <p>词鲸依赖 Supabase、OpenRouter/所配置模型、Free Dictionary API 和 Apple 系统能力。第三方可能按其条款和隐私政策处理必要请求，并可能出现维护、限流、地区限制或中断。我们会采取合理措施选择和隔离服务，但无法控制第三方网络与平台的持续可用性。</p>
+    </section>
+
+    <section class="card">
+      <h2>六、服务变更、中断与终止</h2>
+      <p>我们可能为安全、合规、维护或产品改进而调整、暂停或终止部分功能，并尽可能对重大变化提供适当提示。紧急安全事件、第三方故障、不可抗力或防止滥用时，可能无法提前通知。</p>
+      <p>你可以随时停止使用或在 App 内删除账号。若账号违反本条款、危害用户或服务安全，或法律要求采取措施，我们可以限制或终止相关访问，并在适用情况下提供说明或申诉渠道。账号终止后的数据处理见隐私政策。</p>
+    </section>
+
+    <section class="card">
+      <h2>七、免责声明与责任边界</h2>
+      <p>在适用法律允许范围内，词鲸按当前可用状态提供。我们不保证服务永不中断、完全无误，或 AI 与第三方内容始终准确。你应保存重要笔记的必要副本，并在依赖学习内容前自行核对。</p>
+      <p>对于因网络、设备、第三方平台、用户不当操作、未经授权的账号共享或超出合理控制范围的事件造成的损失，各方按适用法律和自身过错承担责任。本条款不排除或限制法律不得排除的消费者权利、人身损害责任或故意、重大过失责任。</p>
+    </section>
+
+    <section class="card">
+      <h2>八、适用法律、争议与条款变更</h2>
+      <p>本条款适用中华人民共和国法律；法律对消费者保护、未成年人或个人信息另有强制规定的，从其规定。发生争议时，请先通过 <a href="mailto:zdjoey@126.com">zdjoey@126.com</a> 联系协商；协商不成，可向有管辖权的人民法院或依法设立的争议解决机构寻求处理。</p>
+      <p>我们可能因功能、第三方服务或法律变化更新本条款。重大变化会通过网页或 App 内适当提示；继续使用更新后的服务前，请查看本页更新日期。</p>
+      <div class="contact"><a class="button" href="mailto:zdjoey@126.com">联系词鲸</a><a class="button secondary-button" href="/privacy">查看隐私政策</a></div>
     </section>
   </main>
-  <footer class="shell">© 2026 词鲸背单词 · <a href="/privacy">隐私政策</a> · <a href="https://github.com/KapiYue/cijing-app">GitHub</a></footer>
+  <footer class="shell">© 2026 词鲸背单词 · <a href="/privacy">隐私政策</a> · <a href="#terms">使用条款</a></footer>
 </body>
 </html>
