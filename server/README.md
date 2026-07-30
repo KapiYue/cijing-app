@@ -1,16 +1,16 @@
 # 词鲸背单词 trusted server
 
-This folder defines the trusted-service boundary for 词鲸背单词. The current learning APIs run as Supabase Edge Functions under `supabase/functions/`; this Flask service supplies deployment health/readiness endpoints and is the home for future privileged jobs that cannot run in a mobile client.
+This folder defines the trusted-service boundary for 词鲸背单词. The learning APIs run in hosted Supabase, while the local Flask process provides a stable physical-device integration gateway and health/readiness checks.
 
-It is deliberately outside the current iOS/extension request path:
+During pre-release physical-device testing the request path is:
 
 ```text
-iOS / Chrome ── Supabase Auth, PostgREST and Edge Functions
+iOS ── Mac Flask :8000 ── hosted Supabase Auth, PostgREST and Edge Functions
 
-operations ──── Flask /healthz and /readyz ── trusted Supabase probe
+Chrome extension ───────── hosted Supabase directly
 ```
 
-`GET /` and `GET /healthz` report process health without contacting dependencies. `GET /readyz` uses the server-only Supabase key to check whether the REST endpoint is reachable; it never returns the key or upstream response body. Future privileged jobs belong here only when they cannot safely run in a user-scoped Edge Function or client.
+`GET /` and `GET /healthz` report process health without contacting dependencies. `GET /readyz` uses the server-only Supabase key to check whether the REST endpoint is reachable; it never returns the key or upstream response body. `/auth/v1/*`, `/rest/v1/*`, and `/functions/v1/*` transparently forward the client's publishable key and user session to hosted Supabase. The proxy never replaces them with the server secret, so Supabase Auth and RLS remain authoritative.
 
 ## Local development
 
@@ -25,6 +25,8 @@ python -m pip install -r server/requirements.txt
 cd server
 python -m flask --app app run --host 0.0.0.0 --port 8000
 ```
+
+From the repository root, `make server-start` is the equivalent start command. Then run `make device-config` once before rebuilding the iOS app. It keeps `.env` pointed at hosted Supabase, leaves the Chrome extension on the hosted URL, and points only the iOS build at the Mac's Bonjour hostname on port 8000.
 
 Required variables:
 

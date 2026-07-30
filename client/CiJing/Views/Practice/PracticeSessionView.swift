@@ -215,7 +215,7 @@ struct PracticeSessionView: View {
                     .autocorrectionDisabled()
                     .font(.title2.bold())
                     .padding(16)
-                    .background(.white, in: RoundedRectangle(cornerRadius: 16))
+                    .background(CiJingTheme.surface, in: RoundedRectangle(cornerRadius: 16))
                     .overlay(RoundedRectangle(cornerRadius: 16).stroke(CiJingTheme.line))
                     .disabled(revealed)
                 Button("检查拼写") {
@@ -255,7 +255,7 @@ struct PracticeSessionView: View {
                 .buttonStyle(PrimaryButtonStyle())
         }
         .padding(18)
-        .background(.white, in: RoundedRectangle(cornerRadius: 25, style: .continuous))
+        .background(CiJingTheme.surface, in: RoundedRectangle(cornerRadius: 25, style: .continuous))
         .overlay(RoundedRectangle(cornerRadius: 25).stroke(CiJingTheme.line))
         .shadow(color: CiJingTheme.purpleDark.opacity(0.18), radius: 24, y: 8)
         .padding(.horizontal, 14)
@@ -389,7 +389,7 @@ struct PracticeSessionView: View {
             }
             .padding(28)
             .frame(maxWidth: 330)
-            .background(.white, in: RoundedRectangle(cornerRadius: 30, style: .continuous))
+            .background(CiJingTheme.surface, in: RoundedRectangle(cornerRadius: 30, style: .continuous))
             .shadow(color: .black.opacity(0.18), radius: 30, y: 12)
             .padding(24)
         }

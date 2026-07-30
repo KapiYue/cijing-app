@@ -59,8 +59,3 @@ enum AuthCredentialRules {
             .trimmingCharacters(in: .whitespacesAndNewlines)
     }
 }
-
-enum SignUpResult: Equatable {
-    case signedIn
-    case emailConfirmationRequired
-}

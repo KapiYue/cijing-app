@@ -78,11 +78,14 @@ export async function signUp(email, password) {
     throw new Error(message || "注册失败");
   }
   const hasSession = Boolean(payload.access_token && payload.refresh_token);
-  if (hasSession) await setSession(payload);
+  if (hasSession) {
+    await setSession(null);
+    throw new Error("邮箱验证服务暂时不可用，为保护账号安全，本次未登录。请稍后重试或联系支持人员。");
+  }
   return {
-    confirmationRequired: !hasSession,
+    confirmationRequired: true,
     email: credentials.email,
-    session: hasSession ? payload : null
+    session: null
   };
 }
 

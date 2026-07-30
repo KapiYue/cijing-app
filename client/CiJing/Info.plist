@@ -44,6 +44,8 @@
 	</dict>
 	<key>NSMicrophoneUsageDescription</key>
 	<string>跟读模式需要录制你的朗读并提供文字反馈。</string>
+	<key>NSLocalNetworkUsageDescription</key>
+	<string>上线前真机联调需要通过同一局域网连接这台 Mac 上运行的词鲸调试服务。</string>
 	<key>NSSpeechRecognitionUsageDescription</key>
 	<string>跟读模式使用语音识别显示你的朗读内容并给出准确度反馈。</string>
 	<key>UIApplicationSceneManifest</key>

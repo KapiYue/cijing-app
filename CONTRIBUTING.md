@@ -30,25 +30,26 @@ Open `client/CiJing.xcodeproj`, select the `CiJing` scheme and an iOS 17+ simula
 
 ### Physical-device configuration
 
-An iPhone's `127.0.0.1` points to the phone, not the development Mac. Start the local Supabase stack, keep both devices on the same LAN, and run:
+An iPhone's `127.0.0.1` points to the phone, not the development Mac. For production-data integration testing, start Flask on `0.0.0.0:8000`, keep both devices on the same LAN, and run:
 
 ```bash
+make server-start
 make device-config
 ```
 
-The command detects the Mac's current IPv4 address on `en0`, updates `.env`, and regenerates client configuration. If Wi-Fi uses another interface, pass it explicitly:
+The command reads the Mac's Bonjour hostname and regenerates only the iOS client URL. `.env` and the Chrome extension remain pointed at hosted Supabase, so changing Wi-Fi IP addresses does not require editing configuration. Override the host only when Bonjour is unavailable:
 
 ```bash
-CIJING_NETWORK_INTERFACE=en1 make device-config
+CIJING_LOCAL_SERVER_HOST=192.168.1.20 make device-config
 ```
 
-You can also supply a verified address directly:
+You can override the Flask port when necessary:
 
 ```bash
-node scripts/generate-config.mjs --url http://192.168.1.20:54321
+CIJING_LOCAL_SERVER_PORT=8080 make device-config
 ```
 
-Use the publishable/anon key belonging to the same local instance; changing only the URL causes authentication failures. Ensure the macOS firewall permits the local Supabase port. Before an Archive, TestFlight, or App Store build, restore the production HTTPS URL in `.env`, run `make config` and `make config-check`, and rebuild.
+Ensure the macOS firewall permits the Flask port. Before an Archive, TestFlight, or App Store build, run `make config` and `make config-check` so the iOS client returns to the production HTTPS URL and does not ship a local gateway address.
 
 For database or Edge Function changes, also reset a local Supabase stack and run the smoke test:
 

@@ -135,7 +135,7 @@ struct ReadingSessionView: View {
                         .font(.system(size: 13, weight: .bold))
                         .foregroundStyle(CiJingTheme.purple)
                         .frame(width: 29, height: 27)
-                        .background(.white.opacity(0.8), in: RoundedRectangle(cornerRadius: 9))
+                        .background(CiJingTheme.surface.opacity(0.84), in: RoundedRectangle(cornerRadius: 9))
                 }
                 .buttonStyle(.plain)
                 .accessibilityLabel("播放第 \(index + 1) 段")
@@ -162,7 +162,7 @@ struct ReadingSessionView: View {
                 }
                 .padding(12)
                 .frame(maxWidth: .infinity, alignment: .leading)
-                .background(.white.opacity(0.64), in: RoundedRectangle(cornerRadius: 13))
+                .background(CiJingTheme.surfaceMuted.opacity(0.78), in: RoundedRectangle(cornerRadius: 13))
                 .transition(.opacity.combined(with: .move(edge: .top)))
             }
         }
@@ -240,7 +240,7 @@ struct ReadingSessionView: View {
         }
         .padding(.horizontal, 11)
         .frame(height: 57)
-        .background(Color.white.opacity(0.88), in: RoundedRectangle(cornerRadius: 19, style: .continuous))
+        .background(CiJingTheme.surface.opacity(0.92), in: RoundedRectangle(cornerRadius: 19, style: .continuous))
         .overlay(RoundedRectangle(cornerRadius: 19).stroke(CiJingTheme.line))
         .shadow(color: CiJingTheme.purpleDark.opacity(0.1), radius: 12, y: 5)
     }

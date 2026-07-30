@@ -3,7 +3,6 @@ import SwiftUI
 struct LookupView: View {
     @EnvironmentObject private var store: AppStore
     @StateObject private var speech = SpeechService()
-    @AppStorage("recentLookupTerms") private var recentRaw = "serendipity,resilient,nuance"
     @State private var query = ""
     @State private var result: LookupResult?
     @State private var isLookingUp = false
@@ -12,7 +11,7 @@ struct LookupView: View {
     @State private var errorMessage: String?
 
     private var recentTerms: [String] {
-        recentRaw.split(separator: ",").map(String.init).filter { !$0.isEmpty }.prefix(6).map { $0 }
+        store.recentLookupTermsRaw.split(separator: ",").map(String.init).filter { !$0.isEmpty }.prefix(6).map { $0 }
     }
 
     var body: some View {
@@ -80,7 +79,7 @@ struct LookupView: View {
                                 .font(.caption)
                                 .foregroundStyle(Color(red: 120 / 255, green: 108 / 255, blue: 127 / 255))
                                 .padding(.horizontal, 11).padding(.vertical, 8)
-                                .background(.white.opacity(0.9), in: RoundedRectangle(cornerRadius: 11))
+                                .background(CiJingTheme.surface.opacity(0.94), in: RoundedRectangle(cornerRadius: 11))
                         }.buttonStyle(.plain)
                     }
                 }
@@ -131,7 +130,7 @@ struct LookupView: View {
             .lineSpacing(4)
             .padding(13)
             .frame(maxWidth: .infinity, alignment: .leading)
-            .background(Color(red: 248 / 255, green: 245 / 255, blue: 250 / 255), in: RoundedRectangle(cornerRadius: 13))
+            .background(CiJingTheme.surfaceMuted, in: RoundedRectangle(cornerRadius: 13))
             .padding(.top, 16)
 
             Button { save(value) } label: {
@@ -184,6 +183,6 @@ struct LookupView: View {
     }
 
     private func remember(_ term: String) {
-        recentRaw = ([term] + recentTerms.filter { $0.caseInsensitiveCompare(term) != .orderedSame }).prefix(6).joined(separator: ",")
+        store.setRecentLookupTermsRaw(([term] + recentTerms.filter { $0.caseInsensitiveCompare(term) != .orderedSame }).prefix(6).joined(separator: ","))
     }
 }

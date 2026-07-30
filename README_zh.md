@@ -105,14 +105,12 @@
 ## 架构与安全摘要
 
 ```text
-iOS App ─────┐
-             ├─ Supabase Auth / PostgREST ── PostgreSQL + RLS + RPC
-Chrome 扩展 ─┘                    └────────── Edge Functions ── OpenRouter / Qwen
-
-Flask 服务 ── 可信健康检查与运维边界（不在当前用户请求链路中）
+iPhone 真机 ── Mac 本地 Flask:8000 ── 线上 Supabase Auth / PostgREST
+Chrome 扩展 ──────────────────────┘              ├─ PostgreSQL + RLS + RPC
+                                                └─ Edge Functions ── OpenRouter / Qwen
 ```
 
-iOS App 和扩展复用同一个 Supabase 账号及按用户隔离的学习数据。所有业务表都启用 Row Level Security，数据库函数在已认证用户范围内执行。通过身份校验的 Edge Functions 只把词典补充或分级阅读所需的任务输入发送给配置的 OpenRouter 模型。Flask 服务是独立的可信边界，用于健康检查和未来的特权任务，当前不参与学习请求。
+iOS App 和扩展复用同一个 Supabase 账号及按用户隔离的学习数据。所有业务表都启用 Row Level Security，数据库函数在已认证用户范围内执行。真机联调时，iOS 的 Auth、PostgREST 与 Edge Functions 请求先经过 Mac 上的 Flask 透明代理，再访问线上 Supabase；Chrome 扩展仍直接访问线上 Supabase。代理保留用户访问令牌与 RLS 边界，不向客户端注入服务端密钥。
 
 根目录 `.env` 是本地配置的唯一来源，生成的 iOS 和扩展配置不会进入 Git。客户端包只含 Supabase URL 与 publishable key；Supabase secret key 和 OpenRouter API key 只存在于可信运行时。组件细节见 [Supabase 架构与运维指南](supabase/README.md)和[可信服务指南](server/README.md)。
 
@@ -132,7 +130,7 @@ make functions
 
 用 Xcode 打开 `client/CiJing.xcodeproj`，选择 `CiJing` scheme 和 iOS 17+ 模拟器运行。Chrome 扩展可在 `chrome://extensions` 中选择“加载已解压的扩展程序”，然后载入 `extension/`。
 
-真机连接本地环境时，先启动 Supabase，再执行 `make device-config` 后重新构建。该命令会把回环地址换成 Mac 当前的局域网地址，因此 iPhone 与 Mac 必须在同一网络。制作 Archive、TestFlight 或 App Store 构建前，应把 `.env` 恢复为生产 HTTPS URL，并重新运行 `make config` 和 `make config-check`。
+真机使用生产数据联调时，执行 `make server-start` 启动 Flask，并在首次构建联调版本前执行 `make device-config`。iOS 会通过 Mac 稳定的 Bonjour 主机名连接 Flask，由 Flask 以用户会话转发到线上 Supabase；Chrome 扩展仍直连线上 Supabase。此版本安装后，即使 Wi-Fi IP 改变也只需重启 Flask，不必重新生成配置。制作 Archive、TestFlight 或 App Store 构建前，运行 `make config` 和 `make config-check`，确保发布包恢复为生产 HTTPS 地址直连。
 
 配置、数据库、Edge Functions 与生产上线说明见 [supabase/README.md](supabase/README.md)；贡献流程和真机排障见 [CONTRIBUTING.md](CONTRIBUTING.md)。
 

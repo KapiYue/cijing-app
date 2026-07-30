@@ -33,6 +33,7 @@ final class SupabaseAPI: ObservableObject {
     }
 
     var currentEmail: String { session?.user.email ?? "学习者" }
+    var currentUserID: UUID? { session?.user.id }
     var isSignedIn: Bool { session != nil }
 
     func signIn(email: String, password: String) async throws {
@@ -51,21 +52,14 @@ final class SupabaseAPI: ObservableObject {
         }
     }
 
-    func signUp(email: String, password: String) async throws -> SignUpResult {
+    func signUp(email: String, password: String) async throws {
         isAuthenticating = true; defer { isAuthenticating = false }
         let credentials = try AuthCredentialRules.validate(email: email, password: password, mode: .signUp)
         let body = try encoder.encode(Credentials(email: credentials.email, password: credentials.password))
         let value: SignupResponse = try await send(path: "/auth/v1/signup", method: "POST", body: body, authenticated: false)
-        if let accessToken = value.accessToken,
-           let refreshToken = value.refreshToken,
-           let expiresIn = value.expiresIn,
-           let expiresAt = value.expiresAt,
-           let user = value.user {
-            persist(AuthSession(accessToken: accessToken, refreshToken: refreshToken, expiresIn: expiresIn,
-                                expiresAt: expiresAt, tokenType: value.tokenType, user: user))
-            return .signedIn
+        if value.accessToken != nil || value.refreshToken != nil {
+            throw CiJingAPIError.server("邮箱验证服务暂时不可用，为保护账号安全，本次未登录。请稍后重试或联系支持人员。")
         }
-        return .emailConfirmationRequired
     }
 
     func signOut() async {

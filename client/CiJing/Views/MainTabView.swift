@@ -94,7 +94,7 @@ struct MainTabView: View {
                             .symbolEffect(.bounce, value: selection == tab)
                         Text(tab.title).font(.system(size: 12, weight: selection == tab ? .bold : .semibold))
                     }
-                    .foregroundStyle(selection == tab ? CiJingTheme.purpleDark : Color(red: 129 / 255, green: 123 / 255, blue: 134 / 255))
+                    .foregroundStyle(selection == tab ? CiJingTheme.purpleDark : CiJingTheme.secondary)
                     .frame(maxWidth: .infinity, minHeight: 57)
                     .background(selection == tab ? CiJingTheme.purpleSoft : .clear, in: RoundedRectangle(cornerRadius: 19, style: .continuous))
                 }
@@ -105,7 +105,7 @@ struct MainTabView: View {
         }
         .padding(6)
         .frame(height: 70)
-        .background(Color(red: 249 / 255, green: 246 / 255, blue: 253 / 255), in: RoundedRectangle(cornerRadius: 25, style: .continuous))
+        .background(CiJingTheme.surfaceElevated, in: RoundedRectangle(cornerRadius: 25, style: .continuous))
         .overlay(RoundedRectangle(cornerRadius: 25, style: .continuous).stroke(CiJingTheme.line))
         .shadow(color: CiJingTheme.purpleDark.opacity(0.14), radius: 12, y: 5)
     }

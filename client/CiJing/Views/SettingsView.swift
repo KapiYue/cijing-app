@@ -8,10 +8,6 @@ private enum AppLinks {
 struct SettingsView: View {
     @EnvironmentObject private var store: AppStore
     @EnvironmentObject private var api: SupabaseAPI
-    @AppStorage("dailyReminderEnabled") private var dailyReminder = true
-    @AppStorage("autoPronunciationEnabled") private var autoPronunciation = true
-    @AppStorage("hapticFeedbackEnabled") private var hapticFeedback = true
-    @AppStorage(SpeechVoicePreference.storageKey) private var speechVoiceIdentifier = ""
     @State private var importing = false
     @State private var checkingUpdate = false
     @State private var cacheSize = AppCache.formattedSize
@@ -28,17 +24,24 @@ struct SettingsView: View {
                     NavigationLink { ProfileSettingsView() } label: { profileCard }
                         .buttonStyle(.plain)
 
+                    SettingsSectionTitle("外观")
+                    SettingsGroup {
+                        NavigationLink { AppearanceSettingsView() } label: {
+                            SettingsActionRow(icon: "circle.lefthalf.filled", title: "显示模式", subtitle: appearanceSummary)
+                        }.buttonStyle(.plain)
+                    }
+
                     SettingsSectionTitle("学习偏好")
                     SettingsGroup {
-                        SettingsToggleRow(icon: "bell", title: "每日学习提醒", subtitle: "每天 20:30", isOn: $dailyReminder)
+                        SettingsToggleRow(icon: "bell", title: "每日学习提醒", subtitle: "每天 20:30", isOn: dailyReminderBinding)
                         SettingsDivider()
-                        SettingsToggleRow(icon: "speaker.wave.2", title: "自动播放发音", subtitle: "打开词条时自动朗读", isOn: $autoPronunciation)
+                        SettingsToggleRow(icon: "speaker.wave.2", title: "自动播放发音", subtitle: "打开词条时自动朗读", isOn: autoPronunciationBinding)
                         SettingsDivider()
                         NavigationLink { SpeechVoiceSettingsView() } label: {
                             SettingsActionRow(icon: "waveform", title: "英文发音声音", subtitle: selectedVoiceName)
                         }.buttonStyle(.plain)
                         SettingsDivider()
-                        SettingsToggleRow(icon: "sparkles", title: "触感反馈", subtitle: "答题与完成时轻触反馈", isOn: $hapticFeedback)
+                        SettingsToggleRow(icon: "sparkles", title: "触感反馈", subtitle: "答题与完成时轻触反馈", isOn: hapticFeedbackBinding)
                     }
 
                     SettingsSectionTitle("内容与数据")
@@ -87,7 +90,7 @@ struct SettingsView: View {
                     } label: {
                         Text("退出登录").font(CiJingTypography.rowTitle).frame(maxWidth: .infinity).padding(.vertical, 16)
                     }
-                    .background(.white.opacity(0.76), in: RoundedRectangle(cornerRadius: 17))
+                    .background(CiJingTheme.surface.opacity(0.9), in: RoundedRectangle(cornerRadius: 17))
                     .padding(.top, 20)
 
                     Text("词鲸背单词 \(AppMetadata.version) · © 2026")
@@ -119,8 +122,8 @@ struct SettingsView: View {
             Image(systemName: "chevron.right").foregroundStyle(CiJingTheme.purple)
         }
         .padding(17)
-        .background(LinearGradient(colors: [Color(red: 239 / 255, green: 226 / 255, blue: 251 / 255), Color(red: 227 / 255, green: 209 / 255, blue: 242 / 255)], startPoint: .topLeading, endPoint: .bottomTrailing), in: RoundedRectangle(cornerRadius: 22))
-        .overlay(RoundedRectangle(cornerRadius: 22).stroke(Color(red: 220 / 255, green: 203 / 255, blue: 236 / 255)))
+        .background(CiJingTheme.featuredGradient, in: RoundedRectangle(cornerRadius: 22))
+        .overlay(RoundedRectangle(cornerRadius: 22).stroke(CiJingTheme.line))
     }
 
     private var profileName: String {
@@ -128,11 +131,24 @@ struct SettingsView: View {
         return value?.isEmpty == false ? value! : api.currentEmail
     }
     private var profileInitial: String { String(profileName.prefix(1)).uppercased() }
+    private var appearanceSummary: String {
+        AppAppearance.selection(for: store.preferredAppearance).title
+    }
+    private var dailyReminderBinding: Binding<Bool> {
+        Binding(get: { store.dailyReminderEnabled }, set: { store.setDailyReminderEnabled($0) })
+    }
+    private var autoPronunciationBinding: Binding<Bool> {
+        Binding(get: { store.autoPronunciationEnabled }, set: { store.setAutoPronunciationEnabled($0) })
+    }
+    private var hapticFeedbackBinding: Binding<Bool> {
+        Binding(get: { store.hapticFeedbackEnabled }, set: { store.setHapticFeedbackEnabled($0) })
+    }
     private var preferenceSummary: String {
         guard let profile = store.profile else { return "故事 · 适中 · 中篇" }
         return "\(ReadingOptions.label(for: profile.preferredStyle)) · \(ReadingOptions.label(for: profile.preferredDifficulty)) · 中篇"
     }
     private var selectedVoiceName: String {
+        let speechVoiceIdentifier = store.profile?.preferredVoiceIdentifier ?? ""
         if speechVoiceIdentifier.isEmpty, let voice = SpeechVoicePreference.defaultVoice {
             return "\(voice.name) · \(voice.language)（默认）"
         }
@@ -187,6 +203,55 @@ struct SettingsView: View {
     }
 }
 
+private struct AppearanceSettingsView: View {
+    @EnvironmentObject private var store: AppStore
+
+    private var selection: AppAppearance {
+        AppAppearance.selection(for: store.preferredAppearance)
+    }
+
+    var body: some View {
+        ZStack {
+            PaperBackground()
+            ScrollView {
+                VStack(alignment: .leading, spacing: 14) {
+                    Text("每个账号会独立保存显示模式；未设置时默认跟随 iPhone 系统外观。选择“项目默认”时，当前项目代码设定为浅色模式；退出登录后，登录页也会跟随系统。")
+                        .font(CiJingTypography.supporting)
+                        .foregroundStyle(CiJingTheme.secondary)
+                        .lineSpacing(4)
+
+                    SettingsGroup {
+                        ForEach(Array(AppAppearance.allCases.enumerated()), id: \.element.id) { index, appearance in
+                            if index > 0 { SettingsDivider() }
+                            Button { store.setAppearancePreference(appearance) } label: {
+                                HStack(spacing: 12) {
+                                    SettingsIcon(systemName: appearance.icon)
+                                    VStack(alignment: .leading, spacing: 3) {
+                                        Text(appearance.title).font(CiJingTypography.rowTitle).foregroundStyle(CiJingTheme.ink)
+                                        Text(appearance.subtitle).font(CiJingTypography.supporting).foregroundStyle(CiJingTheme.secondary)
+                                    }
+                                    Spacer()
+                                    if selection == appearance {
+                                        Image(systemName: "checkmark.circle.fill").foregroundStyle(CiJingTheme.purple)
+                                    }
+                                }
+                                .padding(.horizontal, 15)
+                                .frame(minHeight: 70)
+                                .contentShape(Rectangle())
+                            }
+                            .buttonStyle(.plain)
+                        }
+                    }
+                }
+                .padding(18)
+            }
+        }
+        .navigationTitle("显示模式")
+        .navigationBarTitleDisplayMode(.inline)
+        .task { if store.profile == nil { await store.refreshAll() } }
+    }
+}
+
 private struct SpeechVoiceSettingsView: View {
     @EnvironmentObject private var store: AppStore
     @StateObject private var speech = SpeechService()
@@ -214,7 +279,7 @@ private struct SpeechVoiceSettingsView: View {
                             voiceRow(identifier: voice.identifier, title: voice.name, subtitle: voiceSubtitle(voice))
                         }
                     }
-                    .background(Color(red: 249 / 255, green: 245 / 255, blue: 253 / 255).opacity(0.93), in: RoundedRectangle(cornerRadius: 22))
+                    .background(CiJingTheme.surfaceElevated.opacity(0.96), in: RoundedRectangle(cornerRadius: 22))
                     .overlay(RoundedRectangle(cornerRadius: 22).stroke(CiJingTheme.line.opacity(0.82)))
                     .clipShape(RoundedRectangle(cornerRadius: 22))
                 }
@@ -317,7 +382,7 @@ private struct SettingsGroup<Content: View>: View {
     init(@ViewBuilder content: () -> Content) { self.content = content() }
     var body: some View {
         VStack(spacing: 0) { content }
-            .background(Color(red: 249 / 255, green: 245 / 255, blue: 253 / 255).opacity(0.93), in: RoundedRectangle(cornerRadius: 22))
+            .background(CiJingTheme.surfaceElevated.opacity(0.96), in: RoundedRectangle(cornerRadius: 22))
             .overlay(RoundedRectangle(cornerRadius: 22).stroke(CiJingTheme.line.opacity(0.82)))
             .clipShape(RoundedRectangle(cornerRadius: 22))
     }
@@ -424,7 +489,7 @@ private struct ProfileSettingsView: View {
                             SettingsActionRow(icon: "person.crop.circle.badge.minus", title: "删除账号", subtitle: "永久删除账号及全部云端学习数据")
                         }
                         .buttonStyle(.plain)
-                        .background(Color(red: 249 / 255, green: 245 / 255, blue: 253 / 255).opacity(0.93), in: RoundedRectangle(cornerRadius: 18))
+                        .background(CiJingTheme.surfaceElevated.opacity(0.96), in: RoundedRectangle(cornerRadius: 18))
                         .overlay(RoundedRectangle(cornerRadius: 18).stroke(CiJingTheme.line.opacity(0.82)))
                     }
                 }.padding(18)
@@ -694,7 +759,7 @@ private struct AboutCiJingView: View {
                         }
                     }
                     .buttonStyle(.plain)
-                    .background(Color(red: 249 / 255, green: 245 / 255, blue: 253 / 255).opacity(0.93), in: RoundedRectangle(cornerRadius: 22))
+                    .background(CiJingTheme.surfaceElevated.opacity(0.96), in: RoundedRectangle(cornerRadius: 22))
                     .overlay(RoundedRectangle(cornerRadius: 22).stroke(CiJingTheme.line.opacity(0.82)))
                     .clipShape(RoundedRectangle(cornerRadius: 22))
                 }.padding(18)

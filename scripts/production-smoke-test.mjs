@@ -44,9 +44,17 @@ function wordPayload(term, meaning, sentence) {
 
 try {
   const signup = await request("/auth/v1/signup", { method: "POST", body: { email, password } });
+  if (signup.access_token || signup.refresh_token) throw new Error("注册错误地直接返回会话，请启用 Supabase 邮箱确认模板");
   userID = signup.user?.id;
-  if (!userID) throw new Error("注册未返回用户 ID");
-  if (!signup.access_token) throw new Error("注册未直接返回会话，请确认生产项目已关闭邮箱确认");
+  if (!userID) {
+    const users = await request("/auth/v1/admin/users?page=1&per_page=1000", { admin: true });
+    userID = users.users?.find((user) => user.email?.toLowerCase() === email.toLowerCase())?.id;
+  }
+  if (!userID) throw new Error("注册请求未返回会话，但管理员也未查询到待确认用户");
+
+  await request(`/auth/v1/admin/users/${userID}`, {
+    method: "PUT", admin: true, body: { email_confirm: true },
+  });
 
   const session = await request("/auth/v1/token?grant_type=password", {
     method: "POST", body: { email, password },
@@ -103,7 +111,7 @@ try {
 
   console.log(JSON.stringify({
     status: "ok",
-    checks: ["signup_without_email_confirmation", "account_password_login", "profile_trigger", "save_word", "daily_plan", "learning_targets", "apply_review", "ai_lookup", "ai_reading", "complete_reading", "daily_activity"],
+    checks: ["signup_requires_email_confirmation", "admin_confirm_for_smoke", "account_password_login", "profile_trigger", "save_word", "daily_plan", "learning_targets", "apply_review", "ai_lookup", "ai_reading", "complete_reading", "daily_activity"],
   }, null, 2));
 } finally {
   if (userID) {

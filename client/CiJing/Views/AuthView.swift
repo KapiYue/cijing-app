@@ -19,13 +19,14 @@ struct AuthView: View {
                         Text("鲸").font(.system(size: 32, weight: .bold, design: .serif)).foregroundStyle(.white)
                             .frame(width: 58, height: 58).background(CiJingTheme.green, in: RoundedRectangle(cornerRadius: 18))
                         VStack(alignment: .leading) {
-                            Text("词鲸背单词").font(.system(size: 35, weight: .bold, design: .rounded))
+                            Text("词鲸背单词").font(.system(size: 35, weight: .bold, design: .rounded)).foregroundStyle(CiJingTheme.ink)
                             Text("READ TO REMEMBER").font(.system(size: 11, weight: .bold)).tracking(1.2).foregroundStyle(CiJingTheme.secondary)
                         }
                     }
                     VStack(alignment: .leading, spacing: 8) {
                         Text(isSignUp ? "建立你的真实阅读词库" : "欢迎回来")
                             .font(.system(size: 27, weight: .bold, design: .rounded))
+                            .foregroundStyle(CiJingTheme.ink)
                         Text("在 Chrome 里遇见，在词鲸背单词里真正掌握。")
                             .foregroundStyle(CiJingTheme.secondary)
                     }
@@ -39,7 +40,7 @@ struct AuthView: View {
                         Button(isSignUp ? "已有账号？登录" : "第一次使用？创建账号") { errorMessage = nil; successMessage = nil; isSignUp.toggle() }
                             .font(.subheadline.bold()).foregroundStyle(CiJingTheme.green)
                     }.cijingCard()
-                    Text("邮箱账号会在浏览器扩展与 iOS App 之间安全同步；后续启用邮箱验证时，无需更换账号。")
+                    Text("邮箱账号可在浏览器扩展与 iOS App 之间安全同步；注册后请先完成邮箱验证。")
                         .font(.system(size: 13)).foregroundStyle(CiJingTheme.secondary).padding(.horizontal, 5)
                 }.padding(24)
             }
@@ -54,12 +55,10 @@ struct AuthView: View {
             errorMessage = nil
             successMessage = nil
             if isSignUp {
-                let result = try await api.signUp(email: credentials.email, password: credentials.password)
-                if result == .emailConfirmationRequired {
-                    successMessage = "注册成功，请打开验证邮件完成确认后再登录。"
-                    password = ""
-                    isSignUp = false
-                }
+                try await api.signUp(email: credentials.email, password: credentials.password)
+                successMessage = "注册申请已提交，请前往邮箱完成验证后再登录；如果暂未收到，请检查垃圾邮件。"
+                password = ""
+                isSignUp = false
             } else {
                 try await api.signIn(email: credentials.email, password: credentials.password)
             }
@@ -83,6 +82,7 @@ private struct AuthField: View {
                         .autocorrectionDisabled()
                 }
             }
+            .foregroundStyle(CiJingTheme.ink)
         }.padding(14).background(CiJingTheme.paper.opacity(0.75), in: RoundedRectangle(cornerRadius: 14))
     }
 }

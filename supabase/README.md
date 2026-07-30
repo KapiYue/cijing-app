@@ -118,7 +118,7 @@ OPENROUTER_MODEL=qwen/qwen3.6-flash
 3. 运行 `./scripts/supabase.sh db push --dry-run` 预览，再运行 `./scripts/supabase.sh db push` 应用尚未执行的迁移。
 4. 运行 `make edge-secrets` 推送 OpenRouter 配置。脚本使用临时 `0600` 文件，完成后自动删除。
 5. 部署 `lookup-word`、`explain-reading-word`、`generate-reading` 与 `delete-account` 四个 Edge Functions。
-6. 在 Supabase Dashboard 的 `Authentication → Sign In / Providers → Email` 中核对 Email Provider、注册、邮箱确认和密码策略。当前客户端兼容注册后直接建立会话及需要邮箱确认两种响应；若启用确认邮件，应同时配置模板和跳转地址。
+6. 在 Supabase Dashboard 的 `Authentication → Sign In / Providers → Email` 中核对 Email Provider、注册、邮箱确认和密码策略。生产环境必须启用邮箱确认并配置确认邮件模板与跳转地址；客户端会拒绝注册后直接建立会话，防止配置回退时绕过验证邮件。
 7. 如需 Flask 健康检查服务，按 [`server/README.md`](../server/README.md) 独立部署；它使用 server-only secret key。
 8. 使用 Release 配置归档 iOS App；生产包不得包含局域网 HTTP URL 或任何 secret key。
 

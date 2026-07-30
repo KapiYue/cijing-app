@@ -109,10 +109,11 @@ iOS app ─────┐
              ├─ Supabase Auth / PostgREST ── PostgreSQL + RLS + RPC
 Chrome ──────┘                    └────────── Edge Functions ── OpenRouter / Qwen
 
-Flask server ── trusted health and operations boundary (outside the user request path)
+Physical iPhone ── local Flask integration gateway ── hosted Supabase
+Flask server ── trusted health and operations boundary
 ```
 
-The iOS app and extension share a Supabase account and user-scoped learning data. Every business table has Row Level Security, and database functions execute in the authenticated user's scope. Authenticated Edge Functions send only the task inputs needed for dictionary enrichment or graded reading generation to the configured OpenRouter model. The Flask service is a separate trusted boundary for health checks and future privileged jobs; it is not currently part of the learning request path.
+The iOS app and extension share a Supabase account and user-scoped learning data. Every business table has Row Level Security, and database functions execute in the authenticated user's scope. During physical-device testing, iOS Auth, PostgREST, and Edge Functions requests pass through the local Flask gateway before reaching hosted Supabase; the Chrome extension continues to call hosted Supabase directly. The gateway preserves the user's access token and RLS boundary and never injects a server secret into client requests.
 
 The root `.env` is the only local configuration source. Generated iOS and extension configuration is ignored by Git. Client bundles contain only the Supabase URL and publishable key; Supabase secret keys and the OpenRouter API key stay in trusted runtimes. See [Supabase architecture and operations](supabase/README.md) and the [trusted server guide](server/README.md) for component details.
 
@@ -132,7 +133,7 @@ make functions
 
 Open `client/CiJing.xcodeproj`, select the `CiJing` scheme and an iOS 17+ simulator, then run. Load `extension/` as an unpacked extension from `chrome://extensions`.
 
-For a physical iPhone, start the local stack and run `make device-config` before rebuilding. This replaces the loopback URL with the Mac's current LAN address; the phone and Mac must be on the same network. Restore the production HTTPS URL in `.env`, then rerun `make config` and `make config-check`, before creating an Archive, TestFlight, or App Store build.
+For a physical iPhone using production data, run `make server-start` and `make device-config` before rebuilding. The iOS app uses the Mac's stable Bonjour hostname, Flask forwards user-scoped requests to hosted Supabase, and the Chrome extension continues to use hosted Supabase directly. Once this device build is installed, changing Wi-Fi IP addresses requires only restarting Flask, not regenerating configuration. Run `make config` and `make config-check` before creating an Archive, TestFlight, or App Store build so release binaries use the production HTTPS URL directly.
 
 Configuration, database, Edge Function, and production instructions live in [supabase/README.md](supabase/README.md). Contribution workflow and physical-device troubleshooting live in [CONTRIBUTING.md](CONTRIBUTING.md).
 

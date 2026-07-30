@@ -94,13 +94,13 @@ private struct ReadingGenerationView: View {
     var body: some View {
         ZStack {
             LinearGradient(
-                colors: [Color(red: 247 / 255, green: 241 / 255, blue: 252 / 255), Color(red: 230 / 255, green: 218 / 255, blue: 247 / 255)],
+                colors: [CiJingTheme.surfaceElevated, CiJingTheme.canvas],
                 startPoint: .topLeading,
                 endPoint: .bottomTrailing
             ).ignoresSafeArea()
 
             Circle().fill(CiJingTheme.purple.opacity(0.12)).frame(width: 310, height: 310).blur(radius: 18).offset(x: 150, y: -270)
-            Circle().fill(.white.opacity(0.55)).frame(width: 260, height: 260).blur(radius: 24).offset(x: -150, y: 300)
+            Circle().fill(CiJingTheme.surface.opacity(0.55)).frame(width: 260, height: 260).blur(radius: 24).offset(x: -150, y: 300)
 
             VStack(spacing: 26) {
                 ZStack {
@@ -110,7 +110,7 @@ private struct ReadingGenerationView: View {
                         .frame(width: 126, height: 126)
                         .rotationEffect(.degrees(orbiting ? 360 : 0))
                     RoundedRectangle(cornerRadius: 25)
-                        .fill(.white.opacity(0.9))
+                        .fill(CiJingTheme.surface.opacity(0.9))
                         .frame(width: 82, height: 82)
                         .shadow(color: CiJingTheme.purple.opacity(0.16), radius: 18, y: 8)
                     Image(systemName: icons[phase])
@@ -159,7 +159,7 @@ private struct ReadingGenerationView: View {
                 }
                 .padding(18)
                 .frame(maxWidth: 340, alignment: .leading)
-                .background(.white.opacity(0.66), in: RoundedRectangle(cornerRadius: 20))
+                .background(CiJingTheme.surface.opacity(0.72), in: RoundedRectangle(cornerRadius: 20))
 
                 Text("相同选词与设置会优先复用缓存，通常只需一点点时间")
                     .font(.caption2).foregroundStyle(CiJingTheme.secondary)

@@ -31,7 +31,7 @@ struct WordLibraryView: View {
                                 Image(systemName: "arrow.up.arrow.down")
                                     .foregroundStyle(CiJingTheme.ink)
                                     .frame(width: 40, height: 40)
-                                    .background(.white.opacity(0.74), in: RoundedRectangle(cornerRadius: 14))
+                                    .background(CiJingTheme.surface.opacity(0.82), in: RoundedRectangle(cornerRadius: 14))
                             }.buttonStyle(.plain)
                         )
                     )
@@ -85,7 +85,7 @@ struct WordLibraryView: View {
             Spacer()
         }
         .padding(13)
-        .background(.white.opacity(0.86), in: RoundedRectangle(cornerRadius: 16))
+        .background(CiJingTheme.surface.opacity(0.9), in: RoundedRectangle(cornerRadius: 16))
     }
 
     private var wordList: some View {
@@ -96,9 +96,9 @@ struct WordLibraryView: View {
                 if index < filtered.count - 1 { Divider().overlay(CiJingTheme.line).padding(.leading, 16) }
             }
         }
-        .background(.white.opacity(0.93), in: RoundedRectangle(cornerRadius: 22, style: .continuous))
+        .background(CiJingTheme.surface.opacity(0.96), in: RoundedRectangle(cornerRadius: 22, style: .continuous))
         .overlay(RoundedRectangle(cornerRadius: 22).stroke(CiJingTheme.line.opacity(0.78)))
-        .shadow(color: Color(red: 66 / 255, green: 49 / 255, blue: 87 / 255).opacity(0.08), radius: 20, y: 9)
+        .shadow(color: CiJingTheme.shadow.opacity(0.1), radius: 20, y: 9)
         .clipShape(RoundedRectangle(cornerRadius: 22, style: .continuous))
     }
 
@@ -124,10 +124,10 @@ struct WordLibraryView: View {
                     .font(.system(size: 13)).lineSpacing(3)
             }
         }
-        .foregroundStyle(Color(red: 140 / 255, green: 118 / 255, blue: 95 / 255))
+        .foregroundStyle(CiJingTheme.secondary)
         .padding(13)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .background(Color(red: 1, green: 248 / 255, blue: 240 / 255), in: RoundedRectangle(cornerRadius: 15))
+        .background(CiJingTheme.warmSoft, in: RoundedRectangle(cornerRadius: 15))
     }
 
     private func filterColor(_ status: WordStatus) -> Color {
@@ -185,7 +185,7 @@ private struct LibraryWordRow: View {
                     if let phonetic = word.phonetic, !phonetic.isEmpty { Text("/\(phonetic)/").font(.system(size: 11, design: .monospaced)).foregroundStyle(CiJingTheme.secondary) }
                 }
                 Text("\(word.parts.first?.partOfSpeech ?? "") \(word.displayMeaning)")
-                    .font(.system(size: 13)).foregroundStyle(Color(red: 121 / 255, green: 114 / 255, blue: 124 / 255)).lineLimit(1)
+                    .font(.system(size: 13)).foregroundStyle(CiJingTheme.secondary).lineLimit(1)
             }
             Spacer(minLength: 8)
             VStack(alignment: .trailing, spacing: 6) {

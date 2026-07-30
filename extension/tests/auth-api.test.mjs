@@ -1,7 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 
-test("uses the real email for sign-in and supports future email confirmation", async () => {
+test("uses the real email for sign-in and requires email confirmation", async () => {
   const storage = new Map();
   globalThis.chrome = {
     storage: {
@@ -49,11 +49,12 @@ test("uses the real email for sign-in and supports future email confirmation", a
     ]);
     assert.deepEqual(await api.sessionSummary(), { signedIn: true, email: "test5@qq.com" });
 
-    const signup = await api.signUp(" New_User@Example.COM ", "StrongPass9!");
-    assert.equal(signup.confirmationRequired, false);
-    assert.equal(signup.session.user.email, "new_user@example.com");
+    await assert.rejects(
+      () => api.signUp(" New_User@Example.COM ", "StrongPass9!"),
+      /邮箱验证服务暂时不可用/
+    );
+    assert.deepEqual(await api.sessionSummary(), { signedIn: false });
 
-    await api.signOut();
     const pending = await api.signUp("pending@example.com", "StrongPass9!");
     assert.deepEqual(pending, {
       confirmationRequired: true,

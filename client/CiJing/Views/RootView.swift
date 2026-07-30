@@ -16,7 +16,14 @@ struct RootView: View {
             else if api.isSignedIn || isUIPreview { MainTabView().transition(.opacity) }
             else { AuthView().transition(.opacity) }
         }
+        .foregroundStyle(CiJingTheme.ink)
+        .preferredColorScheme(preferredColorScheme)
         .animation(.easeInOut(duration: 0.25), value: api.isSignedIn)
+    }
+
+    private var preferredColorScheme: ColorScheme? {
+        guard api.isSignedIn else { return nil }
+        return AppAppearance.selection(for: store.preferredAppearance).colorScheme
     }
 
     @ViewBuilder

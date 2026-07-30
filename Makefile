@@ -1,4 +1,4 @@
-.PHONY: config device-config config-check client-config client-config-check supabase-start supabase-stop supabase-reset functions edge-secrets smoke production-audit production-smoke delete-account-smoke extension-test server-test ios-build verify
+.PHONY: config device-config config-check client-config client-config-check supabase-start supabase-stop supabase-reset functions edge-secrets smoke production-audit production-smoke delete-account-smoke extension-test server-start server-test ios-build verify
 
 config:
 	node scripts/generate-config.mjs
@@ -43,6 +43,9 @@ delete-account-smoke:
 extension-test:
 	node --test extension/tests/*.test.mjs
 	find extension -name '*.js' -print0 | xargs -0 -n1 node --check
+
+server-start:
+	cd server && venv/bin/python -m flask --app app run --host 0.0.0.0 --port 8000
 
 server-test:
 	cd server && python3 -m unittest test_app.py

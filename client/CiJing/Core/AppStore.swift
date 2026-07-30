@@ -10,16 +10,25 @@ final class AppStore: ObservableObject {
     @Published var currentReading: ReadingSession?
     @Published var isLoading = false
     @Published private(set) var hasLoadedAccountData = false
+    @Published private(set) var preferredAppearance: String?
+    @Published private(set) var dailyReminderEnabled = true
+    @Published private(set) var autoPronunciationEnabled = true
+    @Published private(set) var hapticFeedbackEnabled = true
+    @Published private(set) var recentLookupTermsRaw = "serendipity,resilient,nuance"
     @Published var errorMessage: String?
 
     let api: SupabaseAPI
-    init(api: SupabaseAPI) { self.api = api }
+    init(api: SupabaseAPI) {
+        self.api = api
+        loadLocalAccountPreferences(migratingLegacyValues: true)
+    }
 
     var weakWords: [Word] { words.filter { $0.status == .weak }.sorted { $0.strength < $1.strength } }
     var dueWords: [Word] { words.filter { $0.status != .new && $0.status != .ignored && $0.isDue } }
 
     func refreshAll() async {
         guard api.isSignedIn else { return }
+        loadLocalAccountPreferences(migratingLegacyValues: true)
         isLoading = true
         defer {
             isLoading = false
@@ -162,8 +171,95 @@ final class AppStore: ObservableObject {
         profile = nil
         currentReading = nil
         hasLoadedAccountData = false
+        preferredAppearance = nil
+        dailyReminderEnabled = true
+        autoPronunciationEnabled = true
+        hapticFeedbackEnabled = true
+        recentLookupTermsRaw = Self.defaultRecentLookupTerms
         errorMessage = nil
         UserDefaults.standard.removeObject(forKey: SpeechVoicePreference.storageKey)
+    }
+
+    func setAppearancePreference(_ appearance: AppAppearance) {
+        guard let userID = api.currentUserID else { return }
+        preferredAppearance = appearance.rawValue
+        UserDefaults.standard.set(appearance.rawValue, forKey: Self.accountStorageKey("appearance", userID: userID))
+    }
+
+    func setDailyReminderEnabled(_ value: Bool) {
+        setLocalPreference(value, name: "daily-reminder") { dailyReminderEnabled = value }
+    }
+
+    func setAutoPronunciationEnabled(_ value: Bool) {
+        setLocalPreference(value, name: "auto-pronunciation") { autoPronunciationEnabled = value }
+    }
+
+    func setHapticFeedbackEnabled(_ value: Bool) {
+        setLocalPreference(value, name: "haptic-feedback") { hapticFeedbackEnabled = value }
+    }
+
+    func setRecentLookupTermsRaw(_ value: String) {
+        setLocalPreference(value, name: "recent-lookups") { recentLookupTermsRaw = value }
+    }
+
+    private static let defaultRecentLookupTerms = "serendipity,resilient,nuance"
+    private static let legacyAppearancePrefix = "cijing.appearance."
+    private static let legacyPreferenceKeys = [
+        "dailyReminderEnabled",
+        "autoPronunciationEnabled",
+        "hapticFeedbackEnabled",
+        "recentLookupTerms",
+    ]
+
+    private func loadLocalAccountPreferences(migratingLegacyValues: Bool) {
+        guard let userID = api.currentUserID else {
+            preferredAppearance = nil
+            dailyReminderEnabled = true
+            autoPronunciationEnabled = true
+            hapticFeedbackEnabled = true
+            recentLookupTermsRaw = Self.defaultRecentLookupTerms
+            return
+        }
+
+        let defaults = UserDefaults.standard
+        if migratingLegacyValues {
+            migrateLegacyPreferences(to: userID, defaults: defaults)
+        }
+        preferredAppearance = defaults.string(forKey: Self.accountStorageKey("appearance", userID: userID))
+        dailyReminderEnabled = defaults.object(forKey: Self.accountPreferenceStorageKey("daily-reminder", userID: userID)) as? Bool ?? true
+        autoPronunciationEnabled = defaults.object(forKey: Self.accountPreferenceStorageKey("auto-pronunciation", userID: userID)) as? Bool ?? true
+        hapticFeedbackEnabled = defaults.object(forKey: Self.accountPreferenceStorageKey("haptic-feedback", userID: userID)) as? Bool ?? true
+        recentLookupTermsRaw = defaults.string(forKey: Self.accountPreferenceStorageKey("recent-lookups", userID: userID)) ?? Self.defaultRecentLookupTerms
+    }
+
+    private func migrateLegacyPreferences(to userID: UUID, defaults: UserDefaults) {
+        let appearanceKey = Self.accountStorageKey("appearance", userID: userID)
+        let legacyAppearanceKey = Self.legacyAppearancePrefix + api.currentEmail.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
+        if defaults.object(forKey: appearanceKey) == nil, let value = defaults.string(forKey: legacyAppearanceKey) {
+            defaults.set(value, forKey: appearanceKey)
+        }
+        defaults.removeObject(forKey: legacyAppearanceKey)
+
+        // These values used to be global, so their owning account cannot be known.
+        // Discard them instead of assigning another user's preferences to the
+        // account that happened to be signed in during the upgrade.
+        for legacyKey in Self.legacyPreferenceKeys {
+            defaults.removeObject(forKey: legacyKey)
+        }
+    }
+
+    private func setLocalPreference<T>(_ value: T, name: String, apply: () -> Void) {
+        guard let userID = api.currentUserID else { return }
+        apply()
+        UserDefaults.standard.set(value, forKey: Self.accountPreferenceStorageKey(name, userID: userID))
+    }
+
+    private static func accountStorageKey(_ name: String, userID: UUID) -> String {
+        "cijing.account.\(userID.uuidString.lowercased()).\(name)"
+    }
+
+    private static func accountPreferenceStorageKey(_ name: String, userID: UUID) -> String {
+        "cijing.account.\(userID.uuidString.lowercased()).preferences.v2.\(name)"
     }
 
     private func refreshPlan() async { if let next = try? await api.dailyPlan() { plan = next } }

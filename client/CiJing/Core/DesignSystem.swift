@@ -1,4 +1,5 @@
 import SwiftUI
+import UIKit
 
 private struct AppTabBarHiddenKey: EnvironmentKey {
     static let defaultValue: Binding<Bool> = .constant(false)
@@ -13,16 +14,21 @@ extension EnvironmentValues {
 
 /// Shared visual tokens from the 390 × 844 interactive prototype.
 enum CiJingTheme {
-    static let purple = Color(red: 118 / 255, green: 81 / 255, blue: 201 / 255)
-    static let purpleDark = Color(red: 95 / 255, green: 63 / 255, blue: 175 / 255)
-    static let purpleSoft = Color(red: 233 / 255, green: 224 / 255, blue: 248 / 255)
-    static let canvas = Color(red: 241 / 255, green: 235 / 255, blue: 248 / 255)
-    static let ink = Color(red: 38 / 255, green: 33 / 255, blue: 45 / 255)
-    static let secondary = Color(red: 138 / 255, green: 132 / 255, blue: 144 / 255)
-    static let line = Color(red: 226 / 255, green: 216 / 255, blue: 236 / 255)
-    static let warm = Color(red: 233 / 255, green: 155 / 255, blue: 84 / 255)
-    static let success = Color(red: 63 / 255, green: 183 / 255, blue: 129 / 255)
-    static let danger = Color(red: 219 / 255, green: 107 / 255, blue: 119 / 255)
+    static let purple = adaptive(light: 0x7651C9, dark: 0xB79AFF)
+    static let purpleDark = adaptive(light: 0x5F3FAF, dark: 0xD1C0FF)
+    static let purpleSoft = adaptive(light: 0xE9E0F8, dark: 0x33264A)
+    static let canvas = adaptive(light: 0xF1EBF8, dark: 0x17131F)
+    static let ink = adaptive(light: 0x26212D, dark: 0xF6F0FB)
+    static let secondary = adaptive(light: 0x8A8490, dark: 0xB8B0C0)
+    static let line = adaptive(light: 0xE2D8EC, dark: 0x463852)
+    static let warm = adaptive(light: 0xE99B54, dark: 0xF3B16F)
+    static let success = adaptive(light: 0x3FB781, dark: 0x68D9A7)
+    static let danger = adaptive(light: 0xDB6B77, dark: 0xFF8C98)
+    static let surface = adaptive(light: 0xFFFDFE, dark: 0x241D2C)
+    static let surfaceElevated = adaptive(light: 0xF9F6FD, dark: 0x2B2235)
+    static let surfaceMuted = adaptive(light: 0xF7F2FB, dark: 0x30263B)
+    static let warmSoft = adaptive(light: 0xFFF1E4, dark: 0x3B2A24)
+    static let shadow = adaptive(light: 0x423157, dark: 0x000000)
 
     // Compatibility names used by the existing reading and practice flows.
     static let green = purple
@@ -30,16 +36,86 @@ enum CiJingTheme {
     static let paper = canvas
 
     static let pageGradient = LinearGradient(
-        colors: [Color(red: 246 / 255, green: 241 / 255, blue: 251 / 255), canvas],
+        colors: [adaptive(light: 0xF6F1FB, dark: 0x211929), canvas],
         startPoint: .top,
         endPoint: .bottom
     )
 
     static let primaryGradient = LinearGradient(
-        colors: [Color(red: 128 / 255, green: 91 / 255, blue: 210 / 255), Color(red: 108 / 255, green: 69 / 255, blue: 189 / 255)],
+        colors: [adaptive(light: 0x805BD2, dark: 0x8E68DD), adaptive(light: 0x6C45BD, dark: 0x6844B8)],
         startPoint: .topLeading,
         endPoint: .bottomTrailing
     )
+
+    static let featuredGradient = LinearGradient(
+        colors: [adaptive(light: 0xF8F1FF, dark: 0x30233F), adaptive(light: 0xEADCF9, dark: 0x241A31)],
+        startPoint: .topLeading,
+        endPoint: .bottomTrailing
+    )
+
+    private static func adaptive(light: Int, dark: Int) -> Color {
+        Color(uiColor: UIColor { traits in
+            UIColor(rgb: traits.userInterfaceStyle == .dark ? dark : light)
+        })
+    }
+}
+
+private extension UIColor {
+    convenience init(rgb: Int) {
+        self.init(
+            red: CGFloat((rgb >> 16) & 0xFF) / 255,
+            green: CGFloat((rgb >> 8) & 0xFF) / 255,
+            blue: CGFloat(rgb & 0xFF) / 255,
+            alpha: 1
+        )
+    }
+}
+
+enum AppAppearance: String, CaseIterable, Identifiable {
+    case projectDefault = "default"
+    case system
+    case light
+    case dark
+
+    static let projectDefaultColorScheme: ColorScheme = .light
+
+    var id: String { rawValue }
+    var title: String {
+        switch self {
+        case .projectDefault: "项目默认（浅色）"
+        case .system: "跟随系统"
+        case .light: "浅色"
+        case .dark: "深色"
+        }
+    }
+    var subtitle: String {
+        switch self {
+        case .projectDefault: "使用项目代码设定的默认外观"
+        case .system: "随 iPhone 的外观自动切换"
+        case .light: "始终使用浅色外观"
+        case .dark: "始终使用深色外观"
+        }
+    }
+    var icon: String {
+        switch self {
+        case .projectDefault: "paintbrush"
+        case .system: "iphone"
+        case .light: "sun.max"
+        case .dark: "moon.stars"
+        }
+    }
+    var colorScheme: ColorScheme? {
+        switch self {
+        case .projectDefault: Self.projectDefaultColorScheme
+        case .system: nil
+        case .light: .light
+        case .dark: .dark
+        }
+    }
+
+    static func selection(for storedValue: String?) -> AppAppearance {
+        AppAppearance(rawValue: storedValue ?? "") ?? .system
+    }
 }
 
 /// Shared type scale for the app's readable 12–18 pt body hierarchy.
@@ -113,11 +189,11 @@ struct CardModifier: ViewModifier {
         content
             .padding(padding)
             .background(
-                LinearGradient(colors: [.white.opacity(0.94), Color(red: 249 / 255, green: 246 / 255, blue: 253 / 255)], startPoint: .topLeading, endPoint: .bottomTrailing),
+                LinearGradient(colors: [CiJingTheme.surface, CiJingTheme.surfaceElevated], startPoint: .topLeading, endPoint: .bottomTrailing),
                 in: RoundedRectangle(cornerRadius: 22, style: .continuous)
             )
             .overlay(RoundedRectangle(cornerRadius: 22, style: .continuous).stroke(CiJingTheme.line.opacity(0.75)))
-            .shadow(color: Color(red: 66 / 255, green: 49 / 255, blue: 87 / 255).opacity(0.09), radius: 21, y: 10)
+            .shadow(color: CiJingTheme.shadow.opacity(0.12), radius: 21, y: 10)
     }
 }
 
@@ -152,7 +228,7 @@ struct SearchField: View {
         .font(CiJingTypography.body)
         .padding(.horizontal, 14)
         .frame(height: 48)
-        .background(.white.opacity(0.86), in: RoundedRectangle(cornerRadius: 15, style: .continuous))
+        .background(CiJingTheme.surface.opacity(0.92), in: RoundedRectangle(cornerRadius: 15, style: .continuous))
         .overlay(RoundedRectangle(cornerRadius: 15, style: .continuous).stroke(CiJingTheme.line))
     }
 }

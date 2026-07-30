@@ -114,9 +114,9 @@ struct HomeView: View {
                 .buttonStyle(PrimaryButtonStyle())
         }
         .padding(24)
-        .background(LinearGradient(colors: [Color(red: 248 / 255, green: 241 / 255, blue: 1), Color(red: 234 / 255, green: 220 / 255, blue: 249 / 255)], startPoint: .topLeading, endPoint: .bottomTrailing), in: RoundedRectangle(cornerRadius: 22, style: .continuous))
-        .overlay(RoundedRectangle(cornerRadius: 22, style: .continuous).stroke(Color(red: 232 / 255, green: 222 / 255, blue: 242 / 255)))
-        .shadow(color: Color(red: 66 / 255, green: 49 / 255, blue: 87 / 255).opacity(0.09), radius: 21, y: 10)
+        .background(CiJingTheme.featuredGradient, in: RoundedRectangle(cornerRadius: 22, style: .continuous))
+        .overlay(RoundedRectangle(cornerRadius: 22, style: .continuous).stroke(CiJingTheme.line))
+        .shadow(color: CiJingTheme.shadow.opacity(0.12), radius: 21, y: 10)
     }
 
     private var completedPlanCard: some View {
@@ -134,9 +134,9 @@ struct HomeView: View {
                     .background(Color(red: 1, green: 241 / 255, blue: 228 / 255), in: RoundedRectangle(cornerRadius: 12))
             }
             HStack(spacing: 8) {
-                PlanMetric(number: "\(store.plan.newSuggested)", label: "新词", tint: Color(red: 238 / 255, green: 228 / 255, blue: 251 / 255))
-                PlanMetric(number: "\(store.plan.practiceToday)", label: "练习", tint: Color(red: 243 / 255, green: 232 / 255, blue: 248 / 255))
-                PlanMetric(number: "\(Int(store.plan.progress * 100))%", label: "完成", tint: Color(red: 234 / 255, green: 223 / 255, blue: 245 / 255))
+                PlanMetric(number: "\(store.plan.newSuggested)", label: "新词", tint: CiJingTheme.purpleSoft)
+                PlanMetric(number: "\(store.plan.practiceToday)", label: "练习", tint: CiJingTheme.surfaceMuted)
+                PlanMetric(number: "\(Int(store.plan.progress * 100))%", label: "完成", tint: CiJingTheme.surfaceElevated)
             }
             VStack(spacing: 8) {
                 HStack { Text("今日进度"); Spacer(); Text("100%").bold() }.font(.caption).foregroundStyle(CiJingTheme.secondary)
@@ -144,8 +144,8 @@ struct HomeView: View {
             }
         }
         .padding(20)
-        .background(LinearGradient(colors: [Color(red: 247 / 255, green: 240 / 255, blue: 1), Color(red: 234 / 255, green: 220 / 255, blue: 248 / 255)], startPoint: .topLeading, endPoint: .bottomTrailing), in: RoundedRectangle(cornerRadius: 22, style: .continuous))
-        .overlay(RoundedRectangle(cornerRadius: 22).stroke(Color(red: 223 / 255, green: 207 / 255, blue: 238 / 255)))
+        .background(CiJingTheme.featuredGradient, in: RoundedRectangle(cornerRadius: 22, style: .continuous))
+        .overlay(RoundedRectangle(cornerRadius: 22).stroke(CiJingTheme.line))
     }
 
     private var exploreGrid: some View {
@@ -168,7 +168,7 @@ struct HomeView: View {
             SnapshotMetric(value: "\(store.recentReadings.count)", label: "短文", icon: "text.book.closed.fill")
         }
         .padding(.vertical, 14)
-        .background(Color.white.opacity(0.72), in: RoundedRectangle(cornerRadius: 19, style: .continuous))
+        .background(CiJingTheme.surface.opacity(0.82), in: RoundedRectangle(cornerRadius: 19, style: .continuous))
         .overlay(RoundedRectangle(cornerRadius: 19).stroke(CiJingTheme.line))
     }
 
@@ -238,12 +238,12 @@ struct HomeView: View {
         HStack(alignment: .top, spacing: 10) {
             Text(store.plan.completedToday ? "🔥" : "💡")
             Text(store.plan.completedToday ? "词库互动火焰已点亮。继续学习，火焰会随着连续天数长大。" : "温馨提示：浏览器扩展收藏的单词会自动出现在词库，并优先安排进今日学习。")
-                .font(.system(size: 13)).foregroundStyle(Color(red: 129 / 255, green: 121 / 255, blue: 134 / 255)).lineSpacing(4)
+                .font(.system(size: 13)).foregroundStyle(CiJingTheme.secondary).lineSpacing(4)
         }
         .padding(15)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .background(Color(red: 1, green: 250 / 255, blue: 245 / 255), in: RoundedRectangle(cornerRadius: 17))
-        .overlay(RoundedRectangle(cornerRadius: 17).stroke(Color(red: 250 / 255, green: 236 / 255, blue: 221 / 255)))
+        .background(CiJingTheme.warmSoft, in: RoundedRectangle(cornerRadius: 17))
+        .overlay(RoundedRectangle(cornerRadius: 17).stroke(CiJingTheme.warm.opacity(0.25)))
     }
 
     private var profileInitial: String {
@@ -330,9 +330,9 @@ private struct ExploreCard: View {
                     .font(.system(size: 15, weight: .bold))
                     .foregroundStyle(item.tint)
                     .frame(width: 34, height: 34)
-                    .background(item.soft, in: RoundedRectangle(cornerRadius: 12))
+                    .background(item.tint.opacity(0.15), in: RoundedRectangle(cornerRadius: 12))
                 Spacer()
-                Text(item.badge).font(.system(size: 11, weight: .heavy)).foregroundStyle(item.tint).padding(.horizontal, 6).padding(.vertical, 4).background(item.soft, in: RoundedRectangle(cornerRadius: 7))
+                Text(item.badge).font(.system(size: 11, weight: .heavy)).foregroundStyle(item.tint).padding(.horizontal, 6).padding(.vertical, 4).background(item.tint.opacity(0.15), in: RoundedRectangle(cornerRadius: 7))
             }
             Spacer(minLength: 8)
             Text(item.title).font(.system(size: 14, weight: .bold, design: .rounded)).foregroundStyle(CiJingTheme.ink)
@@ -340,7 +340,7 @@ private struct ExploreCard: View {
         }
         .padding(15)
         .frame(maxWidth: .infinity, minHeight: 108, alignment: .leading)
-        .background(LinearGradient(colors: [item.soft.opacity(0.8), item.soft.opacity(0.42)], startPoint: .topLeading, endPoint: .bottomTrailing), in: RoundedRectangle(cornerRadius: 22, style: .continuous))
+        .background(LinearGradient(colors: [item.tint.opacity(0.16), CiJingTheme.surfaceElevated], startPoint: .topLeading, endPoint: .bottomTrailing), in: RoundedRectangle(cornerRadius: 22, style: .continuous))
         .overlay(RoundedRectangle(cornerRadius: 22).stroke(item.tint.opacity(0.18)))
     }
 }
