@@ -13,7 +13,7 @@ test("renders exactly one phonetic slash on each side", () => {
   assert.equal(formatPhonetic(""), "");
 });
 
-test("privacy mode removes all webpage context before lookup", () => {
+test("lookup payload sends only the selected word and current sentence", () => {
   const payload = {
     word: "state",
     context: "State appears in a private page.",
@@ -24,9 +24,11 @@ test("privacy mode removes all webpage context before lookup", () => {
   assert.deepEqual(prepareLookupPayload(payload, true), {
     word: "state",
     context: "",
-    sentence: "",
-    source_url: null,
-    source_title: null
+    sentence: ""
   });
-  assert.equal(prepareLookupPayload(payload, false), payload);
+  assert.deepEqual(prepareLookupPayload(payload, false), {
+    word: "state",
+    context: "State appears in a private page.",
+    sentence: "State appears in a private page."
+  });
 });

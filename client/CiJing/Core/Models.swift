@@ -21,6 +21,25 @@ struct LexiconPart: Codable, Hashable, Identifiable {
     let meaning: String
 }
 
+struct DictionaryLicense: Codable, Hashable, Identifiable {
+    var id: String { url }
+    let name: String
+    let url: String
+}
+
+struct DictionaryAudioAttribution: Codable, Hashable {
+    let sourceUrl: String
+    let license: DictionaryLicense
+}
+
+struct DictionaryAttribution: Codable, Hashable {
+    let provider: String
+    let providerUrl: String
+    let sourceUrls: [String]
+    let licenses: [DictionaryLicense]
+    let audio: DictionaryAudioAttribution?
+}
+
 struct Word: Codable, Hashable, Identifiable {
     let id: UUID
     let userId: UUID?
@@ -38,6 +57,7 @@ struct Word: Codable, Hashable, Identifiable {
     var firstContext: String?
     var firstSourceUrl: String?
     var firstSourceTitle: String?
+    var dictionaryAttribution: DictionaryAttribution? = nil
     var notes: String
     var customMeaning: String?
     var status: WordStatus
@@ -158,6 +178,7 @@ struct LookupResult: Codable {
     let exampleEnglish: String
     let exampleChinese: String
     let sentence: String
+    var dictionaryAttribution: DictionaryAttribution? = nil
 }
 
 struct ReadingWordExplanation: Codable {
@@ -168,6 +189,7 @@ struct ReadingWordExplanation: Codable {
     let meaning: String
     let contextualMeaning: String
     let sentence: String
+    var dictionaryAttribution: DictionaryAttribution? = nil
 }
 
 struct EdgeResponse<T: Codable>: Codable { let data: T; let cached: Bool? }
@@ -196,6 +218,7 @@ struct SaveWordPayload: Codable {
     let sentence: String?
     let sourceUrl: String?
     let sourceTitle: String?
+    var dictionaryAttribution: DictionaryAttribution? = nil
 }
 
 struct APIErrorPayload: Codable { let message: String?; let error: String?; let errorDescription: String?; let msg: String? }

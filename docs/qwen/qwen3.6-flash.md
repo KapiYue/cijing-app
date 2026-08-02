@@ -1,6 +1,6 @@
 # Qwen3.6 Flash 集成说明
 
-更新日期：2026 年 7 月 30 日
+更新日期：2026 年 8 月 2 日
 
 词鲸当前通过 OpenRouter 使用模型标识 `qwen/qwen3.6-flash`，用于词义中文补充、阅读内查词和个性化双语短文生成。模型不直接暴露给 iOS 或 Chrome 扩展；所有调用都发生在已认证的 Supabase Edge Functions 中。
 
@@ -39,6 +39,7 @@ make edge-secrets
 - `response_format.type = json_schema` 与 `strict = true`：要求精确结构；
 - 默认 `temperature = 0.35`、`max_tokens = 2200`；
 - 阅读生成使用 `temperature = 0.55`、`max_tokens = 5200`，重新生成时温度为 `0.72`；
+- `provider.data_collection = "deny"`：只允许路由到声明不收集输入用于训练的端点；当前模型不在 OpenRouter 公布的 ZDR 列表中，不能宣称零保留；
 - `HTTP-Referer` 与 `X-Title` 只用于 OpenRouter 请求来源标识。
 
 返回内容会再次由本地 `schemaIssues` 校验。第一次响应缺字段或类型错误时，适配器最多发起一次带错误摘要的纠正请求；第二次仍不合规则返回 `OPENROUTER_SCHEMA_MISMATCH`，不会把未校验文本写入业务表。
@@ -47,7 +48,7 @@ make edge-secrets
 
 ### `lookup-word`
 
-输入限制：英文单词最多 61 个字符，句子最多 600 字符，周边上下文最多 1800 字符。Free Dictionary API 提供公开英文释义、音标与音频候选，Qwen 补充中文释义、语境义和例句。结果按用户、词形、上下文哈希缓存 90 天。
+服务端输入上限为英文单词 61 个字符、句子 600 字符和上下文 1800 字符；当前 Chrome 扩展只发送包含选词且最多 600 字符的当前句子，不发送所在段落。Free Dictionary API 提供带来源和许可元数据的英文释义、音标与音频候选，Qwen 补充中文释义、语境义和例句。结果按用户、词形、上下文哈希缓存 90 天。
 
 ### `explain-reading-word`
 
@@ -60,10 +61,10 @@ make edge-secrets
 ## 数据最小化
 
 - 不向 OpenRouter 发送邮箱、密码、访问令牌、用户 ID、页面 Cookie 或完整浏览历史；
-- 查词仅发送用户主动选择的词及受长度限制的句子/周边文本；扩展隐私模式会在请求前清空网页上下文和来源；
+- 查词仅发送用户主动选择的词及包含该词、最多 600 字符的当前句子；扩展隐私模式会在请求前清空句子和页面来源；
 - 阅读生成只发送选中的目标词及释义、主题、文体和难度；
 - 模型输出写入当前用户受 RLS 保护的缓存或阅读记录；
-- 上游服务对请求的保留与处理仍受其条款和隐私政策约束，产品政策变化时必须同步复核 [`docs/privacy-policy.md`](../privacy-policy.md)。
+- 上游服务对请求的保留与处理仍受其条款和隐私政策约束，产品政策变化时必须同步复核 [`docs/privacy-policy.md`](../privacy-policy.md) 与 [`docs/third-party-content-and-ai-compliance.md`](../third-party-content-and-ai-compliance.md)。
 
 ## 验证与换模
 

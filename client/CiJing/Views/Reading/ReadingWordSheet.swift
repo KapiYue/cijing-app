@@ -45,6 +45,9 @@ struct ReadingWordSheet: View {
             Text(word.displayMeaning).font(.title3.bold())
             if let contextual = word.contextualMeaning { Label("当前语境", systemImage: "scope").font(.caption.bold()).foregroundStyle(CiJingTheme.green); Text(contextual) }
             Text(selection.sentence).font(.body).padding(13).background(CiJingTheme.paper, in: RoundedRectangle(cornerRadius: 13))
+            if let attribution = word.dictionaryAttribution {
+                DictionaryAttributionView(attribution: attribution)
+            }
             Label("已在个人词库 · \(word.status.title)", systemImage: "checkmark.circle.fill").font(.subheadline.bold()).foregroundStyle(CiJingTheme.green)
         }.cijingCard()
     }
@@ -56,6 +59,9 @@ struct ReadingWordSheet: View {
             Label("这个句子里", systemImage: "scope").font(.caption.bold()).foregroundStyle(CiJingTheme.green)
             Text(item.contextualMeaning)
             Text(selection.sentence).font(.body).padding(13).background(CiJingTheme.paper, in: RoundedRectangle(cornerRadius: 13))
+            if let attribution = item.dictionaryAttribution {
+                DictionaryAttributionView(attribution: attribution)
+            }
             Button(saved ? "✓ 已保存到词库" : "＋ 保存为新词") { Task { await save(item) } }.buttonStyle(PrimaryButtonStyle()).disabled(saved)
         }.cijingCard()
     }
@@ -69,6 +75,9 @@ struct ReadingWordSheet: View {
             Text(selection.sentence).font(.body).padding(13).background(CiJingTheme.paper, in: RoundedRectangle(cornerRadius: 13))
             if !item.englishDefinition.isEmpty {
                 Text(item.englishDefinition).font(.subheadline).foregroundStyle(CiJingTheme.secondary)
+            }
+            if let attribution = item.dictionaryAttribution {
+                DictionaryAttributionView(attribution: attribution)
             }
             Button(saved ? "✓ 已保存到词库" : "＋ 保存为新词") { Task { await save(item) } }
                 .buttonStyle(PrimaryButtonStyle()).disabled(saved)

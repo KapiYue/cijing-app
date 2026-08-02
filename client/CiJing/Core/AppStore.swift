@@ -118,7 +118,8 @@ final class AppStore: ObservableObject {
         let payload = SaveWordPayload(term: explanation.term, lemma: explanation.lemma, phonetic: explanation.phonetic, audioUrl: nil,
             parts: [LexiconPart(partOfSpeech: explanation.partOfSpeech, meaning: explanation.meaning)], primaryMeaning: explanation.meaning,
             contextualMeaning: explanation.contextualMeaning, englishDefinition: nil, exampleEn: sentence, exampleZh: nil,
-            context: sentence, sentence: sentence, sourceUrl: nil, sourceTitle: "AI 阅读 · \(readingTitle)")
+            context: sentence, sentence: sentence, sourceUrl: nil, sourceTitle: "AI 阅读 · \(readingTitle)",
+            dictionaryAttribution: explanation.dictionaryAttribution)
         let word = try await api.saveWord(payload); replace(word); return word
     }
 
@@ -137,7 +138,8 @@ final class AppStore: ObservableObject {
             context: result.sentence,
             sentence: result.sentence,
             sourceUrl: nil,
-            sourceTitle: "词鲸背单词 App 查词"
+            sourceTitle: "词鲸背单词 App 查词",
+            dictionaryAttribution: result.dictionaryAttribution
         )
         let word = try await api.saveWord(payload)
         replace(word)

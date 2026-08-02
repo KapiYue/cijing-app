@@ -6,6 +6,14 @@
   let requestSerial = 0;
 
   const escapeHTML = (value = "") => String(value).replace(/[&<>'"]/g, (char) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", "'": "&#39;", '"': "&quot;" })[char]);
+  const safeExternalURL = (value = "") => {
+    try {
+      const url = new URL(String(value));
+      return url.protocol === "https:" ? url.href : "";
+    } catch {
+      return "";
+    }
+  };
   const { cleanWord, findSentence, formatPhonetic, prepareLookupPayload } = globalThis.CiJingTextUtils;
   const validWord = (value) => /^[A-Za-z][A-Za-z'-]{0,60}$/.test(value);
   const currentHost = location.hostname.toLowerCase();
@@ -16,13 +24,13 @@
     if (!validWord(word)) return null;
     let node = selection?.anchorNode?.nodeType === Node.TEXT_NODE ? selection.anchorNode.parentElement : selection?.anchorNode;
     const container = node?.closest?.("p,li,blockquote,article,section,main,td,figcaption") || node?.parentElement || document.body;
-    const context = (container?.innerText || "").replace(/\s+/g, " ").trim().slice(0, 1800);
-    const sentence = findSentence(context, word);
+    const surroundingText = (container?.innerText || "").replace(/\s+/g, " ").trim().slice(0, 1800);
+    const sentence = findSentence(surroundingText, word);
     const range = selection?.rangeCount ? selection.getRangeAt(0) : null;
     const rect = range?.getBoundingClientRect();
     return {
       word,
-      context,
+      context: sentence,
       sentence,
       source_url: location.href,
       source_title: document.title,
@@ -42,7 +50,7 @@
     host.style.cssText = "all:initial;position:fixed;z-index:2147483647;left:0;top:0";
     const shadow = host.attachShadow({ mode: "open" });
     shadow.innerHTML = `<style>
-      :host{all:initial}.card{--accent:#7651c9;--accent-dark:#5f3faf;--accent-soft:#e9e0f8;position:fixed;width:min(380px,calc(100vw - 16px));max-height:calc(100vh - 16px);overflow:auto;overscroll-behavior:contain;scrollbar-gutter:stable;background:#fffdf8;color:#26212d;border:1px solid color-mix(in srgb,var(--accent) 20%,transparent);border-radius:20px;box-shadow:0 22px 70px rgba(73,47,99,.25);font:15px/1.55 -apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC",sans-serif;animation:in .16s ease-out}.card[data-theme="blue"]{--accent:#3977d6;--accent-dark:#275ba9;--accent-soft:#e4efff}.card[data-theme="green"]{--accent:#2d936c;--accent-dark:#207052;--accent-soft:#e0f4eb}.card[data-theme="orange"]{--accent:#d9823d;--accent-dark:#ae6127;--accent-soft:#fff0df}.card[data-theme="rose"]{--accent:#b95579;--accent-dark:#913d5d;--accent-soft:#f9e5ed}.inner{padding:18px}.brand{display:flex;justify-content:space-between;align-items:center;color:var(--accent-dark);font-size:13px;font-weight:750;letter-spacing:.06em}.close{border:0;background:var(--accent-soft);color:var(--accent-dark);width:31px;height:31px;border-radius:50%;cursor:pointer;font-size:18px;line-height:1}.head{display:flex;align-items:center;gap:10px;margin:12px 0 2px;min-width:0}.word{font:700 29px/1.1 Georgia,serif;color:#342448;overflow-wrap:anywhere}.phonetic{color:#817987;font-size:14px}.speak{display:grid;place-items:center;flex:none;border:0;background:var(--accent-soft);color:var(--accent-dark);border-radius:11px;width:38px;height:38px;cursor:pointer}.speak svg,.secondary svg{width:20px;height:20px;fill:currentColor}.speak .wave,.secondary .wave{fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round}.meaning{font-size:18px;font-weight:700;margin:13px 0 4px}.context{background:color-mix(in srgb,var(--accent-soft) 70%,white);border-left:3px solid var(--accent);border-radius:0 11px 11px 0;padding:11px 13px;margin:13px 0;color:#4f3a69}.part{display:flex;gap:8px;margin:6px 0}.pos{flex:none;color:var(--accent-dark);font-weight:700;font-size:13px;padding-top:1px}.definition{color:#6f6875;font-size:14px;margin:9px 0}.example{margin:13px 0 4px;padding-top:12px;border-top:1px solid #eee8f3}.translation{color:#746d7b;margin-top:4px}.footer{display:flex;gap:9px;margin-top:16px}.primary,.secondary{border:0;border-radius:12px;padding:11px 14px;font-size:14px;font-weight:750;cursor:pointer}.primary{flex:1;background:linear-gradient(135deg,var(--accent),var(--accent-dark));color:white}.primary:disabled{opacity:.62}.secondary{display:flex;align-items:center;justify-content:center;gap:6px;background:var(--accent-soft);color:var(--accent-dark)}.loading{padding:32px 0;text-align:center;color:var(--accent-dark)}.dot{display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--accent);margin:0 3px;animation:pulse 1s infinite}.dot:nth-child(2){animation-delay:.15s}.dot:nth-child(3){animation-delay:.3s}.error{background:#fff1ed;color:#9a3f28;border-radius:12px;padding:12px;margin:13px 0}.hint{font-size:12px;color:#817987;margin-top:9px}.login{display:block;text-align:center;background:linear-gradient(135deg,var(--accent),var(--accent-dark));color:#fff;text-decoration:none;border:0;border-radius:12px;padding:11px;margin-top:13px;cursor:pointer;font-weight:700}.privacy{display:inline-flex;align-items:center;gap:5px;color:var(--accent-dark);font-weight:650}@keyframes in{from{opacity:0;transform:translateY(7px) scale(.98)}}@keyframes pulse{0%,100%{opacity:.25}50%{opacity:1}}@media(max-width:330px){.inner{padding:14px}.footer{flex-direction:column}.secondary{width:100%}}
+      :host{all:initial}.card{--accent:#7651c9;--accent-dark:#5f3faf;--accent-soft:#e9e0f8;position:fixed;width:min(380px,calc(100vw - 16px));max-height:calc(100vh - 16px);overflow:auto;overscroll-behavior:contain;scrollbar-gutter:stable;background:#fffdf8;color:#26212d;border:1px solid color-mix(in srgb,var(--accent) 20%,transparent);border-radius:20px;box-shadow:0 22px 70px rgba(73,47,99,.25);font:15px/1.55 -apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC",sans-serif;animation:in .16s ease-out}.card[data-theme="blue"]{--accent:#3977d6;--accent-dark:#275ba9;--accent-soft:#e4efff}.card[data-theme="green"]{--accent:#2d936c;--accent-dark:#207052;--accent-soft:#e0f4eb}.card[data-theme="orange"]{--accent:#d9823d;--accent-dark:#ae6127;--accent-soft:#fff0df}.card[data-theme="rose"]{--accent:#b95579;--accent-dark:#913d5d;--accent-soft:#f9e5ed}.inner{padding:18px}.brand{display:flex;justify-content:space-between;align-items:center;color:var(--accent-dark);font-size:13px;font-weight:750;letter-spacing:.06em}.close{border:0;background:var(--accent-soft);color:var(--accent-dark);width:31px;height:31px;border-radius:50%;cursor:pointer;font-size:18px;line-height:1}.head{display:flex;align-items:center;gap:10px;margin:12px 0 2px;min-width:0}.word{font:700 29px/1.1 Georgia,serif;color:#342448;overflow-wrap:anywhere}.phonetic{color:#817987;font-size:14px}.speak{display:grid;place-items:center;flex:none;border:0;background:var(--accent-soft);color:var(--accent-dark);border-radius:11px;width:38px;height:38px;cursor:pointer}.speak svg,.secondary svg{width:20px;height:20px;fill:currentColor}.speak .wave,.secondary .wave{fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round}.meaning{font-size:18px;font-weight:700;margin:13px 0 4px}.context{background:color-mix(in srgb,var(--accent-soft) 70%,white);border-left:3px solid var(--accent);border-radius:0 11px 11px 0;padding:11px 13px;margin:13px 0;color:#4f3a69}.part{display:flex;gap:8px;margin:6px 0}.pos{flex:none;color:var(--accent-dark);font-weight:700;font-size:13px;padding-top:1px}.definition{color:#6f6875;font-size:14px;margin:9px 0}.example{margin:13px 0 4px;padding-top:12px;border-top:1px solid #eee8f3}.translation{color:#746d7b;margin-top:4px}.attribution{margin-top:12px;padding-top:10px;border-top:1px solid #eee8f3;color:#817987;font-size:12px}.attribution a{color:var(--accent-dark);margin-right:9px}.footer{display:flex;gap:9px;margin-top:16px}.primary,.secondary{border:0;border-radius:12px;padding:11px 14px;font-size:14px;font-weight:750;cursor:pointer}.primary{flex:1;background:linear-gradient(135deg,var(--accent),var(--accent-dark));color:white}.primary:disabled{opacity:.62}.secondary{display:flex;align-items:center;justify-content:center;gap:6px;background:var(--accent-soft);color:var(--accent-dark)}.loading{padding:32px 0;text-align:center;color:var(--accent-dark)}.dot{display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--accent);margin:0 3px;animation:pulse 1s infinite}.dot:nth-child(2){animation-delay:.15s}.dot:nth-child(3){animation-delay:.3s}.error{background:#fff1ed;color:#9a3f28;border-radius:12px;padding:12px;margin:13px 0}.hint{font-size:12px;color:#817987;margin-top:9px}.login{display:block;text-align:center;background:linear-gradient(135deg,var(--accent),var(--accent-dark));color:#fff;text-decoration:none;border:0;border-radius:12px;padding:11px;margin-top:13px;cursor:pointer;font-weight:700}.privacy{display:inline-flex;align-items:center;gap:5px;color:var(--accent-dark);font-weight:650}@keyframes in{from{opacity:0;transform:translateY(7px) scale(.98)}}@keyframes pulse{0%,100%{opacity:.25}50%{opacity:1}}@media(max-width:330px){.inner{padding:14px}.footer{flex-direction:column}.secondary{width:100%}}
     </style><div class="card" data-theme="${escapeHTML(preferences.theme)}"><div class="inner"><div class="brand"><span>词鲸背单词</span><button class="close" aria-label="关闭">×</button></div><div id="body"></div></div></div>`;
     document.documentElement.appendChild(host);
     const card = shadow.querySelector(".card");
@@ -101,6 +109,18 @@
     const privacyHint = preferences.privacyMode
       ? '<span class="privacy">隐私模式 · 未使用网页上下文</span>'
       : preferences.saveContext ? "将同时保存当前句子和页面来源" : "仅保存单词与释义";
+    const attribution = data.dictionaryAttribution;
+    const attributionLinks = attribution ? [
+      ...(attribution.sourceUrls || []).map((url, index) => [attribution.sourceUrls.length === 1 ? "词条来源" : `词条来源 ${index + 1}`, url]),
+      ...(attribution.licenses || []).map((license) => [`词条许可：${license.name}`, license.url]),
+      ...(attribution.audio ? [["发音来源", attribution.audio.sourceUrl], [`发音许可：${attribution.audio.license.name}`, attribution.audio.license.url]] : []),
+    ].map(([label, url]) => {
+      const safeURL = safeExternalURL(url);
+      return safeURL ? `<a href="${escapeHTML(safeURL)}" target="_blank" rel="noopener noreferrer">${escapeHTML(label)}</a>` : "";
+    }).filter(Boolean).join("") : "";
+    const attributionHTML = attributionLinks
+      ? `<div class="attribution">Free Dictionary API · ${attributionLinks}</div>`
+      : "";
     root.getElementById("body").innerHTML = `
       <div class="head"><span class="word">${escapeHTML(data.term || payload.word)}</span><button class="speak" id="speak" aria-label="播放发音" title="播放发音">${volumeIcon()}</button></div>
       <div class="phonetic">${phonetic ? `${escapeHTML(phonetic)} · ` : ""}${escapeHTML(data.lemma || "")}</div>
@@ -108,6 +128,7 @@
       ${data.contextualMeaning ? `<div class="context"><strong>此处：</strong>${escapeHTML(data.contextualMeaning)}</div>` : ""}
       <div class="definition">${escapeHTML(data.englishDefinition)}</div>
       <div class="example"><div>${escapeHTML(data.exampleEnglish)}</div><div class="translation">${escapeHTML(data.exampleChinese)}</div></div>
+      ${attributionHTML}
       <div class="footer"><button class="secondary" id="slow">${volumeIcon()}<span>慢速</span></button><button class="primary" id="save">＋ 保存到词库</button></div>
       <div class="hint">${data.audioUrl ? "发音：公开词典真人录音 · " : "发音：Chrome 高质量英文语音 · "}${privacyHint}</div>`;
 
@@ -158,7 +179,8 @@
       context: includeContext ? payload.context : null,
       sentence: includeContext ? (data.sentence || payload.sentence) : null,
       source_url: includeContext ? payload.source_url : null,
-      source_title: includeContext ? payload.source_title : null
+      source_title: includeContext ? payload.source_title : null,
+      dictionary_attribution: data.dictionaryAttribution || null
     }});
     if (saved.ok) {
       button.textContent = automatic ? "✓ 已自动保存" : "✓ 已保存并同步";
@@ -213,7 +235,7 @@
     const response = await chrome.runtime.sendMessage({ type: "LOOKUP_WORD", payload: requestPayload });
     if (serial !== requestSerial || !document.getElementById(HOST_ID)) return;
     if (!response?.ok) showError(root, payload.word, response?.error || "查询失败");
-    else showResult(root, requestPayload, response.data);
+    else showResult(root, payload, response.data);
   }
 
   document.addEventListener("dblclick", (event) => {

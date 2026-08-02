@@ -675,7 +675,8 @@ private enum LegalDocument: String, CaseIterable, Identifiable {
         case .localSharing:
             return [
                 ("云服务", "学习数据存储和账号认证由 Supabase 提供，仅为完成登录、同步和数据保存而处理必要信息。"),
-                ("AI 内容生成", "生成词义解释或个性化短文时，会向 OpenRouter 传输必要的目标单词及相关上下文；不会传输你的密码。"),
+                ("AI 内容生成", "生成词义解释或个性化短文时，会向 OpenRouter 及配置的 Qwen 模型传输必要的目标单词及受限长度上下文；请求仅允许路由到声明不收集输入用于训练的端点，不会传输你的邮箱、密码或访问令牌。"),
+                ("第三方词典", "查询英文单词时会向 Free Dictionary API 发送该单词。返回的词条来源、许可及发音素材许可会随结果保留，并可在查词结果、个人词库或第三方内容与许可页面查看。"),
                 ("系统能力", "朗读使用苹果设备的语音合成能力；跟读识别由系统语音识别能力提供，具体处理方式同时受设备系统设置约束。"),
                 ("地方或公共机构", "除非法律法规要求、司法或行政机关依法提出，或为保护用户与公众的重大合法权益，我们不会向地方机构共享个人信息。")
             ]
@@ -697,7 +698,7 @@ private struct LegalDocumentView: View {
             PaperBackground()
             ScrollView {
                 VStack(alignment: .leading, spacing: 14) {
-                    Text("更新日期：2026 年 7 月 20 日\n生效日期：2026 年 7 月 20 日").font(.caption2).foregroundStyle(CiJingTheme.secondary).lineSpacing(4)
+                    Text("更新日期：2026 年 8 月 2 日\n生效日期：2026 年 8 月 2 日").font(.caption2).foregroundStyle(CiJingTheme.secondary).lineSpacing(4)
                     VStack(alignment: .leading, spacing: 18) {
                         Text(document.rawValue).font(.system(size: 23, weight: .bold, design: .rounded))
                         ForEach(Array(document.sections.enumerated()), id: \.offset) { index, section in
@@ -761,6 +762,10 @@ private struct AboutCiJingView: View {
                     VStack(spacing: 0) {
                         NavigationLink { LegalDocumentView(document: .legalAndPrivacy) } label: {
                             SettingsActionRow(icon: "hand.raised", title: "隐私与法律", subtitle: "在应用内查看数据处理与用户权利")
+                        }.buttonStyle(.plain)
+                        SettingsDivider()
+                        NavigationLink { ThirdPartyCreditsView() } label: {
+                            SettingsActionRow(icon: "doc.text.magnifyingglass", title: "第三方内容与许可", subtitle: "查看词典、发音与 AI 服务来源")
                         }.buttonStyle(.plain)
                         SettingsDivider()
                         NavigationLink { AppSupportView() } label: {

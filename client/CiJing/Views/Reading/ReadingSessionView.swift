@@ -36,6 +36,9 @@ struct ReadingSessionView: View {
                 VStack(alignment: .leading, spacing: 22) {
                     readingHeader
                     targetStrip
+                    Label("本文及翻译由 AI 生成，可能不准确，请结合原文和权威来源核对。", systemImage: "sparkles")
+                        .font(.caption)
+                        .foregroundStyle(CiJingTheme.secondary)
                     ForEach(Array(displayed.paragraphs.enumerated()), id: \.offset) { index, paragraph in
                         paragraphView(paragraph, index: index)
                     }

@@ -45,6 +45,13 @@ export async function openRouterJSON<T>(options: {
         temperature: options.temperature ?? 0.35,
         max_tokens: options.maxTokens ?? 2200,
         reasoning: { enabled: false },
+        provider: {
+          // Reject endpoints that may retain prompts for training or other
+          // non-transient collection. Qwen3.6 Flash is not currently listed as
+          // a ZDR endpoint, so the stricter `zdr: true` flag would make the
+          // configured production model unavailable.
+          data_collection: "deny",
+        },
         response_format: {
           type: "json_schema",
           json_schema: { name: options.schemaName, strict: true, schema: options.schema },

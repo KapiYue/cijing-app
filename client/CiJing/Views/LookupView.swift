@@ -134,6 +134,16 @@ struct LookupView: View {
             .background(CiJingTheme.surfaceMuted, in: RoundedRectangle(cornerRadius: 13))
             .padding(.top, 16)
 
+            if let attribution = value.dictionaryAttribution {
+                DictionaryAttributionView(attribution: attribution)
+                    .padding(.top, 14)
+            }
+
+            Label("中文释义与例句可能包含 AI 生成内容，请结合原文和权威来源核对。", systemImage: "sparkles")
+                .font(.caption2)
+                .foregroundStyle(CiJingTheme.secondary)
+                .padding(.top, 12)
+
             Button { save(value) } label: {
                 HStack(spacing: 7) {
                     if isSaving { ProgressView().tint(saved ? CiJingTheme.purple : .white) }

@@ -1,7 +1,11 @@
 import { handleOptions, jsonResponse } from "../_shared/cors.ts";
 import { requireUser } from "../_shared/auth.ts";
 import { openRouterJSON, sha256 } from "../_shared/openrouter.ts";
-import { fetchPublicDictionary, type PublicDictionaryEntry } from "../_shared/free-dictionary.ts";
+import {
+  fetchPublicDictionary,
+  type DictionaryAttribution,
+  type PublicDictionaryEntry,
+} from "../_shared/free-dictionary.ts";
 
 type Part = { partOfSpeech: string; meaning: string };
 type LookupResult = {
@@ -16,6 +20,7 @@ type LookupResult = {
   exampleChinese: string;
   sentence: string;
   audioUrl?: string | null;
+  dictionaryAttribution?: DictionaryAttribution;
 };
 
 const lookupSchema = {
@@ -73,10 +78,14 @@ Deno.serve(async (request) => {
       .maybeSingle();
     if (cached?.result) {
       const cachedResult = cached.result as LookupResult;
-      if (cachedResult.audioUrl) return jsonResponse({ data: cachedResult, cached: true });
+      if (cachedResult.dictionaryAttribution) return jsonResponse({ data: cachedResult, cached: true });
       const publicEntry = await fetchPublicDictionary(term);
-      const refreshedResult = { ...cachedResult, audioUrl: publicEntry?.audioUrl ?? null };
-      if (publicEntry?.audioUrl) {
+      const refreshedResult = {
+        ...cachedResult,
+        audioUrl: publicEntry?.audioUrl ?? cachedResult.audioUrl ?? null,
+        ...(publicEntry ? { dictionaryAttribution: publicEntry.attribution } : {}),
+      };
+      if (publicEntry) {
         await client.from("lexicon_cache").update({ result: refreshedResult })
           .eq("user_id", user.id).eq("normalized_term", normalized).eq("context_hash", contextHash);
       }
@@ -108,6 +117,7 @@ Deno.serve(async (request) => {
         englishDefinition: publicEntry?.definition || enriched.englishDefinition,
         exampleEnglish: enriched.exampleEnglish || publicEntry?.example || sentence,
         audioUrl: publicEntry?.audioUrl ?? null,
+        ...(publicEntry ? { dictionaryAttribution: publicEntry.attribution } : {}),
       };
     } catch (error) {
       if (!publicEntry) throw error;
@@ -147,5 +157,6 @@ function publicFallback(entry: PublicDictionaryEntry, term: string, sentence: st
     exampleChinese: "中文释义暂时不可用，已展示公开词典释义。",
     sentence,
     audioUrl: entry.audioUrl,
+    dictionaryAttribution: entry.attribution,
   };
 }

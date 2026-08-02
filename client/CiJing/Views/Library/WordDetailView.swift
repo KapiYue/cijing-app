@@ -62,6 +62,10 @@ struct WordDetailView: View {
             if let contextual = current.contextualMeaning { Divider(); Label("此处含义", systemImage: "scope").font(.caption.bold()).foregroundStyle(CiJingTheme.green); Text(contextual) }
             if let definition = current.englishDefinition { Text(definition).font(.subheadline).foregroundStyle(CiJingTheme.secondary) }
             if let example = current.exampleEn { Divider(); Text(example).font(.body); if let chinese = current.exampleZh { Text(chinese).font(.subheadline).foregroundStyle(CiJingTheme.secondary) } }
+            if let attribution = current.dictionaryAttribution {
+                Divider()
+                DictionaryAttributionView(attribution: attribution)
+            }
         }.cijingCard()
     }
 

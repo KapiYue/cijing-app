@@ -19,8 +19,11 @@
   }
 
   function prepareLookupPayload(payload, privacyMode) {
-    if (!privacyMode) return payload;
-    return { ...payload, context: "", sentence: "", source_url: null, source_title: null };
+    return {
+      word: payload.word,
+      context: privacyMode ? "" : payload.context,
+      sentence: privacyMode ? "" : payload.sentence
+    };
   }
 
   globalThis.CiJingTextUtils = Object.freeze({ cleanWord, findSentence, formatPhonetic, prepareLookupPayload });
