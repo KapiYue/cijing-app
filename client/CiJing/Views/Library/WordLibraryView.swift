@@ -59,7 +59,7 @@ struct WordLibraryView: View {
     private var filters: some View {
         ScrollView(.horizontal, showsIndicators: false) {
             HStack(spacing: 6) {
-                LibraryFilterChip(title: "全部", count: store.words.count, color: CiJingTheme.purple, soft: Color(red: 238 / 255, green: 232 / 255, blue: 251 / 255), selected: filter == nil) { filter = nil }
+                LibraryFilterChip(title: "全部", count: store.words.count, color: CiJingTheme.purple, soft: CiJingTheme.purpleSoft, selected: filter == nil) { filter = nil }
                 ForEach(visibleStatuses) { status in
                     LibraryFilterChip(
                         title: status.title.replacingOccurrences(of: "词", with: ""),
@@ -77,7 +77,7 @@ struct WordLibraryView: View {
         HStack(spacing: 10) {
             Text("🔥")
                 .frame(width: 37, height: 37)
-                .background(Color(red: 1, green: 241 / 255, blue: 228 / 255), in: RoundedRectangle(cornerRadius: 13))
+                .background(CiJingTheme.warmSoft, in: RoundedRectangle(cornerRadius: 13))
             VStack(alignment: .leading, spacing: 3) {
                 Text("学习火焰已点亮").font(CiJingTypography.label).foregroundStyle(CiJingTheme.ink)
                 Text("完成学习后，词库里的单词也更有生命力了").font(CiJingTypography.supporting).foregroundStyle(CiJingTheme.secondary)
@@ -132,9 +132,9 @@ struct WordLibraryView: View {
 
     private func filterColor(_ status: WordStatus) -> Color {
         switch status {
-        case .new: Color(red: 99 / 255, green: 132 / 255, blue: 205 / 255)
-        case .learning: Color(red: 201 / 255, green: 133 / 255, blue: 63 / 255)
-        case .review: Color(red: 183 / 255, green: 99 / 255, blue: 157 / 255)
+        case .new: CiJingTheme.blue
+        case .learning: CiJingTheme.warmStrong
+        case .review: CiJingTheme.rose
         case .weak: CiJingTheme.danger
         default: CiJingTheme.purple
         }
@@ -142,10 +142,10 @@ struct WordLibraryView: View {
 
     private func filterSoftColor(_ status: WordStatus) -> Color {
         switch status {
-        case .new: Color(red: 234 / 255, green: 241 / 255, blue: 252 / 255)
-        case .learning: Color(red: 1, green: 241 / 255, blue: 223 / 255)
-        case .review: Color(red: 247 / 255, green: 233 / 255, blue: 243 / 255)
-        case .weak: Color(red: 252 / 255, green: 235 / 255, blue: 238 / 255)
+        case .new: CiJingTheme.blueSoft
+        case .learning: CiJingTheme.warmSoft
+        case .review: CiJingTheme.roseSoft
+        case .weak: CiJingTheme.dangerSoft
         default: CiJingTheme.purpleSoft
         }
     }
@@ -214,8 +214,28 @@ private struct StatusBadge: View {
     var body: some View {
         Text(title)
             .font(.system(size: 11, weight: .semibold))
-            .foregroundStyle(status == .weak ? CiJingTheme.danger : status == .new ? CiJingTheme.purple : Color(red: 188 / 255, green: 115 / 255, blue: 52 / 255))
+            .foregroundStyle(foreground)
             .padding(.horizontal, 8).padding(.vertical, 5)
-            .background(status == .weak ? Color(red: 252 / 255, green: 236 / 255, blue: 239 / 255) : status == .new ? CiJingTheme.purpleSoft : Color(red: 1, green: 241 / 255, blue: 228 / 255), in: RoundedRectangle(cornerRadius: 8))
+            .background(background, in: RoundedRectangle(cornerRadius: 8))
+    }
+
+    private var foreground: Color {
+        switch status {
+        case .new: CiJingTheme.blue
+        case .learning: CiJingTheme.warmStrong
+        case .review: CiJingTheme.rose
+        case .weak: CiJingTheme.danger
+        default: CiJingTheme.purple
+        }
+    }
+
+    private var background: Color {
+        switch status {
+        case .new: CiJingTheme.blueSoft
+        case .learning: CiJingTheme.warmSoft
+        case .review: CiJingTheme.roseSoft
+        case .weak: CiJingTheme.dangerSoft
+        default: CiJingTheme.purpleSoft
+        }
     }
 }

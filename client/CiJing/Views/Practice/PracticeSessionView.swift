@@ -270,7 +270,7 @@ struct PracticeSessionView: View {
                     .font(.system(size: 30, weight: .bold))
                     .foregroundStyle(.white)
                     .frame(width: 67, height: 67)
-                    .background(Color(red: 188 / 255, green: 86 / 255, blue: 157 / 255), in: Circle())
+                    .background(CiJingTheme.roseFill, in: Circle())
                 Text("错题回顾").font(.system(size: 24, weight: .bold, design: .rounded))
                 Text("再来一遍，直到全对").font(.subheadline).foregroundStyle(CiJingTheme.secondary)
                 Text("还有 \(pendingWrong.count) 道题需要攻克 · 第 \(retryRound + 1) 轮")
@@ -311,7 +311,7 @@ struct PracticeSessionView: View {
                     AccuracyRing(progress: overallAccuracy)
                     VStack(alignment: .leading, spacing: 8) {
                         SummaryLegend(color: CiJingTheme.purple, text: "今日新学  \(reading.targetTerms.count)")
-                        SummaryLegend(color: Color(red: 187 / 255, green: 89 / 255, blue: 164 / 255), text: "复习  \(questions.count)")
+                        SummaryLegend(color: CiJingTheme.rose, text: "复习  \(questions.count)")
                         SummaryLegend(color: CiJingTheme.success, text: "答对  \(directCorrect.count)")
                         SummaryLegend(color: CiJingTheme.danger, text: "待加强  \(missedWords.count)")
                     }

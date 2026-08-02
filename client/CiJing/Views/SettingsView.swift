@@ -116,10 +116,10 @@ struct SettingsView: View {
             Text(profileInitial)
                 .font(.title3.bold()).foregroundStyle(.white)
                 .frame(width: 50, height: 50)
-                .background(LinearGradient(colors: [Color(red: 247 / 255, green: 207 / 255, blue: 169 / 255), CiJingTheme.warm], startPoint: .topLeading, endPoint: .bottomTrailing), in: RoundedRectangle(cornerRadius: 16))
+                .background(CiJingTheme.avatarGradient, in: RoundedRectangle(cornerRadius: 16))
             VStack(alignment: .leading, spacing: 4) {
                 Text(profileName).font(.system(size: 17, weight: .bold)).foregroundStyle(CiJingTheme.ink).lineLimit(1)
-                Text("编辑头像、昵称与账户安全").font(.system(size: 13)).foregroundStyle(Color(red: 119 / 255, green: 107 / 255, blue: 128 / 255))
+                Text("编辑头像、昵称与账户安全").font(.system(size: 13)).foregroundStyle(CiJingTheme.secondary)
             }
             Spacer()
             Image(systemName: "chevron.right").foregroundStyle(CiJingTheme.purple)
@@ -473,10 +473,10 @@ private struct ProfileSettingsView: View {
                     VStack(spacing: 10) {
                         Text(initial).font(.system(size: 31, weight: .bold)).foregroundStyle(.white)
                             .frame(width: 82, height: 82)
-                            .background(LinearGradient(colors: [Color(red: 247 / 255, green: 207 / 255, blue: 169 / 255), CiJingTheme.warm], startPoint: .topLeading, endPoint: .bottomTrailing), in: RoundedRectangle(cornerRadius: 28))
+                            .background(CiJingTheme.avatarGradient, in: RoundedRectangle(cornerRadius: 28))
                         Text(draft?.displayName?.isEmpty == false ? draft!.displayName! : "学习者").font(.title2.bold())
                         Text("编辑昵称与学习目标，让词鲸背单词更适合你的学习节奏。 ").font(.caption).foregroundStyle(CiJingTheme.secondary)
-                    }.frame(maxWidth: .infinity).padding(24).background(LinearGradient(colors: [Color(red: 243 / 255, green: 232 / 255, blue: 1), Color(red: 223 / 255, green: 202 / 255, blue: 239 / 255)], startPoint: .topLeading, endPoint: .bottomTrailing), in: RoundedRectangle(cornerRadius: 22))
+                    }.frame(maxWidth: .infinity).padding(24).background(CiJingTheme.featuredGradient, in: RoundedRectangle(cornerRadius: 22))
 
                     if let draft {
                         VStack(alignment: .leading, spacing: 14) {
@@ -708,7 +708,7 @@ private struct LegalDocumentView: View {
                         VStack(alignment: .leading, spacing: 11) {
                             Text("联系我们").font(.subheadline.bold())
                             Text("如需行使个人信息权利、申请删除数据或反馈隐私问题，可通过以下渠道联系我们。")
-                                .font(.system(size: 12)).foregroundStyle(Color(red: 110 / 255, green: 101 / 255, blue: 115 / 255)).lineSpacing(6)
+                                .font(.system(size: 12)).foregroundStyle(CiJingTheme.secondary).lineSpacing(6)
                             if document != .legalAndPrivacy {
                                 NavigationLink("查看法律信息及隐私管理") {
                                     LegalDocumentView(document: .legalAndPrivacy)
@@ -729,7 +729,7 @@ private struct LegalDocumentView: View {
 private struct LegalSection: View {
     let title: String
     let copy: String
-    var body: some View { VStack(alignment: .leading, spacing: 8) { Text(title).font(.subheadline.bold()); Text(copy).font(.system(size: 12)).foregroundStyle(Color(red: 110 / 255, green: 101 / 255, blue: 115 / 255)).lineSpacing(6) } }
+    var body: some View { VStack(alignment: .leading, spacing: 8) { Text(title).font(.subheadline.bold()); Text(copy).font(.system(size: 12)).foregroundStyle(CiJingTheme.secondary).lineSpacing(6) } }
 }
 
 private struct AboutCiJingView: View {

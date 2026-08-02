@@ -7,12 +7,12 @@ struct HomeView: View {
     @State private var notice: String?
 
     private let exploreItems: [ExploreItem] = [
-        .init(destination: .readingSetup, title: "生成短文", subtitle: "把弱词写进故事", badge: "AI", icon: "wand.and.stars", tint: CiJingTheme.purple, soft: CiJingTheme.purpleSoft),
-        .init(destination: .practice, title: "巩固练习", subtitle: "读完立即练一轮", badge: "12 题", icon: "checkmark.circle", tint: Color(red: 192 / 255, green: 106 / 255, blue: 165 / 255), soft: Color(red: 248 / 255, green: 234 / 255, blue: 244 / 255)),
-        .init(destination: .progress, title: "学习进度", subtitle: "看见每天的积累", badge: "+18%", icon: "chart.bar", tint: Color(red: 84 / 255, green: 173 / 255, blue: 120 / 255), soft: Color(red: 233 / 255, green: 248 / 255, blue: 239 / 255)),
-        .init(destination: .weakWords, title: "薄弱词", subtitle: "优先攻克易错词", badge: "2 词", icon: "exclamationmark", tint: CiJingTheme.danger, soft: Color(red: 252 / 255, green: 236 / 255, blue: 239 / 255)),
-        .init(destination: .shadowing, title: "跟读训练", subtitle: "逐句听读与纠音", badge: "8 min", icon: "mic.fill", tint: Color(red: 220 / 255, green: 139 / 255, blue: 67 / 255), soft: Color(red: 1, green: 241 / 255, blue: 228 / 255)),
-        .init(destination: .readingHistory, title: "阅读历史", subtitle: "继续最近的短文", badge: "3 篇", icon: "clock.arrow.circlepath", tint: Color(red: 93 / 255, green: 143 / 255, blue: 201 / 255), soft: Color(red: 234 / 255, green: 243 / 255, blue: 251 / 255))
+        .init(destination: .readingSetup, title: "生成短文", subtitle: "把弱词写进故事", badge: "AI", icon: "wand.and.stars", tint: CiJingTheme.purple),
+        .init(destination: .practice, title: "巩固练习", subtitle: "读完立即练一轮", badge: "12 题", icon: "checkmark.circle", tint: CiJingTheme.rose),
+        .init(destination: .progress, title: "学习进度", subtitle: "看见每天的积累", badge: "+18%", icon: "chart.bar", tint: CiJingTheme.success),
+        .init(destination: .weakWords, title: "薄弱词", subtitle: "优先攻克易错词", badge: "2 词", icon: "exclamationmark", tint: CiJingTheme.danger),
+        .init(destination: .shadowing, title: "跟读训练", subtitle: "逐句听读与纠音", badge: "8 min", icon: "mic.fill", tint: CiJingTheme.warm),
+        .init(destination: .readingHistory, title: "阅读历史", subtitle: "继续最近的短文", badge: "3 篇", icon: "clock.arrow.circlepath", tint: CiJingTheme.blue)
     ]
 
     var body: some View {
@@ -91,7 +91,7 @@ struct HomeView: View {
             .font(.system(size: 18, weight: .bold, design: .rounded))
             .foregroundStyle(.white)
             .frame(width: 42, height: 42)
-            .background(LinearGradient(colors: [Color(red: 247 / 255, green: 207 / 255, blue: 169 / 255), CiJingTheme.warm], startPoint: .topLeading, endPoint: .bottomTrailing), in: RoundedRectangle(cornerRadius: 15, style: .continuous))
+            .background(CiJingTheme.avatarGradient, in: RoundedRectangle(cornerRadius: 15, style: .continuous))
             .shadow(color: CiJingTheme.warm.opacity(0.18), radius: 9, y: 5)
     }
 
@@ -129,9 +129,9 @@ struct HomeView: View {
                 Spacer()
                 Label("连续 \(store.plan.streakDays) 天", systemImage: "flame.fill")
                     .font(.caption.bold())
-                    .foregroundStyle(Color(red: 201 / 255, green: 120 / 255, blue: 50 / 255))
+                    .foregroundStyle(CiJingTheme.warmStrong)
                     .padding(.horizontal, 10).padding(.vertical, 7)
-                    .background(Color(red: 1, green: 241 / 255, blue: 228 / 255), in: RoundedRectangle(cornerRadius: 12))
+                    .background(CiJingTheme.warmSoft, in: RoundedRectangle(cornerRadius: 12))
             }
             HStack(spacing: 8) {
                 PlanMetric(number: "\(store.plan.newSuggested)", label: "新词", tint: CiJingTheme.purpleSoft)
@@ -203,7 +203,7 @@ struct HomeView: View {
             Image(systemName: "book.closed")
                 .foregroundStyle(CiJingTheme.warm)
                 .frame(width: 40, height: 40)
-                .background(Color(red: 1, green: 241 / 255, blue: 228 / 255), in: RoundedRectangle(cornerRadius: 13))
+                .background(CiJingTheme.warmSoft, in: RoundedRectangle(cornerRadius: 13))
             VStack(alignment: .leading, spacing: 3) {
                 Text("还没有生成短文").font(CiJingTypography.rowTitle).foregroundStyle(CiJingTheme.secondary)
                 Text("生成后的短文会长期保存在这里").font(CiJingTypography.supporting).foregroundStyle(CiJingTheme.secondary)
@@ -293,7 +293,6 @@ private struct ExploreItem: Identifiable {
     let badge: String
     let icon: String
     let tint: Color
-    let soft: Color
 }
 
 private enum ExploreDestination {

@@ -78,7 +78,7 @@ struct LookupView: View {
                         } label: {
                             Text(term)
                                 .font(.caption)
-                                .foregroundStyle(Color(red: 120 / 255, green: 108 / 255, blue: 127 / 255))
+                                .foregroundStyle(CiJingTheme.secondary)
                                 .padding(.horizontal, 11).padding(.vertical, 8)
                                 .background(CiJingTheme.surface.opacity(0.94), in: RoundedRectangle(cornerRadius: 11))
                         }.buttonStyle(.plain)

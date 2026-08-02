@@ -24,10 +24,18 @@ enum CiJingTheme {
     static let warm = adaptive(light: 0xE99B54, dark: 0xF3B16F)
     static let success = adaptive(light: 0x3FB781, dark: 0x68D9A7)
     static let danger = adaptive(light: 0xDB6B77, dark: 0xFF8C98)
+    static let rose = adaptive(light: 0xA83F85, dark: 0xF0A3D3)
+    static let roseFill = adaptive(light: 0xA83F85, dark: 0x7A315F)
+    static let blue = adaptive(light: 0x476DB7, dark: 0x91B7FF)
+    static let warmStrong = adaptive(light: 0x9B5A22, dark: 0xFFC58C)
     static let surface = adaptive(light: 0xFFFDFE, dark: 0x241D2C)
     static let surfaceElevated = adaptive(light: 0xF9F6FD, dark: 0x2B2235)
     static let surfaceMuted = adaptive(light: 0xF7F2FB, dark: 0x30263B)
     static let warmSoft = adaptive(light: 0xFFF1E4, dark: 0x3B2A24)
+    static let successSoft = adaptive(light: 0xE9F8EF, dark: 0x20392F)
+    static let dangerSoft = adaptive(light: 0xFCECEF, dark: 0x44252C)
+    static let roseSoft = adaptive(light: 0xF8EAF4, dark: 0x3D2435)
+    static let blueSoft = adaptive(light: 0xEAF3FB, dark: 0x243248)
     static let shadow = adaptive(light: 0x423157, dark: 0x000000)
 
     // Compatibility names used by the existing reading and practice flows.
@@ -49,6 +57,12 @@ enum CiJingTheme {
 
     static let featuredGradient = LinearGradient(
         colors: [adaptive(light: 0xF8F1FF, dark: 0x30233F), adaptive(light: 0xEADCF9, dark: 0x241A31)],
+        startPoint: .topLeading,
+        endPoint: .bottomTrailing
+    )
+
+    static let avatarGradient = LinearGradient(
+        colors: [adaptive(light: 0xD27A42, dark: 0xA8552F), adaptive(light: 0x9B5AC7, dark: 0x643C89)],
         startPoint: .topLeading,
         endPoint: .bottomTrailing
     )
