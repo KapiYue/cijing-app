@@ -9,6 +9,7 @@ const secretKey = config.SUPABASE_SECRET_KEY;
 const emailArgument = process.argv.find((value) => value.startsWith("--email="));
 const email = (emailArgument?.slice("--email=".length) || "superai@qq.com").trim().toLowerCase();
 const shouldApply = process.argv.includes("--apply");
+const allowReseed = process.argv.includes("--force-reseed");
 
 if (!baseURL || !secretKey) throw new Error(".env 中缺少 SUPABASE_URL 或 SUPABASE_SECRET_KEY");
 
@@ -165,10 +166,14 @@ const [existingWords, existingReadings, existingProfiles, existingActivity] = aw
   request(`/rest/v1/daily_activity?user_id=eq.${user.id}&select=activity_date,learned_count,reviewed_count,reading_count,practice_count,completed&order=activity_date.desc`),
 ]);
 
-const expectedStatuses = new Map(vocabulary.map((item) => [item.term, item.status]));
+// 生产审核账号已按商品页截图校准到该基线：01-home 与 09-progress 显示已学习 146、已掌握 68。
+// 下方 vocabulary 只是早期 8 词种子，不再是期望值，仅在账号为空时用于播种。
+const screenshotBaseline = { words: 146, masteredWords: 68, readings: 3, activityDays: 18 };
+
 const expectedReadingTitles = ["A Quiet Kind of Progress", "The Train Beyond the Rain", "Designing Time for Deep Work"];
-const wordsMatch = existingWords.length === vocabulary.length
-  && existingWords.every((word) => expectedStatuses.get(word.normalized_term) === word.status);
+const masteredWords = existingWords.filter((word) => word.status === "mastered").length;
+const wordsMatch = existingWords.length === screenshotBaseline.words
+  && masteredWords === screenshotBaseline.masteredWords;
 const readingsMatch = existingReadings.length === expectedReadingTitles.length
   && expectedReadingTitles.every((title) => existingReadings.some((reading) => reading.title === title));
 const profileMatches = existingProfiles[0]?.display_name === "Qing"
@@ -178,24 +183,41 @@ const profileMatches = existingProfiles[0]?.display_name === "Qing"
   && existingProfiles[0]?.preferred_theme === "daily_life"
   && existingProfiles[0]?.preferred_style === "story"
   && existingProfiles[0]?.timezone === "Asia/Shanghai";
-const activityMatches = existingActivity.length === 18
+const activityMatches = existingActivity.length === screenshotBaseline.activityDays
   && existingActivity.every((activity) => activity.completed);
+const datasetMatches = wordsMatch && readingsMatch && profileMatches && activityMatches;
 
 if (!shouldApply) {
   console.log(JSON.stringify({
     mode: "check",
     email,
     existingWords: existingWords.length,
-    expectedWords: vocabulary.length,
+    expectedWords: screenshotBaseline.words,
+    existingMasteredWords: masteredWords,
+    expectedMasteredWords: screenshotBaseline.masteredWords,
     existingReadings: existingReadings.map((reading) => reading.title),
     expectedReadings: expectedReadingTitles,
     activityDays: existingActivity.length,
+    expectedActivityDays: screenshotBaseline.activityDays,
     profileDisplayName: existingProfiles[0]?.display_name ?? null,
-    screenshotCoreDatasetMatches: wordsMatch && readingsMatch && profileMatches && activityMatches,
-    screenshotPlan: "商品页预览已校准为与当前 8 词审核数据一致：已学习 8、已掌握 0、今日新词 1。",
-    nextStep: `node scripts/ensure-review-data.mjs --email=${email} --apply`,
+    screenshotCoreDatasetMatches: datasetMatches,
+    screenshotPlan: `商品页预览与生产审核账号一致：已学习 ${screenshotBaseline.words}、已掌握 ${screenshotBaseline.masteredWords}、今日新词 1。`,
+    nextStep: datasetMatches
+      ? "数据与商品页截图基线一致，无需操作。"
+      : "数据与基线不符，请人工核对后再决定；--apply 会按内置 8 词种子重写，默认已被拒绝执行。",
   }, null, 2));
   process.exit(0);
+}
+
+// --apply 会先删除 reading_sessions 与 daily_activity，再按内置 8 词种子重写 words。
+// 账号已达校准基线时执行它会摧毁与商品页截图一致的 146/68 数据，因此默认拒绝。
+if (existingWords.length > vocabulary.length && !allowReseed) {
+  throw new Error(
+    `拒绝执行 --apply：${email} 当前有 ${existingWords.length} 个词（已掌握 ${masteredWords}），`
+    + `已按商品页截图校准到 ${screenshotBaseline.words}/${screenshotBaseline.masteredWords} 基线；`
+    + `内置种子只有 ${vocabulary.length} 个词，写入会覆盖已校准数据并删除 reading_sessions 与 daily_activity。`
+    + "确需从零重新播种时，先备份生产数据，再显式追加 --force-reseed。",
+  );
 }
 
 await Promise.all([
@@ -326,9 +348,11 @@ console.log(JSON.stringify({
   activityDays: verification[2].length,
   recentSevenTotals: verification[2].slice(0, 7).reverse().map((day) => day.learned_count + day.reviewed_count + day.practice_count),
   profile: verification[3][0],
-  screenshotCoreDatasetMatches: verification[0].length === 8
-    && verification[1].length === 3
-    && verification[2].length === 18
+  masteredWords: verification[0].filter((word) => word.status === "mastered").length,
+  screenshotCoreDatasetMatches: verification[0].length === screenshotBaseline.words
+    && verification[0].filter((word) => word.status === "mastered").length === screenshotBaseline.masteredWords
+    && verification[1].length === screenshotBaseline.readings
+    && verification[2].length === screenshotBaseline.activityDays
     && verification[3][0]?.display_name === "Qing",
-  screenshotPlan: "商品页预览与生产 RPC 一致：已学习 8、已掌握 0、今日新词 1。",
+  screenshotPlan: `商品页预览基线：已学习 ${screenshotBaseline.words}、已掌握 ${screenshotBaseline.masteredWords}、今日新词 1。`,
 }, null, 2));
