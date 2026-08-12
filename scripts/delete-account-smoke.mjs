@@ -33,8 +33,26 @@ try {
   const signup = await fetchJSON("/auth/v1/signup", { method: "POST", body: { email, password } });
   if (!signup.response.ok) throw new Error(`注册临时账号失败：HTTP ${signup.response.status}`);
   userID = signup.payload.user?.id;
-  const token = signup.payload.access_token;
-  if (!userID || !token) throw new Error("临时账号没有返回可用会话");
+  if (!userID) {
+    const users = await fetchJSON("/auth/v1/admin/users?page=1&per_page=1000", { admin: true });
+    userID = users.payload.users?.find((user) => user.email?.toLowerCase() === email.toLowerCase())?.id;
+  }
+  if (!userID) throw new Error("注册请求未返回用户，管理员也未查询到待确认账号");
+
+  // 生产要求邮箱验证，注册不会直接返回会话。与 production-smoke-test.mjs 一致，
+  // 先用管理员接口确认邮箱，再走正常密码登录拿到用户自己的令牌。
+  let token = signup.payload.access_token;
+  if (!token) {
+    await fetchJSON(`/auth/v1/admin/users/${userID}`, {
+      method: "PUT", admin: true, body: { email_confirm: true },
+    });
+    const session = await fetchJSON("/auth/v1/token?grant_type=password", {
+      method: "POST", body: { email, password },
+    });
+    if (!session.response.ok) throw new Error(`确认邮箱后登录失败：HTTP ${session.response.status}`);
+    token = session.payload.access_token;
+  }
+  if (!token) throw new Error("临时账号没有返回可用会话");
 
   const deletion = await fetchJSON("/functions/v1/delete-account", { method: "POST", token, body: {} });
   if (!deletion.response.ok || deletion.payload.deleted !== true) {

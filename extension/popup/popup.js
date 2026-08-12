@@ -3,7 +3,7 @@ import { getPreferences, isHostDisabled, THEME_OPTIONS, updatePreferences } from
 
 const $ = (id) => document.getElementById(id);
 const send = (message) => chrome.runtime.sendMessage(message);
-const PRIVACY_POLICY_URL = "";
+const PRIVACY_POLICY_URL = "https://cijing.joy-coder.com/privacy";
 let activeHost = "";
 let preferences;
 
