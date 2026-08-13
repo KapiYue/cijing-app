@@ -3,6 +3,13 @@ import AVFoundation
 
 private enum AppLinks {
     static let contact = URL(string: "mailto:zdjoey@126.com")!
+    static let icpFiling = URL(string: "https://beian.miit.gov.cn/")!
+}
+
+private enum AppFiling {
+    static let appName = "词鲸背单词"
+    static let sponsor = "张静"
+    static let icpNumber = "浙ICP备2026055717号-3A"
 }
 
 struct SettingsView: View {
@@ -75,6 +82,10 @@ struct SettingsView: View {
                             SettingsActionRow(icon: "info.circle", title: "关于词鲸", subtitle: "了解产品理念与版本信息")
                         }.buttonStyle(.plain)
                         SettingsDivider()
+                        Link(destination: AppLinks.icpFiling) {
+                            SettingsActionRow(icon: "checkmark.seal", title: "ICP 备案号", subtitle: "\(AppFiling.icpNumber) · \(AppFiling.sponsor)")
+                        }
+                        SettingsDivider()
                         Button { Task { await checkForUpdates() } } label: {
                             SettingsActionRow(icon: "arrow.up.circle", title: checkingUpdate ? "正在检查…" : "检查更新", subtitle: "当前版本 \(AppMetadata.version)")
                         }.buttonStyle(.plain).disabled(checkingUpdate)
@@ -96,7 +107,7 @@ struct SettingsView: View {
                     .background(CiJingTheme.surface.opacity(0.9), in: RoundedRectangle(cornerRadius: 17))
                     .padding(.top, 20)
 
-                    Text("词鲸背单词 \(AppMetadata.version) · © 2026")
+                    Text("\(AppFiling.appName) \(AppMetadata.version) · \(AppFiling.icpNumber) · © 2026")
                         .font(CiJingTypography.supporting).foregroundStyle(CiJingTheme.secondary.opacity(0.72))
                         .frame(maxWidth: .infinity).padding(.vertical, 22)
                 }
@@ -745,9 +756,12 @@ private struct AboutCiJingView: View {
                             .foregroundStyle(.white)
                             .frame(width: 82, height: 82)
                             .background(LinearGradient(colors: [CiJingTheme.purple, CiJingTheme.purpleDark], startPoint: .topLeading, endPoint: .bottomTrailing), in: RoundedRectangle(cornerRadius: 27))
-                        Text("词鲸背单词").font(.title2.bold())
+                        Text(AppFiling.appName).font(.title2.bold())
                         Text("版本 \(AppMetadata.version)（\(AppMetadata.build)）")
                             .font(.caption).foregroundStyle(CiJingTheme.secondary)
+                        Text("\(AppFiling.icpNumber) · 主办者 \(AppFiling.sponsor)")
+                            .font(.caption).foregroundStyle(CiJingTheme.secondary)
+                            .multilineTextAlignment(.center)
                     }
                     .frame(maxWidth: .infinity)
                     .cijingCard(padding: 24)
@@ -771,6 +785,10 @@ private struct AboutCiJingView: View {
                         NavigationLink { AppSupportView() } label: {
                             SettingsActionRow(icon: "questionmark.circle", title: "支持与帮助", subtitle: "常见问题与账号删除说明")
                         }.buttonStyle(.plain)
+                        SettingsDivider()
+                        Link(destination: AppLinks.icpFiling) {
+                            SettingsActionRow(icon: "checkmark.seal", title: "ICP 备案号", subtitle: "\(AppFiling.icpNumber) · \(AppFiling.sponsor)")
+                        }
                         SettingsDivider()
                         Link(destination: AppLinks.contact) {
                             SettingsActionRow(icon: "envelope", title: "联系我们", subtitle: "zdjoey@126.com")

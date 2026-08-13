@@ -63,8 +63,10 @@ tbody tr:last-child td { border-bottom: 0; }
 .button { display: inline-flex; align-items: center; padding: 10px 15px; border-radius: 13px; color: white; background: linear-gradient(145deg, var(--purple), var(--purple-dark)); font-weight: 750; text-decoration: none; }
 .secondary-button { color: var(--purple-dark); background: var(--purple-soft); }
 footer { padding: 34px 0 52px; color: var(--muted); font-size: 13px; text-align: center; }
-footer .beian { display: block; margin-top: 8px; }
+footer .beian { display: flex; flex-wrap: wrap; justify-content: center; align-items: center; gap: 0 4px; margin-top: 8px; }
 footer .beian a { color: var(--muted); }
+footer .beian .police-filing { display: inline-flex; align-items: center; gap: 4px; }
+footer .beian .police-filing img { display: block; width: 20px; height: 20px; object-fit: contain; }
 @media (max-width: 640px) {
   .grid { grid-template-columns: 1fr; }
   .nav { align-items: flex-start; gap: 16px; }
