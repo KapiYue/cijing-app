@@ -16,8 +16,8 @@
 | 服务器目录 | `/var/www/cijing` |
 | Nginx 配置 | [`deploy/nginx/cijing.conf`](../deploy/nginx/cijing.conf) → `/etc/nginx/sites-available/cijing` |
 | TLS 证书 | `/etc/nginx/ssl/cijing/fullchain.crt` 与 `private.key` |
-| 证书安装手册 | [`docs/tencent-cloud-ssl-deployment.md`](../docs/tencent-cloud-ssl-deployment.md) |
-| 整站部署手册 | [`docs/policy-site-deployment.md`](../docs/policy-site-deployment.md) |
+
+证书安装与整站部署手册属于维护者本地材料，不随仓库发布。
 
 上线前核对：
 

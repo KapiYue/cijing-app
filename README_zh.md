@@ -13,7 +13,7 @@
   <a href="CONTRIBUTING.md">参与贡献</a> ·
   <a href="supabase/README.md">Supabase 指南</a> ·
   <a href="server/README.md">可信服务</a> ·
-  <a href="docs/APP_STORE_CHECKLIST_zh.md">App Store 清单</a>
+  <a href="docs/privacy-policy.md">隐私政策</a>
 </p>
 
 <p align="center">
@@ -100,7 +100,7 @@
 ├── supabase/    # PostgreSQL 迁移、RLS、RPC 与 Edge Functions
 ├── server/      # 可信 Flask 服务边界与健康检查
 ├── scripts/     # 配置、审计与冒烟测试脚本
-├── docs/        # 政策、运维指南、模型说明与商店素材
+├── docs/        # 公开政策、开发者指南、模型说明与截图
 └── website/     # 对外托管的隐私政策与支持页面
 ```
 

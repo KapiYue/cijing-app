@@ -13,7 +13,7 @@
   <a href="CONTRIBUTING.md">Contributing</a> ·
   <a href="supabase/README.md">Supabase</a> ·
   <a href="server/README.md">Trusted server</a> ·
-  <a href="docs/APP_STORE_CHECKLIST_zh.md">App Store checklist</a>
+  <a href="docs/privacy-policy.md">Privacy policy</a>
 </p>
 
 <p align="center">
@@ -100,7 +100,7 @@ The top-level navigation stays simple, while each reading opens a focused sequen
 ├── supabase/    # PostgreSQL migrations, RLS, RPCs, and Edge Functions
 ├── server/      # Trusted Flask boundary and health checks
 ├── scripts/     # Configuration, audit, and smoke-test utilities
-├── docs/        # Policies, operations guides, model notes, and store assets
+├── docs/        # Public policies, developer guides, model notes, and screenshots
 └── website/     # Privacy policy and support pages for public hosting
 ```
 

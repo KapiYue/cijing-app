@@ -106,11 +106,19 @@ secrets.json
 # Maintainer-only release material
 # ==============================
 # Keep public policies, component guides, and website sources tracked.
-# App Store forms, checklists, handoff notes and submission bundles stay local.
+# App Store and Chrome Web Store forms, checklists, handoff notes and
+# submission bundles stay local.
 /HANDOFF.md
 /HANDOFFmd
 /deliverables/
 /docs/APP_STORE_CHECKLIST_zh.md
 /docs/APP_STORE_METADATA_zh.md
+/docs/app-store-release-checklist.md
 /docs/assets/app-store-connect/
 /docs/policy-site-deployment.md
+/docs/chrome-web-store-assets/
+/docs/chrome-web-store-release-checklist.md
+/docs/public-security-app-filing.md
+/docs/public-security-website-filing.md
+/docs/tencent-cloud-ssl-deployment.md
+/scripts/create-review-user.mjs
