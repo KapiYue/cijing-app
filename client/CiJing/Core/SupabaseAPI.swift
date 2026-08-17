@@ -240,6 +240,15 @@ final class SupabaseAPI: ObservableObject {
     func completeDailySession() async throws -> DailyPlan {
         try await send(path: "/rest/v1/rpc/complete_daily_session", method: "POST", body: encoder.encode(EmptyBody()))
     }
+
+    /// 幂等地记录一次成就解锁；`newlyUnlocked` 为 false 表示这一档早已拿到过。
+    func unlockAchievement(track: String, tier: Int) async throws -> AchievementUnlockResult {
+        try await send(
+            path: "/rest/v1/rpc/unlock_achievement",
+            method: "POST",
+            body: encoder.encode(UnlockBody(pTrack: track, pTier: tier))
+        )
+    }
 }
 
 private struct Credentials: Codable { let email, password: String }
@@ -252,6 +261,13 @@ private struct SignupResponse: Codable {
     let user: AuthUser?
 }
 private struct RefreshBody: Codable { let refreshToken: String }
+private struct UnlockBody: Codable { let pTrack: String; let pTier: Int }
+
+struct AchievementUnlockResult: Codable {
+    let track: String
+    let tier: Int
+    let newlyUnlocked: Bool
+}
 private struct TargetLimit: Codable { let pLimit: Int }
 private struct SaveRPCPayload: Codable { let pPayload: SaveWordPayload }
 private struct WordPatch: Codable { let notes: String?; let customMeaning: String?; let status: WordStatus? }

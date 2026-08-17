@@ -50,7 +50,8 @@ struct PracticeSessionView: View {
     @State private var attemptsByKind: [ExerciseKind: Int] = [:]
     @State private var correctByKind: [ExerciseKind: Int] = [:]
     @State private var startedAt = Date()
-    @State private var showBadge = false
+    /// 只在真的跨过一档时才有值——没升级就没有弹窗。
+    @State private var unlockedAchievement: AchievementUnlock?
 
     init(reading: ReadingSession, onFinish: (() -> Void)? = nil) {
         self.reading = reading
@@ -73,14 +74,14 @@ struct PracticeSessionView: View {
                     .zIndex(2)
             }
 
-            if showBadge {
-                badgeOverlay
+            if let unlockedAchievement {
+                badgeOverlay(unlockedAchievement)
                     .transition(.opacity.combined(with: .scale(scale: 0.96)))
                     .zIndex(3)
             }
         }
         .animation(.easeInOut(duration: 0.22), value: feedbackPresented)
-        .animation(.spring(response: 0.34, dampingFraction: 0.82), value: showBadge)
+        .animation(.spring(response: 0.34, dampingFraction: 0.82), value: unlockedAchievement?.id)
         .navigationTitle("巩固练习")
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
@@ -370,22 +371,37 @@ struct PracticeSessionView: View {
         }
     }
 
-    private var badgeOverlay: some View {
-        ZStack {
+    private func badgeOverlay(_ unlock: AchievementUnlock) -> some View {
+        let tint = unlock.tier.color
+        return ZStack {
             Color.black.opacity(0.34).ignoresSafeArea()
             VStack(spacing: 17) {
-                Text("徽章解锁！").font(.title2.bold()).foregroundStyle(CiJingTheme.secondary)
+                Text(unlock.tier == .bronze ? "徽章解锁！" : "徽章升级！")
+                    .font(.title2.bold())
+                    .foregroundStyle(CiJingTheme.secondary)
                 ZStack {
-                    Circle().fill(Color.orange.opacity(0.14)).frame(width: 132, height: 132)
-                    Circle().stroke(Color.orange.opacity(0.7), lineWidth: 3).frame(width: 112, height: 112)
-                    Image(systemName: "sparkles").font(.system(size: 46, weight: .bold)).foregroundStyle(.orange)
+                    Circle().fill(tint.opacity(0.14)).frame(width: 132, height: 132)
+                    Circle().stroke(tint.opacity(0.7), lineWidth: 3).frame(width: 112, height: 112)
+                    Image(systemName: unlock.track.icon).font(.system(size: 46, weight: .bold)).foregroundStyle(tint)
                 }
                 HStack(spacing: 7) {
-                    Text("初来乍到").font(.system(size: 25, weight: .bold, design: .rounded))
-                    Text("铜章").font(.caption.bold()).foregroundStyle(.orange).padding(.horizontal, 8).padding(.vertical, 4).background(Color.orange.opacity(0.12), in: Capsule())
+                    Text(unlock.title).font(.system(size: 25, weight: .bold, design: .rounded))
+                    Text(unlock.tier.title)
+                        .font(.caption.bold())
+                        .foregroundStyle(tint)
+                        .padding(.horizontal, 8).padding(.vertical, 4)
+                        .background(tint.opacity(0.12), in: Capsule())
                 }
-                Text("完成第一篇个性化阅读").foregroundStyle(CiJingTheme.secondary)
-                Button("收下徽章") { showBadge = false }.buttonStyle(PrimaryButtonStyle())
+                Text(unlock.requirement).foregroundStyle(CiJingTheme.secondary)
+                if let next = unlock.track.next(after: unlock.tier) {
+                    Text("下一档 · \(unlock.track.title(for: next.tier))（\(unlock.track.requirement(next.threshold))）")
+                        .font(.caption)
+                        .foregroundStyle(CiJingTheme.secondary)
+                        .multilineTextAlignment(.center)
+                } else {
+                    Text("这条线已经满级").font(.caption).foregroundStyle(tint)
+                }
+                Button("收下徽章") { unlockedAchievement = nil }.buttonStyle(PrimaryButtonStyle())
             }
             .padding(28)
             .frame(maxWidth: 330)
@@ -514,10 +530,13 @@ struct PracticeSessionView: View {
         store.playHaptic(.completion)
         // 走到总结页就是今日完成——包括「跳过剩余，查看总结」。这是唯一的判定点，
         // 服务端不再按题量推断，页面文案与首页卡片自此不会再互相矛盾。
-        Task { await store.markDailySessionComplete() }
         Task {
+            let unlock = await store.markDailySessionComplete()
+            // 只有真的跨过一档才弹。以前这里无条件弹同一枚硬编码的「初来乍到」，
+            // 从第二次学习起就是假的。
+            guard let unlock else { return }
             try? await Task.sleep(for: .milliseconds(280))
-            showBadge = true
+            unlockedAchievement = unlock
         }
     }
 

@@ -91,9 +91,37 @@ final class AppStore: ObservableObject {
     }
 
     /// 练习走到总结页即算今日完成，由客户端显式置位；服务端不再按题量推断。
-    func markDailySessionComplete() async {
+    /// 置位后按刷新回来的计划结算成就，返回本次**新解锁**的那一档（如果有）。
+    func markDailySessionComplete() async -> AchievementUnlock? {
         do { plan = try await api.completeDailySession() }
-        catch { reportIfNotCancelled(error) }
+        catch { reportIfNotCancelled(error); return nil }
+        return await settleAchievements()
+    }
+
+    /// 结算所有成就线：算出当前该在哪一档，把已达成的档位逐一登记，
+    /// 只有服务端确认「这一档是头一回」时才返回它去弹窗。
+    ///
+    /// 逐档登记而不是只登记最高档，是为了跨度较大的一次跃迁也能留全解锁记录
+    /// （例如久未使用后一次读完多篇）。多档同时新解锁时只弹最高的那枚。
+    private func settleAchievements() async -> AchievementUnlock? {
+        var highest: AchievementUnlock?
+        for track in AchievementCatalog.all {
+            let value = AchievementCatalog.value(for: track, plan: plan)
+            guard let reached = track.tier(for: value) else { continue }
+            for raw in 1...reached.rawValue {
+                guard let tier = AchievementTier(rawValue: raw) else { continue }
+                do {
+                    let result = try await api.unlockAchievement(track: track.id, tier: raw)
+                    guard result.newlyUnlocked else { continue }
+                    let unlock = AchievementUnlock(track: track, tier: tier)
+                    if raw >= (highest?.tier.rawValue ?? 0) { highest = unlock }
+                } catch {
+                    // 成就是锦上添花，登记失败不该打断学习流程；下次结算会补上。
+                    if !isCancellationError(error) { continue }
+                }
+            }
+        }
+        return highest
     }
 
     /// Refreshes the library independently so an unrelated home/profile request cannot leave it stale.

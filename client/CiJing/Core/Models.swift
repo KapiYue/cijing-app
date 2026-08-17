@@ -110,6 +110,8 @@ struct DailyPlan: Codable {
     var reviewedToday: Int = 0
     var practiceToday: Int = 0
     var readingToday: Int = 0
+    var generationToday: Int = 0
+    var readingTotal: Int = 0
     var completedToday: Bool = false
     var dailyNewGoal: Int = 8
     var dailyReviewGoal: Int = 20
