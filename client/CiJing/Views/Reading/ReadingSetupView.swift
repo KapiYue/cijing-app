@@ -43,7 +43,12 @@ struct ReadingSetupView: View {
                         Text("换个主题、文体、难度或目标词，就会生成一篇全新的短文。")
                             .font(.caption2).foregroundStyle(CiJingTheme.secondary)
                     }
-                }.padding(20)
+                }
+                .padding(20)
+                // 从「探索 → 生成短文」进来时底部 Tab 栏是浮在内容之上的（走
+                // 「开启今日学习」的 cover 才会隐藏它）。不留出这段空间，最下面
+                // 的生成按钮会被 Tab 栏盖死且滚不出来。
+                .padding(.bottom, 112)
             }
             if generating {
                 ReadingGenerationView(phase: generationPhase, terms: targets.filter { selectedIDs.contains($0.id) }.map(\.term))
