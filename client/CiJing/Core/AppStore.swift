@@ -67,8 +67,33 @@ final class AppStore: ObservableObject {
 
         // 首页的词库、短文、计划和资料来自独立接口。只要其中一部分已成功，
         // 就保留可用内容且不弹出阻断式错误；全部失败时才提示用户重试。
-        errorMessage = successfulRequests == 0 ? firstError?.localizedDescription : nil
+        // 全部失败又全是取消（切 Tab / 连续下拉）时同样不提示。
+        if successfulRequests == 0, let firstError, !isCancellationError(firstError) {
+            errorMessage = firstError.localizedDescription
+        } else {
+            errorMessage = nil
+        }
         await reconcileDailyReminder()
+    }
+
+    /// 学习流程是三层 `fullScreenCover` 盖在首页之上，收起时首页从未离开视图层级，
+    /// `.task` 不会重跑。这里给首页一个显式的回流入口，顺带把 `recentReadings`
+    /// 一起拉回来——`refreshPlan()` 只刷 `plan`，短文列表会长期停在本地状态。
+    func refreshAfterLearningFlow() async {
+        guard api.isSignedIn else { return }
+        async let planResult = fetchResult { try await api.dailyPlan() }
+        async let readingsResult = fetchResult { try await api.recentReadings() }
+        async let wordsResult = fetchResult { try await api.words() }
+        let results = await (planResult, readingsResult, wordsResult)
+        if case .success(let value) = results.0 { plan = value }
+        if case .success(let value) = results.1 { recentReadings = value }
+        if case .success(let value) = results.2 { words = value }
+    }
+
+    /// 练习走到总结页即算今日完成，由客户端显式置位；服务端不再按题量推断。
+    func markDailySessionComplete() async {
+        do { plan = try await api.completeDailySession() }
+        catch { reportIfNotCancelled(error) }
     }
 
     /// Refreshes the library independently so an unrelated home/profile request cannot leave it stale.
@@ -82,13 +107,13 @@ final class AppStore: ObservableObject {
             if let refreshedPlan = try? await api.dailyPlan() { plan = refreshedPlan }
             errorMessage = nil
         } catch {
-            errorMessage = error.localizedDescription
+            reportIfNotCancelled(error)
         }
     }
 
     func loadTargets(limit: Int = 10) async -> [Word] {
         do { return try await api.learningTargets(limit: limit) }
-        catch { errorMessage = error.localizedDescription; return [] }
+        catch { reportIfNotCancelled(error); return [] }
     }
 
     func generateReading(targets: [Word], theme: String, style: String, difficulty: String, regenerate: Bool = false) async throws -> ReadingSession {
@@ -111,7 +136,7 @@ final class AppStore: ObservableObject {
 
     func recordReview(word: Word, quality: Int, type: String, answer: String? = nil, expected: String? = nil, milliseconds: Int? = nil) async {
         do { replace(try await api.applyReview(wordID: word.id, quality: quality, exerciseType: type, answer: answer, expected: expected, responseTime: milliseconds)); await refreshPlan() }
-        catch { errorMessage = error.localizedDescription }
+        catch { reportIfNotCancelled(error) }
     }
 
     func saveReadingWord(_ explanation: ReadingWordExplanation, sentence: String, readingTitle: String) async throws -> Word {
@@ -149,13 +174,13 @@ final class AppStore: ObservableObject {
 
     func markReadingComplete(_ reading: ReadingSession) async {
         do { try await api.completeReading(id: reading.id, minutes: reading.estimatedMinutes); await refreshPlan() }
-        catch { errorMessage = error.localizedDescription }
+        catch { reportIfNotCancelled(error) }
     }
 
     func importDemoWords() async {
         isLoading = true; defer { isLoading = false }
         for item in DemoLexicon.items {
-            do { replace(try await api.saveWord(item)) } catch { errorMessage = error.localizedDescription; return }
+            do { replace(try await api.saveWord(item)) } catch { reportIfNotCancelled(error); return }
         }
         await refreshAll()
     }
@@ -306,6 +331,13 @@ final class AppStore: ObservableObject {
     }
 
     private func refreshPlan() async { if let next = try? await api.dailyPlan() { plan = next } }
+
+    /// 取消不是故障，不打扰用户；其余错误照常上报。
+    private func reportIfNotCancelled(_ error: Error) {
+        guard !isCancellationError(error) else { return }
+        errorMessage = error.localizedDescription
+    }
+
     private func fetchResult<T>(_ operation: () async throws -> T) async -> Result<T, Error> {
         do { return .success(try await operation()) }
         catch { return .failure(error) }

@@ -66,7 +66,28 @@ Deno.serve(async (request) => {
       const { data: cached } = await client.from("reading_sessions")
         .select("*").eq("user_id", user.id).eq("cache_key", cacheKey)
         .order("created_at", { ascending: false }).limit(1).maybeSingle();
-      if (cached) return jsonResponse({ data: { ...cached, is_cached: true }, cached: true });
+      // 缓存只用来省掉 LLM 调用，不用来省掉记录：每次生成成功都要是一次独立的
+      // 阅读，否则"今天生成了两次、短文计数没动"（既有 completed_at 也让
+      // mark_reading_complete 提前 return）。复制内容新开一行，标记 is_cached
+      // 让客户端能提示"沿用了上次生成的短文"。
+      if (cached) {
+        const { data: reused, error: reuseError } = await client.from("reading_sessions").insert({
+          user_id: user.id,
+          title: cached.title,
+          subtitle: cached.subtitle,
+          theme: cached.theme,
+          style: cached.style,
+          difficulty: cached.difficulty,
+          target_word_ids: cached.target_word_ids,
+          target_terms: cached.target_terms,
+          paragraphs: cached.paragraphs,
+          estimated_minutes: cached.estimated_minutes,
+          cache_key: cacheKey,
+          is_cached: true,
+        }).select("*").single();
+        if (reuseError) throw reuseError;
+        return jsonResponse({ data: reused, cached: true });
+      }
     }
 
     const targetList = wordPrompt(targetWords);

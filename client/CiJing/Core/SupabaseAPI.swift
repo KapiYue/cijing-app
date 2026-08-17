@@ -14,6 +14,17 @@ enum CiJingAPIError: LocalizedError {
     }
 }
 
+/// 请求被取消不是故障：切 Tab 会销毁上一个页面并连带取消它的 `.task`，
+/// 下拉刷新连拉两次也会取消前一次。这类错误一律不该弹给用户——1.0 正式版
+/// 里它们表现为切 Tab 和下拉刷新时偶发的「用户取消」提示。
+func isCancellationError(_ error: Error) -> Bool {
+    if error is CancellationError { return true }
+    let nsError = error as NSError
+    if nsError.domain == NSURLErrorDomain && nsError.code == NSURLErrorCancelled { return true }
+    if nsError.domain == NSCocoaErrorDomain && nsError.code == NSUserCancelledError { return true }
+    return false
+}
+
 @MainActor
 final class SupabaseAPI: ObservableObject {
     @Published private(set) var session: AuthSession?
@@ -223,6 +234,11 @@ final class SupabaseAPI: ObservableObject {
 
     func recentReadings() async throws -> [ReadingSession] {
         try await send(path: "/rest/v1/reading_sessions?select=*&order=created_at.desc&limit=20")
+    }
+
+    /// 走到练习总结页即视为今日完成。服务端不再自行推断，返回刷新后的今日计划。
+    func completeDailySession() async throws -> DailyPlan {
+        try await send(path: "/rest/v1/rpc/complete_daily_session", method: "POST", body: encoder.encode(EmptyBody()))
     }
 }
 

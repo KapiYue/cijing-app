@@ -62,6 +62,13 @@ struct HomeView: View {
         .toolbar(.hidden, for: .navigationBar)
         .task { await store.refreshAll() }
         .fullScreenCover(isPresented: $showingSetup) { NavigationStack { ReadingSetupView(onFinish: { showingSetup = false }) } }
+        // 学习流程盖在首页之上，收起时首页从未离开视图层级，上面的 `.task` 不会重跑。
+        // 没有这一步，首页就只能靠流程里顺手调的 refreshPlan() 撞对，一旦那次请求
+        // 失败或仍在飞行中，卡片会停在旧状态且无法自愈。
+        .onChange(of: showingSetup) { _, presented in
+            guard !presented else { return }
+            Task { await store.refreshAfterLearningFlow() }
+        }
         .alert("提示", isPresented: Binding(get: { notice != nil || store.errorMessage != nil }, set: { if !$0 { notice = nil; store.errorMessage = nil } })) {
             Button("知道了") { notice = nil; store.errorMessage = nil }
         } message: { Text(notice ?? store.errorMessage ?? "") }

@@ -512,6 +512,9 @@ struct PracticeSessionView: View {
         feedbackPresented = false
         stage = .summary
         store.playHaptic(.completion)
+        // 走到总结页就是今日完成——包括「跳过剩余，查看总结」。这是唯一的判定点，
+        // 服务端不再按题量推断，页面文案与首页卡片自此不会再互相矛盾。
+        Task { await store.markDailySessionComplete() }
         Task {
             try? await Task.sleep(for: .milliseconds(280))
             showBadge = true

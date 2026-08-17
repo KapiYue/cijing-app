@@ -43,6 +43,7 @@ struct MainTabView: View {
     @EnvironmentObject private var store: AppStore
     @State private var selection: AppTab = .home
     @State private var tabBarHidden = false
+    @State private var refreshTask: Task<Void, Never>?
 
     init() {
         let arguments = ProcessInfo.processInfo.arguments
@@ -66,10 +67,17 @@ struct MainTabView: View {
         .environment(\.appTabBarHidden, $tabBarHidden)
         .tint(CiJingTheme.purple)
         .animation(.easeInOut(duration: 0.2), value: tabBarHidden)
-        .onChange(of: selection) { _, _ in Task { await refreshSelectedTab() } }
+        .onChange(of: selection) { _, _ in scheduleRefresh() }
         .onChange(of: scenePhase) { _, phase in
-            if phase == .active { Task { await refreshSelectedTab() } }
+            if phase == .active { scheduleRefresh() }
         }
+    }
+
+    /// 每次切 Tab 都会触发一轮刷新。来回快切时旧的那轮还在飞，叠在一起既浪费
+    /// 请求，又会因为互相取消而冒出取消提示。这里只保留最后一次。
+    private func scheduleRefresh() {
+        refreshTask?.cancel()
+        refreshTask = Task { await refreshSelectedTab() }
     }
 
     @ViewBuilder
