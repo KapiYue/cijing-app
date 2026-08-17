@@ -133,15 +133,15 @@ struct ReadingSessionView: View {
                     .foregroundStyle(CiJingTheme.purple)
                     .frame(width: 27, height: 27)
                     .background(CiJingTheme.purpleSoft, in: Circle())
-                Button { speech.speak(paragraph.english, speed: playbackSpeed) } label: {
-                    Image(systemName: speech.currentText == paragraph.english && speech.isSpeaking ? "waveform" : "speaker.wave.2")
+                Button { toggleParagraphPlayback(paragraph.english) } label: {
+                    Image(systemName: paragraphPlaybackIcon(paragraph.english))
                         .font(.system(size: 13, weight: .bold))
                         .foregroundStyle(CiJingTheme.purple)
                         .frame(width: 29, height: 27)
                         .background(CiJingTheme.surface.opacity(0.84), in: RoundedRectangle(cornerRadius: 9))
                 }
                 .buttonStyle(.plain)
-                .accessibilityLabel("播放第 \(index + 1) 段")
+                .accessibilityLabel(isPlaying(paragraph.english) ? "暂停第 \(index + 1) 段" : "播放第 \(index + 1) 段")
                 Spacer()
                 Button { toggleTranslation(index) } label: {
                     Text("译")
@@ -206,7 +206,7 @@ struct ReadingSessionView: View {
                     .background(CiJingTheme.purple, in: Circle())
             }
             .buttonStyle(.plain)
-            .accessibilityLabel(speech.isSpeaking ? "暂停全文朗读" : "播放全文")
+            .accessibilityLabel(speech.isSpeaking && !speech.isPaused ? "暂停朗读" : (speech.isPaused ? "继续朗读" : "播放全文"))
 
             Divider().frame(height: 28).padding(.horizontal, 2)
 
@@ -248,13 +248,34 @@ struct ReadingSessionView: View {
         .shadow(color: CiJingTheme.purpleDark.opacity(0.1), radius: 12, y: 5)
     }
 
+    /// 这段文本是否正在朗读（暂停中不算「正在」，按钮要显示成可继续）。
+    private func isPlaying(_ text: String) -> Bool {
+        speech.currentText == text.trimmingCharacters(in: .whitespacesAndNewlines)
+            && speech.isSpeaking && !speech.isPaused
+    }
+
+    private func isActive(_ text: String) -> Bool {
+        speech.currentText == text.trimmingCharacters(in: .whitespacesAndNewlines)
+            && (speech.isSpeaking || speech.isPaused)
+    }
+
+    private func paragraphPlaybackIcon(_ text: String) -> String {
+        isPlaying(text) ? "pause.fill" : "speaker.wave.2"
+    }
+
+    private func toggleParagraphPlayback(_ text: String) {
+        if isActive(text) { speech.togglePause() }
+        else { speech.speak(text, speed: playbackSpeed) }
+    }
+
+    // 底部这颗是全局走带键：只要有朗读在进行（不管是全文还是某一段），它就是
+    // 暂停键。此前它只认全文，先点过段落播放再点它会去另起一段全文朗读。
     private var fullPlaybackIcon: String {
-        if speech.currentText == fullText && speech.isSpeaking && !speech.isPaused { return "pause.fill" }
-        return "play.fill"
+        speech.isSpeaking && !speech.isPaused ? "pause.fill" : "play.fill"
     }
 
     private func toggleFullPlayback() {
-        if speech.currentText == fullText && (speech.isSpeaking || speech.isPaused) { speech.togglePause() }
+        if speech.isSpeaking || speech.isPaused { speech.togglePause() }
         else { speech.speak(fullText, speed: playbackSpeed) }
     }
 
