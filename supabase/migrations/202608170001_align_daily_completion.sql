@@ -7,10 +7,27 @@
 -- 「开启今日学习」。1.0 正式版首日真机试用即复现。
 --
 -- 新定义：**走到练习总结页就算完成**，由客户端显式调用
--- complete_daily_session() 置位，服务端不再自行推断。两处 upsert 只负责
--- 累计计数，不再碰 completed。
+-- complete_daily_session() 置位。
+--
+-- ⚠️ 本迁移为**向后兼容版（expand 阶段）**：旧的服务端推断规则原样保留，只做加法。
+--
+-- 为什么。初版把「新增 complete_daily_session()」和「删除旧推断」打包在一起，于是
+-- 整批迁移被它绑死——线上 1.0 客户端不会调新 RPC，一旦旧推断被删，那些用户的
+-- 「今日完成」将永远不再置位。这违反了本项目自己的迁移指南（supabase-migration-guide.md
+-- 第 95 行：删除旧行为应等确认旧客户端退出使用后再做）。现在拆成两步：
+--
+--   expand（本迁移）  ：新增 RPC 与计数列，旧规则不动 —— 可先于客户端上线；
+--   contract（1.0.1 上架后）：新增一份前向迁移删掉旧规则，那时才真正兑现
+--                             「魔法数字 5 从代码库消失」。
+--
+-- 两条路径不冲突：旧规则与新 RPC **都只把 completed 置 true，从不置回 false**。
+-- 代价是在 contract 之前，新客户端上「答满 5 题但没走到总结页」也会被算作完成——
+-- 这正是 1.0 一直以来的行为，方向上也不是 11.1 抱怨的那一个（当时是「App 说完成、
+-- 首页说没完成」，反过来则无人受损）。
+--
+-- 🔴 contract 那份迁移别忘了写，否则这个魔法数字会永远留下来。
 
--- 1. apply_review：daily_activity 的 upsert 去掉 completed 推断
+-- 1. apply_review：只加计数列，completed 的旧推断**原样保留**
 create or replace function public.apply_review(
   p_word_id uuid,
   p_quality integer,
@@ -85,13 +102,18 @@ begin
   on conflict (user_id, activity_date) do update set
     reviewed_count = daily_activity.reviewed_count + 1,
     practice_count = daily_activity.practice_count + excluded.practice_count,
+    -- 兼容期保留：与 202607200001 逐字一致，线上 1.0 行为零变化。
+    -- contract 阶段（1.0.1 上架后）删掉这一行。
+    completed = daily_activity.completed or (
+      daily_activity.reading_count > 0 and daily_activity.practice_count + excluded.practice_count >= 5
+    ),
     updated_at = now();
 
   return v_word;
 end;
 $$;
 
--- 2. mark_reading_complete：同样只累计，不判定 completed
+-- 2. mark_reading_complete：同样只加计数，旧推断原样保留
 create or replace function public.mark_reading_complete(p_reading_id uuid, p_minutes integer default 5)
 returns void
 language plpgsql
@@ -113,6 +135,8 @@ begin
   on conflict (user_id, activity_date) do update set
     reading_count = daily_activity.reading_count + 1,
     minutes = daily_activity.minutes + excluded.minutes,
+    -- 兼容期保留：与 202607200001 逐字一致。contract 阶段删掉这一行。
+    completed = daily_activity.completed or daily_activity.practice_count >= 5,
     updated_at = now();
 end;
 $$;
