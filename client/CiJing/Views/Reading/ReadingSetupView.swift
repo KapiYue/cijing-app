@@ -34,10 +34,15 @@ struct ReadingSetupView: View {
                         else { LazyVGrid(columns: [GridItem(.adaptive(minimum: 105))], spacing: 9) { ForEach(targets) { word in Button { if selectedIDs.contains(word.id) { if selectedIDs.count > 3 { selectedIDs.remove(word.id) } } else { selectedIDs.insert(word.id) } } label: { HStack(spacing: 5) { Circle().fill(word.status.color).frame(width: 6, height: 6); Text(word.term).lineLimit(1); if selectedIDs.contains(word.id) { Image(systemName: "checkmark") } }.font(.caption.bold()).padding(.horizontal, 10).padding(.vertical, 9).frame(maxWidth: .infinity).background(selectedIDs.contains(word.id) ? CiJingTheme.lightGreen : CiJingTheme.paper, in: RoundedRectangle(cornerRadius: 11)).foregroundStyle(CiJingTheme.ink) }.buttonStyle(.plain) } } }
                     }
                     if let errorMessage { Text(errorMessage).font(.caption).foregroundStyle(CiJingTheme.danger) }
-                    Button { Task { await generate() } } label: { HStack { Text("生成个性化短文"); Spacer(); Image(systemName: "wand.and.stars") } }
+                    if let existing = previousReading { duplicateNotice(existing) }
+                    Button { Task { await generate(regenerate: previousReading != nil) } } label: {
+                        HStack { Text(previousReading == nil ? "生成个性化短文" : "仍要生成新的一篇"); Spacer(); Image(systemName: "wand.and.stars") }
+                    }
                         .buttonStyle(PrimaryButtonStyle()).disabled(selectedIDs.count < 3 || generating)
-                    Text("已生成的相同组合会优先使用缓存；点击短文内“换一篇”才会请求新的内容。")
-                        .font(.caption2).foregroundStyle(CiJingTheme.secondary)
+                    if previousReading == nil {
+                        Text("换个主题、文体、难度或目标词，就会生成一篇全新的短文。")
+                            .font(.caption2).foregroundStyle(CiJingTheme.secondary)
+                    }
                 }.padding(20)
             }
             if generating {
@@ -67,11 +72,37 @@ struct ReadingSetupView: View {
     }
 
     private func optionSection<Content: View>(title: String, @ViewBuilder content: () -> Content) -> some View { VStack(alignment: .leading, spacing: 11) { Text(title).font(.headline); content() }.cijingCard() }
-    private func generate() async {
+
+    /// 当前这套设置是否已经生成过。相同组合在服务端会命中缓存、拿回同一篇，
+    /// 与其事后解释「这是旧的那篇」，不如生成前就把选择权交回用户。
+    private var previousReading: ReadingSession? {
+        store.recentReadings.first {
+            $0.theme == theme && $0.style == style && $0.difficulty == difficulty
+                && Set($0.targetWordIds) == selectedIDs
+        }
+    }
+
+    private func duplicateNotice(_ existing: ReadingSession) -> some View {
+        VStack(alignment: .leading, spacing: 11) {
+            Label("这套设置你已经生成过", systemImage: "clock.arrow.circlepath")
+                .font(.subheadline.bold())
+            Text("《\(existing.title)》——主题、文体、难度和目标词都与那次相同。继续读那篇不会重复占用词库；也可以坚持生成一篇全新的。")
+                .font(.caption)
+                .foregroundStyle(CiJingTheme.secondary)
+                .lineSpacing(3)
+            Button { reading = existing } label: {
+                HStack { Text("继续读《\(existing.title)》").lineLimit(1); Spacer(); Image(systemName: "arrow.right") }
+            }
+            .buttonStyle(PrimaryButtonStyle())
+        }
+        .cijingCard()
+    }
+
+    private func generate(regenerate: Bool = false) async {
         generationPhase = 0
         generating = true
         defer { generating = false }
-        do { reading = try await store.generateReading(targets: targets.filter { selectedIDs.contains($0.id) }, theme: theme, style: style, difficulty: difficulty) }
+        do { reading = try await store.generateReading(targets: targets.filter { selectedIDs.contains($0.id) }, theme: theme, style: style, difficulty: difficulty, regenerate: regenerate) }
         catch { errorMessage = error.localizedDescription }
     }
 

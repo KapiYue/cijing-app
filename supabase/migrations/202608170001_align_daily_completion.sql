@@ -137,3 +137,85 @@ $$;
 
 revoke execute on function public.complete_daily_session() from public, anon;
 grant execute on function public.complete_daily_session() to authenticated;
+
+-- 4. 生成次数：与"存了几篇短文"解耦
+--
+-- 原先命中缓存时既不产生新行、也不留任何痕迹，于是"今天生成了两次"在数据里
+-- 完全看不出来。一度改成命中缓存就复制一行，但那会让"最近的短文"冒出同名条目
+-- ——文章行数和生成次数本来就是两件事，硬塞进一张表才显得互相矛盾。
+alter table public.daily_activity
+  add column if not exists generation_count integer not null default 0;
+
+create or replace function public.record_reading_generation()
+returns void
+language sql
+security invoker
+set search_path = public
+as $$
+  insert into public.daily_activity (user_id, activity_date, generation_count)
+  values (auth.uid(), current_date, 1)
+  on conflict (user_id, activity_date) do update set
+    generation_count = daily_activity.generation_count + 1,
+    updated_at = now();
+$$;
+
+revoke execute on function public.record_reading_generation() from public, anon;
+grant execute on function public.record_reading_generation() to authenticated;
+
+-- 5. get_daily_plan 带上今日生成次数（数据先就位，暂不在 UI 展示）
+create or replace function public.get_daily_plan()
+returns jsonb
+language sql
+stable
+security invoker
+set search_path = public
+as $$
+with p as (
+  select * from profiles where id = auth.uid()
+), counts as (
+  select
+    count(*) filter (where status not in ('new', 'ignored') and due_at <= now()) as review_due,
+    count(*) filter (where status = 'new') as new_available,
+    count(*) filter (where status = 'weak') as weak_count,
+    count(*) filter (where status <> 'ignored') as learned_count,
+    count(*) filter (where status = 'mastered') as mastered_count
+  from words where user_id = auth.uid()
+), today as (
+  select coalesce(reviewed_count, 0) as reviewed_count,
+         coalesce(practice_count, 0) as practice_count,
+         coalesce(reading_count, 0) as reading_count,
+         coalesce(generation_count, 0) as generation_count,
+         coalesce(completed, false) as completed
+  from daily_activity where user_id = auth.uid() and activity_date = current_date
+), streak as (
+  select count(*) as days from (
+    select activity_date,
+      activity_date - (row_number() over (order by activity_date))::integer as grp
+    from daily_activity
+    where user_id = auth.uid() and (reviewed_count > 0 or reading_count > 0)
+  ) s
+  where grp = (
+    select max(activity_date - rn::integer) from (
+      select activity_date, row_number() over (order by activity_date) rn
+      from daily_activity
+      where user_id = auth.uid() and (reviewed_count > 0 or reading_count > 0)
+    ) z
+  )
+)
+select jsonb_build_object(
+  'review_due', least(c.review_due, p.daily_review_goal),
+  'new_suggested', least(c.new_available, p.daily_new_goal),
+  'weak_count', c.weak_count,
+  'learned_count', c.learned_count,
+  'mastered_count', c.mastered_count,
+  'streak_days', coalesce(s.days, 0),
+  'reviewed_today', coalesce(t.reviewed_count, 0),
+  'practice_today', coalesce(t.practice_count, 0),
+  'reading_today', coalesce(t.reading_count, 0),
+  'generation_today', coalesce(t.generation_count, 0),
+  'completed_today', coalesce(t.completed, false),
+  'daily_new_goal', p.daily_new_goal,
+  'daily_review_goal', p.daily_review_goal
+)
+from p cross join counts c cross join streak s left join today t on true;
+$$;
