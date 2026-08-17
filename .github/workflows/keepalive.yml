@@ -36,15 +36,17 @@ jobs:
   keepalive:
     runs-on: ubuntu-latest
     steps:
+      # checkout / setup-node 用当前最新的大版本：v4 跑在已废弃的 Node 20 上，
+      # 首次运行就报了 deprecation 警告（v5 起改跑 Node 24）。
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
           fetch-depth: 0 # 需要拿到远端所有分支，才能切到 keepalive
 
       - name: Setup Node
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v7
         with:
-          node-version: '20'
+          node-version: '22'
 
       # 真正让 Supabase 记录到活动的一步。脚本零依赖，不需要 npm install。
       - name: Touch Supabase
