@@ -85,6 +85,11 @@ struct ReadingSessionView: View {
         .alert("操作失败", isPresented: Binding(get: { errorMessage != nil }, set: { if !$0 { errorMessage = nil } })) {
             Button("好") {}
         } message: { Text(errorMessage ?? "") }
+        // 朗读起不来时（设备上没有英文语音、音频会话被占用）此前是彻底静默的：
+        // 播放键点下去没声音也没提示，只能当成"点了没反应"。
+        .alert("无法朗读", isPresented: Binding(get: { speech.errorMessage != nil }, set: { if !$0 { speech.errorMessage = nil } })) {
+            Button("好") {}
+        } message: { Text(speech.errorMessage ?? "") }
         .onAppear { tabBarHidden.wrappedValue = true }
         .onDisappear { speech.stop(); tabBarHidden.wrappedValue = false }
     }
