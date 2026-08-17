@@ -1,0 +1,68 @@
+# 一个定时任务同时解决两件事：
+#
+#   1. Supabase 保活 —— 免费版项目 7 天没有数据库活动就会被暂停，暂停后整个后端
+#      下线：App 打不开、扩展查不了词，而且不会有人主动通知你。
+#
+#   2. 定时任务自身保活 —— GitHub 会在仓库连续 60 天没有活动后自动停用所有
+#      schedule 触发器。一旦停用，它就再也不会自己跑起来（「负责保活的东西自己先
+#      死了」），只能人工去 Actions 页面重新启用。所以每次跑完往一个专用分支推
+#      一行心跳，制造仓库活动，把这个 60 天的计时器按回去。
+#
+# 为什么心跳推 keepalive 分支而不是 main：
+#   * 推 main 会触发 Xcode Cloud 构建。两天一次纯属白烧构建额度；
+#   * 也会把 main 的历史刷满无意义的提交。
+#   keepalive 是一条孤儿分支（与 main 无共同历史），内容只有一个 HEARTBEAT 文件。
+#
+# ⚠️ 启用后必须去 Xcode Cloud 控制台确认一次：它的启动条件要限定在 main 分支。
+#    如果设成「任意分支」，这条心跳照样会触发构建，那就白设计了。提交信息里的
+#    [ci skip] 是第二道保险。
+
+name: Keepalive
+
+on:
+  schedule:
+    # cron 五个字段：分 时 日 月 星期，时区固定 UTC（不是北京时间）。
+    #   0    -> 第 0 分钟
+    #   3    -> 3 点（UTC 03:00 = 北京时间 11:00）
+    #   */2  -> 每隔 2 天（1、3、5…29 号；跨月时会有一次间隔变化，无所谓）
+    # Supabase 的阈值是 7 天，两天一次留足了余量，连续失败两三次也不会出事。
+    - cron: '0 3 */2 * *'
+  workflow_dispatch:
+
+permissions:
+  contents: write # 推心跳分支需要写权限
+
+jobs:
+  keepalive:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # 需要拿到远端所有分支，才能切到 keepalive
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      # 真正让 Supabase 记录到活动的一步。脚本零依赖，不需要 npm install。
+      - name: Touch Supabase
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_PUBLISHABLE_KEY: ${{ secrets.SUPABASE_PUBLISHABLE_KEY }}
+        run: node scripts/keepalive.mjs
+
+      # 制造仓库活动。这一步失败不影响上一步已经完成的保活，但要让运行标红，
+      # 否则 60 天后定时任务被停用时不会有任何预兆。
+      - name: Push heartbeat
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          # 首次运行时 keepalive 分支还不存在，--orphan 现建一条
+          git switch keepalive 2>/dev/null || git switch --orphan keepalive
+          date -u +"%Y-%m-%dT%H:%M:%SZ" > HEARTBEAT
+          git add HEARTBEAT
+          git commit -m "chore: keepalive $(date -u +%Y-%m-%dT%H:%M:%SZ) [ci skip]"
+          git push origin keepalive
