@@ -110,11 +110,40 @@ final class SpeechService: NSObject, ObservableObject, AVSpeechSynthesizerDelega
         utterance.preUtteranceDelay = 0.03
         isSpeaking = true
         synthesizer.speak(utterance)
+
+        // 设备上没有可用英文语音时，`speak` 会被静默丢弃：没有音频，也不会回调
+        // didStart / didFinish / didCancel。不核对一下，UI 就会一直显示在朗读。
+        let generation = playbackGeneration
+        Task { [weak self] in
+            try? await Task.sleep(for: .milliseconds(400))
+            guard let self, self.playbackGeneration == generation,
+                  self.isSpeaking, !self.synthesizer.isSpeaking, !self.synthesizer.isPaused
+            else { return }
+            self.stop()
+            self.errorMessage = "这台设备上没有可用的英文语音。请到「设置 → 辅助功能 → 朗读内容 → 声音」中下载一个英语声音后重试。"
+        }
     }
 
     func togglePause() {
-        if synthesizer.isPaused { synthesizer.continueSpeaking(); isPaused = false }
-        else if synthesizer.isSpeaking { synthesizer.pauseSpeaking(at: .word); isPaused = true }
+        if synthesizer.isPaused || isPaused {
+            synthesizer.continueSpeaking()
+            isPaused = false
+            // 合成器其实并没有在朗读（下面那种发散场景），继续也无从继续。
+            if !synthesizer.isSpeaking { stop() }
+            return
+        }
+        if synthesizer.isSpeaking {
+            synthesizer.pauseSpeaking(at: .word)
+            isPaused = true
+            return
+        }
+        // 走到这里说明**我们的状态与合成器发散了**：`isSpeaking` 还是 true，但
+        // 合成器已经不在朗读——设备上没有可用语音（模拟器常见）、朗读被系统
+        // 中断、或启动本身就失败了，而这些情况都不会回调 didFinish/didCancel。
+        //
+        // 此前这里两个分支都进不去，于是静默什么也不做，按钮永久卡在暂停图标、
+        // 再点也没有反应。收敛回停止状态，至少让控件恢复可用。
+        stop()
     }
 
     func repeatCurrent(slow: Bool = false) { if let currentText { speak(currentText, slow: slow) } }
