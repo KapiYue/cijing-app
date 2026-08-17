@@ -1,8 +1,14 @@
 # 词鲸背单词支持与帮助
 
-更新日期：2026 年 7 月 30 日
+更新日期：2026 年 8 月 17 日
 
 支持邮箱：[`zdjoey@126.com`](mailto:zdjoey@126.com)。联系时请勿发送密码、验证码、访问令牌、secret key、完整朗读录音或包含他人私人内容的网页文本。
+
+## 安装
+
+- **iOS / iPadOS**：[App Store 下载词鲸背单词](https://apps.apple.com/cn/app/%E8%AF%8D%E9%B2%B8%E8%83%8C%E5%8D%95%E8%AF%8D/id6792671378)（需要 iOS 17.0 或更高版本），也可在 App Store 搜索「词鲸背单词」。
+- **Chrome 扩展**：[Chrome 应用商店安装词鲸背单词](https://chromewebstore.google.com/detail/%E8%AF%8D%E9%B2%B8%E8%83%8C%E5%8D%95%E8%AF%8D/afihhehkmefgcknloikpejfpikcddifn)，也可在应用商店搜索「词鲸背单词」。
+- 两端用**同一个已验证邮箱**登录，词库与学习记录自动同步；扩展不能单独注册账号。
 
 ## 快速排查
 
@@ -61,4 +67,4 @@
 - [隐私政策](privacy-policy.md)
 - [使用条款](terms-of-service.md)
 
-公开支持页和隐私政策页仍在备案中；App Store Connect 暂用内部占位，必须等正式地址可在未登录状态访问后再回填。
+公开支持页与隐私政策页已上线（`https://cijing.joy-coder.com/support`、`/privacy`），并已回填至 App Store Connect 与 Chrome 应用商店。
