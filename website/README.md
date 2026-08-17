@@ -9,22 +9,16 @@
 
 内容源是 [`docs/privacy-policy.md`](../docs/privacy-policy.md)、[`docs/terms-of-service.md`](../docs/terms-of-service.md)、[`docs/third-party-content-and-ai-compliance.md`](../docs/third-party-content-and-ai-compliance.md) 与 [`docs/support.md`](../docs/support.md)。修改公开内容时必须在同一个提交中同步对应 HTML。
 
-## 部署路径
+## 部署
 
-| 项目 | 值 |
-| --- | --- |
-| 服务器目录 | `/var/www/cijing` |
-| Nginx 配置 | [`deploy/nginx/cijing.conf`](../deploy/nginx/cijing.conf) → `/etc/nginx/sites-available/cijing` |
-| TLS 证书 | `/etc/nginx/ssl/cijing/fullchain.crt` 与 `private.key` |
-
-证书安装与整站部署手册属于维护者本地材料，不随仓库发布。
+Nginx 站点配置在 [`deploy/nginx/cijing.conf`](../deploy/nginx/cijing.conf)。服务器目录、证书路径、上传方式与回滚步骤属于维护者本地材料，不随仓库发布。
 
 上线前核对：
 
-1. `website/` 已 rsync 到 `/var/www/cijing`（不要带入本 README）；
+1. `website/` 全量同步到站点目录，**不要带入本 README**；
 2. `cijing.conf` 已启用且 `sudo nginx -t` 通过；
 3. TLS 覆盖 `cijing.joy-coder.com`；
-4. DNSPod 中 `cijing` A 记录指向服务器公网 IP（网站变更备案通过后再开启）；
+4. DNS 中 `cijing` A 记录指向服务器公网 IP；
 5. 无痕访问 `/privacy`、`/support` 返回 200，页脚同时展示网站 ICP `浙ICP备2026055717号-2`、App ICP `浙ICP备2026055717号-3A` 与 `浙公网安备33010502013311号`（含图标与查询链接）；
 6. `/assets/police-filing-icon.png` 返回 200，页脚图标不是裂图。
 
