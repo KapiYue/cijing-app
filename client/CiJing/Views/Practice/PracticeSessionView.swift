@@ -1,4 +1,6 @@
 import SwiftUI
+// `requestReview` 环境值由 StoreKit 提供，不导入就取不到。
+import StoreKit
 
 private enum ExerciseKind: String, Hashable {
     case meaningChoice, clozeChoice, spelling, contextChoice, selfRating
@@ -52,6 +54,7 @@ struct PracticeSessionView: View {
     @State private var startedAt = Date()
     /// 只在真的跨过一档时才有值——没升级就没有弹窗。
     @State private var unlockedAchievement: AchievementUnlock?
+    @Environment(\.requestReview) private var requestReview
 
     init(reading: ReadingSession, onFinish: (() -> Void)? = nil) {
         self.reading = reading
@@ -401,13 +404,29 @@ struct PracticeSessionView: View {
                 } else {
                     Text("这条线已经满级").font(.caption).foregroundStyle(tint)
                 }
-                Button("收下徽章") { unlockedAchievement = nil }.buttonStyle(PrimaryButtonStyle())
+                Button("收下徽章") {
+                    unlockedAchievement = nil
+                    requestReviewIfEarned()
+                }.buttonStyle(PrimaryButtonStyle())
             }
             .padding(28)
             .frame(maxWidth: 330)
             .background(CiJingTheme.surface, in: RoundedRectangle(cornerRadius: 30, style: .continuous))
             .shadow(color: .black.opacity(0.18), radius: 30, y: 12)
             .padding(24)
+        }
+    }
+
+    /// 徽章弹窗刚给完正反馈，这是整个流程里用户最愿意打分的一刻，转化率最高。
+    ///
+    /// 等 0.8 秒是为了让徽章弹窗的收起动画走完：两个弹层叠在一起时系统弹窗会被顶掉，
+    /// 而配额照扣——那是最亏的一种失败。
+    private func requestReviewIfEarned() {
+        guard AppReviewPrompt.shouldRequest(streakDays: store.plan.streakDays) else { return }
+        AppReviewPrompt.recordRequest()
+        Task {
+            try? await Task.sleep(for: .milliseconds(800))
+            requestReview()
         }
     }
 
