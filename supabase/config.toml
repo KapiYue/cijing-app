@@ -1,3 +1,22 @@
+# ============================================================================
+# 🔴 这是【本地开发】配置，绝对不要推到生产。
+#
+#   supabase config push   ← 永远不要跑这条命令
+#
+# CLI 的 `supabase config` 只有 `push` 一个子命令（没有 `pull`），它会把本文件
+# 原样推到已 link 的线上项目（daudpwwdhdyvfodpwvny，即生产）。后果：
+#
+#   * 下面 [auth] 的 site_url 是 http://127.0.0.1:3000 —— 推上去会把生产的认证
+#     回调地址改成 localhost，**已发出和后续所有验证邮件里的链接全部失效**，
+#     新用户注册链路当场断掉；
+#   * additional_redirect_urls、jwt_expiry 等也会被本地值覆盖。
+#
+# 生产的认证配置（含 SMTP、站点地址、速率限制）一律在 Supabase Dashboard 上改，
+# 不经过本文件。本文件只服务于 `supabase start` / `db reset` 的本机栈。
+#
+# 迁移用 `supabase db push`（那条是安全的、也是正常流程），别和这条搞混。
+# ============================================================================
+
 project_id = "cijing-local"
 
 [api]
