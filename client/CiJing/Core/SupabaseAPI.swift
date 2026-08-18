@@ -249,6 +249,21 @@ final class SupabaseAPI: ObservableObject {
             body: encoder.encode(UnlockBody(pTrack: track, pTier: tier))
         )
     }
+
+    /// 提交一条意见反馈。表上 `user_id` 的默认值是 `auth.uid()`，归属由数据库定，
+    /// 客户端不传——传了也会被 RLS 的 `with check` 挡回来。
+    func submitFeedback(_ draft: FeedbackDraft) async throws -> FeedbackItem {
+        try await send(
+            path: "/rest/v1/feedback?select=*",
+            method: "POST",
+            body: encoder.encode(draft),
+            headers: ["Prefer": "return=representation", "Accept": "application/vnd.pgrst.object+json"]
+        )
+    }
+
+    func feedbackHistory(limit: Int = 30) async throws -> [FeedbackItem] {
+        try await send(path: "/rest/v1/feedback?select=*&order=created_at.desc&limit=\(limit)")
+    }
 }
 
 private struct Credentials: Codable { let email, password: String }

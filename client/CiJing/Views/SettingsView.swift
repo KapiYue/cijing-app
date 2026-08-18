@@ -4,6 +4,9 @@ import AVFoundation
 private enum AppLinks {
     static let contact = URL(string: "mailto:zdjoey@126.com")!
     static let icpFiling = URL(string: "https://beian.miit.gov.cn/")!
+    /// 商品页的「写评价」直达链接。系统评分弹窗每年只有 3 次配额且可能不显示，
+    /// 主动想评分的用户需要一个随时找得到的入口。
+    static let writeReview = URL(string: "https://apps.apple.com/cn/app/id6792671378?action=write-review")!
 }
 
 private enum AppFiling {
@@ -64,6 +67,21 @@ struct SettingsView: View {
                         Button { Task { await importDemo() } } label: {
                             SettingsActionRow(icon: "arrow.down.circle", title: importing ? "正在导入…" : "离线与演示内容", subtitle: "缓存词库并导入体验单词")
                         }.buttonStyle(.plain).disabled(importing)
+                    }
+
+                    SettingsSectionTitle("帮助与反馈")
+                    SettingsGroup {
+                        NavigationLink { AppSupportView() } label: {
+                            SettingsActionRow(icon: "questionmark.circle", title: "帮助与反馈", subtitle: "常见问题 · 提交意见与问题")
+                        }.buttonStyle(.plain)
+                        SettingsDivider()
+                        NavigationLink { FeedbackHistoryView() } label: {
+                            SettingsActionRow(icon: "clock.arrow.circlepath", title: "我的反馈", subtitle: "查看提交记录与回复")
+                        }.buttonStyle(.plain)
+                        SettingsDivider()
+                        Link(destination: AppLinks.writeReview) {
+                            SettingsActionRow(icon: "star", title: "给词鲸评分", subtitle: "在 App Store 写一条评价")
+                        }
                     }
 
                     SettingsSectionTitle("隐私与安全")
@@ -681,7 +699,8 @@ private enum LegalDocument: String, CaseIterable, Identifiable {
                 ("账号信息", "收集邮箱地址，用于注册、登录、找回账号和保障账号安全。"),
                 ("学习与内容信息", "收集收藏单词、查询上下文、笔记、复习结果、学习偏好、AI 短文及阅读进度，用于提供词库、个性化阅读和间隔复习。"),
                 ("麦克风与语音识别", "仅在你主动使用跟读功能时请求系统权限，用于生成本次朗读的文字和准确度反馈；不会在后台持续录音。"),
-                ("设备与诊断信息", "网络请求可能包含 IP 地址、设备系统版本和必要日志，用于保障服务安全与排查故障。第一版不接入广告追踪。")
+                ("设备与诊断信息", "网络请求可能包含 IP 地址、设备系统版本和必要日志，用于保障服务安全与排查故障。第一版不接入广告追踪。"),
+                ("意见反馈", "你主动提交的反馈正文、分类和选填的回信方式，连同客户端版本、设备型号和系统版本一起保存，用于复现问题并回复你。提交页面会明示随附内容。")
             ]
         case .localSharing:
             return [
@@ -726,7 +745,7 @@ private struct LegalDocumentView: View {
                                     LegalDocumentView(document: .legalAndPrivacy)
                                 }
                             }
-                            NavigationLink("支持与帮助") { AppSupportView() }
+                            NavigationLink("帮助与反馈") { AppSupportView() }
                             Link("zdjoey@126.com", destination: AppLinks.contact)
                         }
                         .font(.subheadline.bold())
@@ -783,7 +802,7 @@ private struct AboutCiJingView: View {
                         }.buttonStyle(.plain)
                         SettingsDivider()
                         NavigationLink { AppSupportView() } label: {
-                            SettingsActionRow(icon: "questionmark.circle", title: "支持与帮助", subtitle: "常见问题与账号删除说明")
+                            SettingsActionRow(icon: "questionmark.circle", title: "帮助与反馈", subtitle: "常见问题 · 提交意见与问题")
                         }.buttonStyle(.plain)
                         SettingsDivider()
                         Link(destination: AppLinks.icpFiling) {
@@ -820,8 +839,8 @@ private struct AppSupportView: View {
             ScrollView {
                 VStack(alignment: .leading, spacing: 14) {
                     VStack(alignment: .leading, spacing: 9) {
-                        Text("词鲸支持中心").font(.system(size: 24, weight: .bold, design: .rounded))
-                        Text("常见问题可直接在应用内查看，不会跳转到尚未正式上线的外部网页。")
+                        Text("词鲸帮助中心").font(.system(size: 24, weight: .bold, design: .rounded))
+                        Text("常见问题可直接在应用内查看。没解决的，用下方「意见反馈」告诉我们，会带上版本和机型，不必自己填。")
                             .font(CiJingTypography.body).foregroundStyle(CiJingTheme.secondary).lineSpacing(5)
                     }.cijingCard(padding: 22)
 
@@ -835,16 +854,36 @@ private struct AppSupportView: View {
                     }
 
                     Link(destination: AppLinks.contact) {
-                        Label("邮件联系 zdjoey@126.com", systemImage: "envelope.fill")
+                        Label("邮件联系 zdjoey@126.com", systemImage: "envelope")
+                            .font(CiJingTypography.rowTitle)
                             .frame(maxWidth: .infinity)
+                            .padding(.vertical, 6)
                     }
-                    .buttonStyle(PrimaryButtonStyle())
+                    .foregroundStyle(CiJingTheme.secondary)
                 }
                 .padding(18)
+                .padding(.bottom, 70)
             }
         }
-        .navigationTitle("支持与帮助")
+        .safeAreaInset(edge: .bottom, spacing: 0) {
+            // 常见问题解决不了的，得有地方说。这个按钮固定在底部，翻到哪儿都在。
+            NavigationLink { FeedbackComposeView() } label: {
+                Label("意见反馈", systemImage: "square.and.pencil").frame(maxWidth: .infinity)
+            }
+            .buttonStyle(PrimaryButtonStyle())
+            .padding(.horizontal, 20)
+            .padding(.vertical, 10)
+            .background(.ultraThinMaterial)
+        }
+        .navigationTitle("帮助与反馈")
         .navigationBarTitleDisplayMode(.inline)
+        .toolbar {
+            ToolbarItem(placement: .topBarTrailing) {
+                NavigationLink { FeedbackHistoryView() } label: {
+                    Label("反馈历史", systemImage: "clock.arrow.circlepath")
+                }
+            }
+        }
     }
 }
 
