@@ -224,3 +224,74 @@ struct SaveWordPayload: Codable {
 }
 
 struct APIErrorPayload: Codable { let message: String?; let error: String?; let errorDescription: String?; let msg: String? }
+
+enum FeedbackCategory: String, Codable, CaseIterable, Identifiable {
+    case bug, suggestion, content, account, other
+    var id: String { rawValue }
+
+    var title: String {
+        switch self {
+        case .bug: "问题反馈"
+        case .suggestion: "功能建议"
+        case .content: "内容纠错"
+        case .account: "账号与数据"
+        case .other: "其他"
+        }
+    }
+
+    var icon: String {
+        switch self {
+        case .bug: "exclamationmark.triangle"
+        case .suggestion: "lightbulb"
+        case .content: "text.badge.xmark"
+        case .account: "person.badge.key"
+        case .other: "ellipsis.bubble"
+        }
+    }
+
+    /// 输入框的占位文案。分类不同，我们需要的信息也不同——提示写在这里，
+    /// 比事后回邮件追问「你用的哪个版本」省一个来回。
+    var placeholder: String {
+        switch self {
+        case .bug: "描述你遇到的问题：在哪个页面、点了什么、看到什么结果。版本和机型会自动附上。"
+        case .suggestion: "你希望词鲸多做点什么？说说你打算用它解决的问题。"
+        case .content: "哪个单词或哪篇短文的内容不对？把原文和你认为正确的说法一起写下来。"
+        case .account: "描述账号或数据上的异常。请勿填写密码、验证码或访问令牌。"
+        case .other: "你可以描述你遇到的问题"
+        }
+    }
+}
+
+enum FeedbackStatus: String, Codable {
+    case open
+    case inProgress = "in_progress"
+    case resolved
+
+    var title: String {
+        switch self {
+        case .open: "待处理"
+        case .inProgress: "处理中"
+        case .resolved: "已回复"
+        }
+    }
+}
+
+/// 客户端提交的一条反馈。`userId` 由数据库默认值 `auth.uid()` 填，不从客户端传。
+struct FeedbackDraft: Codable {
+    let category: FeedbackCategory
+    let content: String
+    let contact: String?
+    let appVersion: String
+    let device: String
+    let osVersion: String
+}
+
+struct FeedbackItem: Codable, Identifiable {
+    let id: UUID
+    let category: FeedbackCategory
+    let content: String
+    let status: FeedbackStatus
+    let reply: String?
+    let createdAt: String
+    let repliedAt: String?
+}
