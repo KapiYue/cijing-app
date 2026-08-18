@@ -24,6 +24,21 @@
 	<false/>
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
+<!--
+	  以下两组键只在 Debug 构建里出现，Release（含 Xcode Cloud 出的送审包）里不存在。
+	  它们是 docs/app-store-release-checklist.md 12.3 节本机联调用的：客户端连
+	  http://127.0.0.1:54321 或 Mac 局域网 IP 上的本地 Supabase，没有它们 ATS 会拦掉。
+	  但对正式包来说，声明「需要访问本地网络」和「允许明文 HTTP」都是 Guideline 5.1.1
+	  的现成质疑点——App 上线后根本不连本地网络。1.0 审核员没追问，不代表下一个会放过。
+
+	  实现方式：INFOPLIST_PREPROCESS = YES（两个配置都开），
+	  INFOPLIST_PREPROCESSOR_DEFINITIONS = CIJING_DEBUG_BUILD=1（只在 Debug 配置里定义）。
+	  -traditional-cpp 是必须的：默认模式下 C 预处理器会把 DOCTYPE 里 http:// 之后的内容
+	  当成行注释吃掉，生成的 plist 直接坏掉。
+
+	  改这里之前先读上面这段。想验证有没有生效，见 12.2 节那条命令。
+	-->
+#ifdef CIJING_DEBUG_BUILD
 	<key>NSAppTransportSecurity</key>
 	<dict>
 		<key>NSAllowsLocalNetworking</key>
@@ -42,10 +57,11 @@
 			</dict>
 		</dict>
 	</dict>
+	<key>NSLocalNetworkUsageDescription</key>
+	<string>本机联调时需要通过同一局域网连接这台 Mac 上运行的词鲸调试服务。仅调试版本包含此项。</string>
+#endif
 	<key>NSMicrophoneUsageDescription</key>
 	<string>跟读模式需要录制你的朗读并提供文字反馈。</string>
-	<key>NSLocalNetworkUsageDescription</key>
-	<string>上线前真机联调需要通过同一局域网连接这台 Mac 上运行的词鲸调试服务。</string>
 	<key>NSSpeechRecognitionUsageDescription</key>
 	<string>跟读模式使用语音识别显示你的朗读内容并给出准确度反馈。</string>
 	<key>UIApplicationSceneManifest</key>

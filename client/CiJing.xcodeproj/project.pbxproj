@@ -193,11 +193,14 @@
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = CiJing/Info.plist;
+				INFOPLIST_OTHER_PREPROCESSOR_FLAGS = "-traditional-cpp";
+				INFOPLIST_PREPROCESS = YES;
+				INFOPLIST_PREPROCESSOR_DEFINITIONS = "CIJING_DEBUG_BUILD=1";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 1.0;
+				MARKETING_VERSION = 1.0.1;
 				PRODUCT_BUNDLE_IDENTIFIER = "com.joy-coder.cijingapp";
 				PRODUCT_MODULE_NAME = CiJing;
 				PRODUCT_NAME = "词鲸背单词";
@@ -218,11 +221,13 @@
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = CiJing/Info.plist;
+				INFOPLIST_OTHER_PREPROCESSOR_FLAGS = "-traditional-cpp";
+				INFOPLIST_PREPROCESS = YES;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 1.0;
+				MARKETING_VERSION = 1.0.1;
 				PRODUCT_BUNDLE_IDENTIFIER = "com.joy-coder.cijingapp";
 				PRODUCT_MODULE_NAME = CiJing;
 				PRODUCT_NAME = "词鲸背单词";
