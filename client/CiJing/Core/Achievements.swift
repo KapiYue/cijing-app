@@ -59,10 +59,14 @@ struct AchievementTrack: Identifiable {
 }
 
 enum AchievementCatalog {
-    /// 首版只做两条线：连续天数与阅读篇数。
+    /// 三条线：连续天数、阅读篇数、词汇量。
     ///
-    /// 这两条的数据最扎实、语义最清楚，也正好覆盖「每天都来」和「今天继续学」
-    /// 两种情形。词汇量、正确率等留到有真实反馈后再加，别一上来铺满。
+    /// 前两条覆盖「每天都来」和「今天继续学」；`mastered` 覆盖「学到了什么」——
+    /// 前两条衡量的都是行为，只有它衡量结果，缺了这一条，用户再怎么坚持也看不到
+    /// 词汇量本身在涨。
+    ///
+    /// 三条线的当前值全部来自 `get_daily_plan` 已有的返回字段，**没有一条需要新的
+    /// 后端改动**。正确率那条要聚合 `practice_attempts`，得单开一份迁移，留到下一版。
     static let streak = AchievementTrack(
         id: "streak",
         name: "连续学习",
@@ -81,7 +85,22 @@ enum AchievementCatalog {
         requirement: { count in count == 1 ? "读完第一篇个性化短文" : "累计读完 \(count) 篇短文" }
     )
 
-    static let all: [AchievementTrack] = [streak, reading]
+    /// 用「已掌握」而不是「已收藏」：收藏只是把词放进来，涨得快也太廉价，
+    /// 挂成就会变成鼓励囤词。`mastered` 要真的复习到位才会置位，才配得上徽章。
+    ///
+    /// 门槛比另外两条稀疏（10 / 50 / 200 / 500），因为掌握一个词的代价远高于
+    /// 读完一篇短文或来一天。审核演示账号当前是 66，正好落在银章档，
+    /// 铜银两级看得到、金铂两级够得着。
+    static let mastered = AchievementTrack(
+        id: "mastered",
+        name: "词汇量",
+        icon: "checkmark.seal.fill",
+        thresholds: [10, 50, 200, 500],
+        titles: ["初识十词", "五十词在握", "两百词傍身", "五百词成城"],
+        requirement: { count in "累计掌握 \(count) 个单词" }
+    )
+
+    static let all: [AchievementTrack] = [streak, reading, mastered]
 
     /// 从今日计划里取每条线的当前值。连续天数用的是 `completed = true` 的口径，
     /// 与练习总结页的完成判定一致（见 202608170003 迁移）。
@@ -89,6 +108,7 @@ enum AchievementCatalog {
         switch track.id {
         case streak.id: plan.streakDays
         case reading.id: plan.readingTotal
+        case mastered.id: plan.masteredCount
         default: 0
         }
     }
