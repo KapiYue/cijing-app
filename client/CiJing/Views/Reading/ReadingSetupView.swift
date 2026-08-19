@@ -55,7 +55,22 @@ struct ReadingSetupView: View {
                     .transition(.opacity)
                     .zIndex(2)
             }
-        }.toolbar { ToolbarItem(placement: .topBarLeading) { Button("取消") { dismiss() } } }
+        }.toolbar {
+            // 本页有两种打开方式，出口不一样：
+            //   * fullScreenCover（首页「开启今日学习」、阅读页）——没有返回按钮，
+            //     「取消」是唯一出口，必须有；
+            //   * NavigationLink 推入（探索 → 生成短文）——系统已经给了「返回」，
+            //     再挂一个「取消」就是两个并排的返回键，纯属多余。
+            // 判据用 `onFinish` 是否为 nil：cover 的两个调用点都传了它（用来收起
+            // 自己），push 的调用点 `ReadingSetupView()` 没传。
+            //
+            // ⚠️ **不要改用 `@Environment(\.isPresented)`**，试过了，不行：
+            // NavigationStack 推进来的目标页它同样返回 true，区分不出模态和 push，
+            // 结果是「取消」照样两个都显示。
+            if onFinish != nil {
+                ToolbarItem(placement: .topBarLeading) { Button("取消") { dismiss() } }
+            }
+        }
             .task {
                 if ProcessInfo.processInfo.arguments.contains("-ui-preview") {
                     targets = store.words

@@ -123,3 +123,95 @@ struct AchievementUnlock: Identifiable {
     var title: String { track.title(for: tier) }
     var requirement: String { track.requirement(track.threshold(for: tier)) }
 }
+
+/// 成就常驻展示位，练习总结页与「学习成就」页共用。
+///
+/// 在此之前成就唯一的露面机会是跨级那一瞬间的弹窗（`badgeOverlay`）——用户看不到
+/// 自己有哪几条线、各自到了哪一档、离下一档还差多少，徽章拿到手就消失了。
+struct AchievementBoard: View {
+    let plan: DailyPlan
+    /// 总结页里它是众多卡片之一，需要标题；独立页里标题已经在导航栏上了。
+    var showsHeading = true
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 14) {
+            if showsHeading { Label("成就", systemImage: "rosette").font(.headline) }
+            ForEach(AchievementCatalog.all) { track in
+                AchievementProgressRow(track: track, value: AchievementCatalog.value(for: track, plan: plan))
+            }
+            Text("徽章只在跨级时弹一次，这里随时可以回来看进度")
+                .font(.caption2).foregroundStyle(CiJingTheme.secondary)
+        }.cijingCard()
+    }
+}
+
+/// 独立的成就页。首页「连续 N 天」那枚 pill 点进来，不必先学完一轮才看得到。
+struct AchievementsView: View {
+    @EnvironmentObject private var store: AppStore
+
+    var body: some View {
+        ZStack {
+            PaperBackground()
+            ScrollView {
+                VStack(alignment: .leading, spacing: 18) {
+                    VStack(alignment: .leading, spacing: 8) {
+                        Text("你已经走到这里")
+                            .font(.system(size: 24, weight: .bold, design: .rounded))
+                        Text("每条线都按数值分四档，同一枚徽章会原地升级。等级由你的真实数据推导，不会因为换设备而丢。")
+                            .font(CiJingTypography.body).foregroundStyle(CiJingTheme.secondary).lineSpacing(5)
+                    }.cijingCard(padding: 22)
+
+                    AchievementBoard(plan: store.plan, showsHeading: false)
+                }
+                .padding(18)
+                .padding(.bottom, 90)
+            }
+            .refreshable { await store.refreshAll() }
+        }
+        .navigationTitle("学习成就")
+        .navigationBarTitleDisplayMode(.inline)
+    }
+}
+
+/// 一条成就线的当前进度：已达档位 + 距下一档还差多少。
+private struct AchievementProgressRow: View {
+    let track: AchievementTrack
+    let value: Int
+
+    var body: some View {
+        let tier = track.tier(for: value)
+        let next = track.next(after: tier)
+        // 进度条量的是「当前档到下一档」这一段，不是从零开始——否则铂金前夜看着
+        // 才走了一半，反而像退步了。满级时填满。
+        let floorValue = tier.map { track.threshold(for: $0) } ?? 0
+        let progress: Double = {
+            guard let next else { return 1 }
+            let span = Double(next.threshold - floorValue)
+            guard span > 0 else { return 1 }
+            return min(1, max(0, Double(value - floorValue) / span))
+        }()
+
+        VStack(alignment: .leading, spacing: 7) {
+            HStack(spacing: 9) {
+                Image(systemName: track.icon)
+                    .font(.system(size: 13, weight: .bold))
+                    .foregroundStyle(tier?.color ?? CiJingTheme.secondary)
+                    .frame(width: 28, height: 28)
+                    .background((tier?.color ?? CiJingTheme.secondary).opacity(0.15), in: RoundedRectangle(cornerRadius: 10))
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(track.name).font(.subheadline.bold()).foregroundStyle(CiJingTheme.ink)
+                    Text(tier.map { "\(track.title(for: $0)) · \($0.title)" } ?? "还未解锁")
+                        .font(.caption).foregroundStyle(tier == nil ? CiJingTheme.secondary : (tier?.color ?? CiJingTheme.secondary))
+                }
+                Spacer()
+                Text("\(value)").font(.system(size: 17, weight: .bold, design: .rounded)).foregroundStyle(CiJingTheme.ink)
+            }
+
+            ProgressView(value: progress)
+                .tint(tier?.color ?? CiJingTheme.purple)
+
+            Text(next.map { "距 \(track.title(for: $0.tier)) 还差 \(max(0, $0.threshold - value))" } ?? "已满级")
+                .font(.caption2).foregroundStyle(CiJingTheme.secondary)
+        }
+    }
+}

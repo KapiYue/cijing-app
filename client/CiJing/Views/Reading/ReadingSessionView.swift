@@ -5,7 +5,6 @@ struct SelectedReadingWord: Identifiable { let id = UUID(); let term, sentence: 
 struct ReadingSessionView: View {
     @EnvironmentObject private var store: AppStore
     @Environment(\.dismiss) private var dismiss
-    @Environment(\.appTabBarHidden) private var tabBarHidden
     @StateObject private var speech = SpeechService()
     @State private var displayed: ReadingSession
     @State private var selectedWord: SelectedReadingWord?
@@ -90,8 +89,8 @@ struct ReadingSessionView: View {
         .alert("无法朗读", isPresented: Binding(get: { speech.errorMessage != nil }, set: { if !$0 { speech.errorMessage = nil } })) {
             Button("好") {}
         } message: { Text(speech.errorMessage ?? "") }
-        .onAppear { tabBarHidden.wrappedValue = true }
-        .onDisappear { speech.stop(); tabBarHidden.wrappedValue = false }
+        .onDisappear { speech.stop() }
+        .hidesAppTabBar()
     }
 
     private var readingHeader: some View {

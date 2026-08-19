@@ -68,6 +68,7 @@ struct FeedbackComposeView: View {
             if submitted { successView } else { formView }
         }
         .navigationTitle("意见反馈")
+        .hidesAppTabBar()
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
             ToolbarItem(placement: .topBarTrailing) {
@@ -140,14 +141,6 @@ struct FeedbackComposeView: View {
                 .frame(maxWidth: .infinity, alignment: .leading)
                 .cijingCard(padding: 18)
 
-                HStack(alignment: .top, spacing: 8) {
-                    Image(systemName: "info.circle").font(.system(size: 12))
-                    Text("提交时会一并附上 \(FeedbackEnvironment.summary)，只用于定位问题。")
-                        .lineSpacing(3)
-                }
-                .font(CiJingTypography.supporting)
-                .foregroundStyle(CiJingTheme.secondary)
-                .padding(.horizontal, 4)
             }
             .padding(18)
             .padding(.bottom, 80)
