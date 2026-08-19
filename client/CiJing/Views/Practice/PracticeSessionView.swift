@@ -88,10 +88,21 @@ struct PracticeSessionView: View {
         .navigationTitle("巩固练习")
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
-            ToolbarItem(placement: .topBarLeading) { Button("退出") { dismiss() } }
+            // 与 ReadingSetupView 同一个判据、同一个理由：本页两种打开方式，出口不同。
+            //   * fullScreenCover（阅读页读完 → 练习）——没有返回按钮，「退出」是唯一出口；
+            //   * NavigationLink 推入（探索 → 巩固练习）——系统已经给了「返回」，
+            //     再挂「退出」就是两个并排的返回键。
+            // cover 的调用点传了 onFinish（用来收起自己），push 的没传。
+            if onFinish != nil {
+                ToolbarItem(placement: .topBarLeading) { Button("退出") { dismiss() } }
+            }
         }
         .onAppear { if questions.isEmpty { buildQuestions() } }
         .onDisappear { speech.stop() }
+        // 底部有两处固定内容会被浮动 Tab 栏盖住：答题后的结果面板、总结页的
+        // 「完成」按钮（safeAreaInset）。走阅读流程进来时 ReadingSessionView 已经
+        // 藏了 Tab 栏，所以一直没暴露；从「探索 → 巩固练习」push 进来才会踩到。
+        .hidesAppTabBar()
     }
 
     @ViewBuilder private var content: some View {
@@ -331,6 +342,8 @@ struct PracticeSessionView: View {
                     AbilityRow(title: "语境", progress: performance(.contextChoice), color: .orange)
                     Text("对比的是你最近的整体正确率").font(.caption2).foregroundStyle(CiJingTheme.secondary)
                 }.cijingCard()
+
+                AchievementBoard(plan: store.plan)
 
                 if !missedWords.isEmpty {
                     VStack(alignment: .leading, spacing: 0) {
@@ -622,3 +635,5 @@ private struct AbilityRow: View {
         }
     }
 }
+
+

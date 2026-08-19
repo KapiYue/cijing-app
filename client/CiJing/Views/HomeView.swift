@@ -6,21 +6,47 @@ struct HomeView: View {
     @State private var showingSetup = false
     @State private var notice: String?
 
-    private let exploreItems: [ExploreItem] = [
-        .init(destination: .readingSetup, title: "生成短文", subtitle: "把弱词写进故事", badge: "AI", icon: "wand.and.stars", tint: CiJingTheme.purple),
-        .init(destination: .practice, title: "巩固练习", subtitle: "读完立即练一轮", badge: "12 题", icon: "checkmark.circle", tint: CiJingTheme.rose),
-        .init(destination: .progress, title: "学习进度", subtitle: "看见每天的积累", badge: "+18%", icon: "chart.bar", tint: CiJingTheme.success),
-        .init(destination: .weakWords, title: "薄弱词", subtitle: "优先攻克易错词", badge: "2 词", icon: "exclamationmark", tint: CiJingTheme.danger),
-        .init(destination: .shadowing, title: "跟读训练", subtitle: "逐句听读与纠音", badge: "8 min", icon: "mic.fill", tint: CiJingTheme.warm),
-        .init(destination: .readingHistory, title: "阅读历史", subtitle: "继续最近的短文", badge: "3 篇", icon: "clock.arrow.circlepath", tint: CiJingTheme.blue)
-    ]
+    /// 探索卡片的角标。**这里的每一个数都必须来自 `store`**——原先六个角标写的是
+    /// `12 题` / `+18%` / `2 词` / `8 min` / `3 篇` 五个硬编码字符串，不随账号变化，
+    /// 于是出现过「首页显示短文 1、阅读历史角标写 3 篇」这种当场自相矛盾的画面。
+    /// 与 1.0.1 删掉的硬编码徽章是同一类问题，那次漏了这里。
+    ///
+    /// 推导不出真实值的就**不显示角标**（`nil`），不要为了视觉整齐编一个。
+    /// 「跟读训练」的时长依赖具体短文，进首页时算不出来，所以留空。
+    ///
+    /// 🔴 **角标必须和「点进去看到的东西」同源**，光是「真实数据」还不够。
+    /// 初版改造踩了两次：
+    ///   * 巩固练习曾接 `plan.reviewDue`，但点进去练的是 `recentReadings.first`
+    ///     那篇短文的目标词，跟待复习队列毫无关系；而且 `review_due` 在 SQL 里
+    ///     被 `least(…, daily_review_goal)` 截过，本身也不是「总共待复习多少」。
+    ///   * 阅读历史曾接 `plan.reading_total`，那是**只数已读完**的
+    ///     （`completed_at is not null`）；而阅读历史页列的是 `recentReadings`，
+    ///     不论读没读完都在里面。生成了没读完的短文会出现在列表里却不计入角标。
+    /// 现在两个都改成与目标页同一个数据源。
+    private var exploreItems: [ExploreItem] {
+        [
+            .init(destination: .readingSetup, title: "生成短文", subtitle: "把弱词写进故事", badge: "AI", icon: "wand.and.stars", tint: CiJingTheme.purple),
+            .init(destination: .practice, title: "巩固练习", subtitle: "读完立即练一轮", badge: (store.recentReadings.first?.targetTerms.count).map { "\($0) 词" }, icon: "checkmark.circle", tint: CiJingTheme.rose),
+            .init(destination: .progress, title: "学习进度", subtitle: "看见每天的积累", badge: store.plan.streakDays > 0 ? "连续 \(store.plan.streakDays) 天" : nil, icon: "chart.bar", tint: CiJingTheme.success),
+            .init(destination: .weakWords, title: "薄弱词", subtitle: "优先攻克易错词", badge: store.plan.weakCount > 0 ? "\(store.plan.weakCount) 词" : nil, icon: "exclamationmark", tint: CiJingTheme.danger),
+            .init(destination: .shadowing, title: "跟读训练", subtitle: "逐句听读与纠音", badge: nil, icon: "mic.fill", tint: CiJingTheme.warm),
+            // 与阅读历史页列的是同一批（`recentReadings`，服务端 limit 20）。
+            // 上限 20 意味着超过之后角标不再增长——但页面本身也只展示这 20 条，
+            // 数字与点进去看到的一致，这比显示一个点不开的总数更有用。
+            .init(destination: .readingHistory, title: "阅读历史", subtitle: "继续最近的短文", badge: store.recentReadings.isEmpty ? nil : "\(store.recentReadings.count) 篇", icon: "clock.arrow.circlepath", tint: CiJingTheme.blue)
+        ]
+    }
 
     var body: some View {
         ZStack {
             PaperBackground()
             if store.hasLoadedAccountData {
                 ScrollView {
-                    LazyVStack(alignment: .leading, spacing: 0) {
+                    // 🔴 用 VStack 不用 LazyVStack。Lazy 版会把滚出屏幕的行从视图树上
+                    // 拆掉，而这里面有通往学习流程的 NavigationLink——来源一旦消失，
+                    // SwiftUI 会把推进去的页面连同盖在它上面的 fullScreenCover 一起弹掉。
+                    // 首页内容是有界的（固定区块 + 几篇短文），不 Lazy 没有性能问题。
+                    VStack(alignment: .leading, spacing: 0) {
                         PageHeader(
                             title: greeting,
                             subtitle: store.plan.completedToday ? "今天也完成了一次小小的抵达" : "把今天收藏的词，读成一个故事",
@@ -38,12 +64,25 @@ struct HomeView: View {
                             .padding(.bottom, 13)
                         recentReading
 
-                        if store.plan.completedToday {
-                            SectionHeading(title: "探索", detail: "换一种方式记住")
-                                .padding(.top, 25)
-                                .padding(.bottom, 13)
-                            exploreGrid
-                        }
+                        // 🔴 **不要再把「探索」包进 `if store.plan.completedToday`。**
+                        //
+                        // 通往 ReadingSetupView 的 NavigationLink 就在 exploreGrid 里。
+                        // 包在这个条件下时，用户进入生成短文之后，只要 store.plan 被刷新
+                        // （.task 的 refreshAll()、下拉刷新、或流程内部触发的刷新）让这个
+                        // 分支重新求值，NavigationLink 的来源就从视图树上消失，SwiftUI
+                        // 随即弹掉推进去的页面——盖在它上面的阅读页、练习页一起塌。
+                        // 链路是 HomeView --push--> ReadingSetupView --cover--> ReadingSessionView
+                        // --cover--> PracticeSessionView，抽掉最底下一环，上面三层全没。
+                        //
+                        // 这就是 11.4「学习中突然回到首页」的真正根因（此前误归到 087f884
+                        // 修的两个「用户取消」诱因上，那两个是真 bug 但不是这个的原因）。
+                        //
+                        // 顺带一个产品上的好处：没完成今日学习时本来也该能生成短文、查薄弱词，
+                        // 原先要先完成学习才看得到这些入口，本身就说不通。
+                        SectionHeading(title: "探索", detail: "换一种方式记住")
+                            .padding(.top, 25)
+                            .padding(.bottom, 13)
+                        exploreGrid
 
                         tipCard
                             .padding(.top, 14)
@@ -134,11 +173,20 @@ struct HomeView: View {
                     Text("学习已完成").font(.system(size: 20, weight: .bold, design: .rounded))
                 }
                 Spacer()
-                Label("连续 \(store.plan.streakDays) 天", systemImage: "flame.fill")
+                // 点进成就页。此前成就只在练习总结页出现，也就是**必须学完一轮**
+                // 才看得到自己有哪几条线、到了哪一档——想随手看一眼进度没有入口。
+                // 连续天数本身就是其中一条线，从它进去最自然。
+                NavigationLink { AchievementsView() } label: {
+                    HStack(spacing: 4) {
+                        Label("连续 \(store.plan.streakDays) 天", systemImage: "flame.fill")
+                        Image(systemName: "chevron.right").font(.system(size: 9, weight: .bold))
+                    }
                     .font(.caption.bold())
                     .foregroundStyle(CiJingTheme.warmStrong)
                     .padding(.horizontal, 10).padding(.vertical, 7)
                     .background(CiJingTheme.warmSoft, in: RoundedRectangle(cornerRadius: 12))
+                }
+                .buttonStyle(.plain)
             }
             HStack(spacing: 8) {
                 PlanMetric(number: "\(store.plan.newSuggested)", label: "新词", tint: CiJingTheme.purpleSoft)
@@ -293,16 +341,22 @@ private struct PlanMetric: View {
 }
 
 private struct ExploreItem: Identifiable {
-    let id = UUID()
+    /// 🔴 **必须用 destination 当 id，不能用 `UUID()`。**
+    /// `exploreItems` 现在是计算属性（角标要读实时数据），每次求值都会重建数组；
+    /// 如果 id 是 `UUID()`，每次求值 ForEach 都认为这是一批全新的行，
+    /// 于是把 NavigationLink 连同它推出去的整条学习流程一起拆掉——正是本次修的
+    /// 「中途弹回首页」那个 bug 的更严重版本。destination 天然唯一且稳定。
+    var id: ExploreDestination { destination }
     let destination: ExploreDestination
     let title: String
     let subtitle: String
-    let badge: String
+    /// 推导不出真实值时为 nil，此时不渲染角标。**不要在这里填占位字符串。**
+    let badge: String?
     let icon: String
     let tint: Color
 }
 
-private enum ExploreDestination {
+private enum ExploreDestination: Hashable {
     case readingSetup, practice, progress, weakWords, shadowing, readingHistory
 }
 
@@ -338,7 +392,9 @@ private struct ExploreCard: View {
                     .frame(width: 34, height: 34)
                     .background(item.tint.opacity(0.15), in: RoundedRectangle(cornerRadius: 12))
                 Spacer()
-                Text(item.badge).font(.system(size: 11, weight: .heavy)).foregroundStyle(item.tint).padding(.horizontal, 6).padding(.vertical, 4).background(item.tint.opacity(0.15), in: RoundedRectangle(cornerRadius: 7))
+                if let badge = item.badge {
+                    Text(badge).font(.system(size: 11, weight: .heavy)).foregroundStyle(item.tint).padding(.horizontal, 6).padding(.vertical, 4).background(item.tint.opacity(0.15), in: RoundedRectangle(cornerRadius: 7))
+                }
             }
             Spacer(minLength: 8)
             Text(item.title).font(.system(size: 14, weight: .bold, design: .rounded)).foregroundStyle(CiJingTheme.ink)

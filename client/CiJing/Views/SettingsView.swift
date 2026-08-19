@@ -700,7 +700,7 @@ private enum LegalDocument: String, CaseIterable, Identifiable {
                 ("学习与内容信息", "收集收藏单词、查询上下文、笔记、复习结果、学习偏好、AI 短文及阅读进度，用于提供词库、个性化阅读和间隔复习。"),
                 ("麦克风与语音识别", "仅在你主动使用跟读功能时请求系统权限，用于生成本次朗读的文字和准确度反馈；不会在后台持续录音。"),
                 ("设备与诊断信息", "网络请求可能包含 IP 地址、设备系统版本和必要日志，用于保障服务安全与排查故障。第一版不接入广告追踪。"),
-                ("意见反馈", "你主动提交的反馈正文、分类和选填的回信方式，连同客户端版本、设备型号和系统版本一起保存，用于复现问题并回复你。提交页面会明示随附内容。")
+                ("意见反馈", "你主动提交的反馈正文、分类和选填的回信方式，连同客户端版本、设备型号和系统版本一起保存，用于复现问题并回复你。附带的三项不用于识别你的身份。")
             ]
         case .localSharing:
             return [
@@ -877,6 +877,7 @@ private struct AppSupportView: View {
         }
         .navigationTitle("帮助与反馈")
         .navigationBarTitleDisplayMode(.inline)
+        .hidesAppTabBar()
         .toolbar {
             ToolbarItem(placement: .topBarTrailing) {
                 NavigationLink { FeedbackHistoryView() } label: {

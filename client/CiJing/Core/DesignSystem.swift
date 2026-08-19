@@ -1,14 +1,42 @@
 import SwiftUI
 import UIKit
 
-private struct AppTabBarHiddenKey: EnvironmentKey {
-    static let defaultValue: Binding<Bool> = .constant(false)
+/// 请求隐藏浮动 Tab 栏的页面**计数**，不是布尔开关。
+///
+/// 🔴 **为什么必须是计数器**：用 `Binding<Bool>` 时，「进页面设 true、离开设 false」
+/// 在 push 场景下必然失效——SwiftUI 推入新页时的回调顺序是
+/// **子页 `onAppear`（设 true）→ 父页 `onDisappear`（设 false）**，
+/// 于是子页刚藏好又被父页放了回来，子页底部的固定按钮当场被 Tab 栏盖死。
+/// 这个坑已经踩过三次（阅读设置页、帮助与反馈页、意见反馈页）。
+///
+/// 计数器对顺序免疫：push 过程中计数在 2 和 1 之间变化，始终 > 0；
+/// 只有整条分支都退出时才归零。
+private struct AppTabBarHideRequestsKey: EnvironmentKey {
+    static let defaultValue: Binding<Int> = .constant(0)
 }
 
 extension EnvironmentValues {
-    var appTabBarHidden: Binding<Bool> {
-        get { self[AppTabBarHiddenKey.self] }
-        set { self[AppTabBarHiddenKey.self] = newValue }
+    var appTabBarHideRequests: Binding<Int> {
+        get { self[AppTabBarHideRequestsKey.self] }
+        set { self[AppTabBarHideRequestsKey.self] = newValue }
+    }
+}
+
+extension View {
+    /// 本页在屏幕上期间隐藏浮动 Tab 栏。
+    ///
+    /// **任何在底部用 `.safeAreaInset` 放固定按钮的页面都必须调用它**——Tab 栏是
+    /// `MainTabView` 里的 overlay，不参与安全区计算，不藏起来按钮就会被它整个盖住。
+    func hidesAppTabBar() -> some View { modifier(HidesAppTabBar()) }
+}
+
+private struct HidesAppTabBar: ViewModifier {
+    @Environment(\.appTabBarHideRequests) private var requests
+
+    func body(content: Content) -> some View {
+        content
+            .onAppear { requests.wrappedValue += 1 }
+            .onDisappear { requests.wrappedValue = max(0, requests.wrappedValue - 1) }
     }
 }
 
