@@ -70,3 +70,17 @@ jobs:
           git add HEARTBEAT
           git commit -m "chore: keepalive $(date -u +%Y-%m-%dT%H:%M:%SZ) [ci skip]"
           git push origin keepalive
+
+      # 模型生命周期巡检。必须放在最后一步：
+      #   前两步（Supabase 保活、心跳推送）关系到后端和定时任务自身不死，
+      #   而这一步失败只是「该换模型了」的通知。步骤失败会中断后续步骤，所以顺序
+      #   反过来的话，一次模型告警就会顺手把保活也停掉。
+      #
+      # OPENROUTER_MODEL 不是敏感值（.env.example 和文档里都是明文），但必须与
+      # 生产 Supabase secret 保持一致 —— 换模型时记得同步改这里，否则巡检的是
+      # 一个线上早就不用的标识。设了仓库变量就用仓库变量。
+      - name: Check model lifecycle
+        if: always()
+        env:
+          OPENROUTER_MODEL: ${{ vars.OPENROUTER_MODEL || 'qwen/qwen3.7-flash' }}
+        run: node scripts/check-model.mjs

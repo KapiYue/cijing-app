@@ -47,9 +47,9 @@ export async function openRouterJSON<T>(options: {
         reasoning: { enabled: false },
         provider: {
           // Reject endpoints that may retain prompts for training or other
-          // non-transient collection. Qwen3.6 Flash is not currently listed as
-          // a ZDR endpoint, so the stricter `zdr: true` flag would make the
-          // configured production model unavailable.
+          // non-transient collection. The configured production model is not
+          // confirmed to be on OpenRouter's ZDR endpoint list, so the stricter
+          // `zdr: true` flag would risk making it unavailable.
           data_collection: "deny",
         },
         response_format: {

@@ -22,13 +22,13 @@ Free Dictionary API 服务端项目自身的 GPL-3.0 许可与接口返回内容
 
 ## OpenRouter 与 Qwen
 
-生产配置模型为 `qwen/qwen3.6-flash`，所有请求由已认证的 Supabase Edge Functions 发出。2026 年 8 月 2 日核对结果：
+生产配置模型为 `qwen/qwen3.7-flash`（2026-08-26 由 `qwen/qwen3.6-flash` 换代，动机与取舍见 [`docs/qwen/qwen3.7-flash.md`](qwen/qwen3.7-flash.md)）。所有请求由已认证的 Supabase Edge Functions 发出。2026 年 8 月 26 日核对结果：
 
 - OpenRouter 条款把输入和输出合称 User Content；输入权利仍归输入者，输出权利由具体 Model Terms 决定；
 - OpenRouter 要求输入者拥有提交输入所需的权利，并要求同时遵守模型供应商条款；
 - OpenRouter 的数据控制支持 `provider.data_collection = "deny"`，项目已在每次请求中强制设置，拒绝会收集请求用于训练的端点；
-- Qwen3.6 Flash 当日不在 OpenRouter 公布的 ZDR 端点列表中，因此项目没有虚构“零保留”承诺；隐私政策继续披露上游处理与可能的跨境处理；
-- OpenRouter 当日模型页只显示 Alibaba 单一提供方，未完整展示可独立归档的输出权利条款。项目因此只在语言学习功能中展示输出，不宣称人工创作、独占权利或无侵权保证，并保留 AI 内容提示。
+- 未能确认 Qwen3.7 Flash 在 OpenRouter 公布的 ZDR 端点列表中，因此项目没有虚构“零保留”承诺；隐私政策继续披露上游处理与可能的跨境处理；
+- OpenRouter 当日模型页只显示 Alibaba 单一提供方（总部 SG，数据中心 SG 与 CN），与换代前同一供应方、同一套条款与隐私政策；该页未完整展示可独立归档的输出权利条款。项目因此只在语言学习功能中展示输出，不宣称人工创作、独占权利或无侵权保证，并保留 AI 内容提示。
 
 换模前必须重新保存模型页、Model Terms、数据政策和地区可用性证据。若无法确认商业展示输出的范围，暂停该模型上线，而不是沿用本记录。
 
@@ -53,4 +53,4 @@ Chrome 扩展只在用户主动选中英文单词并发起查询时读取附近�
 - [OpenRouter Terms of Service](https://openrouter.ai/terms)
 - [OpenRouter Data Collection](https://openrouter.ai/docs/guides/privacy/data-collection)
 - [OpenRouter Provider Routing](https://openrouter.ai/docs/guides/routing/provider-selection)
-- [OpenRouter Qwen3.6 Flash](https://openrouter.ai/qwen/qwen3.6-flash)
+- [OpenRouter Qwen3.7 Flash](https://openrouter.ai/qwen/qwen3.7-flash)

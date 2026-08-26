@@ -65,7 +65,7 @@ supabase/
 - 显式“重新生成”跳过短文缓存；改变主题、文体或难度会得到新键；
 - AI 输出必须通过严格 JSON Schema 和本地类型检查；第一次不合规时只允许一次纠正请求。
 
-默认模型及响应约束见 [`docs/qwen/qwen3.6-flash.md`](../docs/qwen/qwen3.6-flash.md)。
+默认模型及响应约束见 [`docs/qwen/qwen3.7-flash.md`](../docs/qwen/qwen3.7-flash.md)。
 
 ## 本地开发
 
@@ -87,7 +87,7 @@ Edge Functions 需要：
 
 ```dotenv
 OPENROUTER_API_KEY=your_key_here
-OPENROUTER_MODEL=qwen/qwen3.6-flash
+OPENROUTER_MODEL=qwen/qwen3.7-flash
 ```
 
 `make functions` 会从根 `.env` 读取这两项，通过权限为 `0600` 的系统临时文件传给本地 Edge Runtime，并在进程结束后删除临时文件。模型可以换成项目允许且兼容严格 JSON Schema 的 OpenRouter 模型；代码会拒绝 `openai/`、`anthropic/` 和 `google/` 前缀。
