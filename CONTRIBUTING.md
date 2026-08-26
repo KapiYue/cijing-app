@@ -59,7 +59,7 @@ make functions
 make smoke
 ```
 
-`make smoke` verifies the cross-client API path without a paid model call. To exercise one real OpenRouter request, use `node scripts/smoke-test.mjs --ai`. See [supabase/README.md](supabase/README.md) for local services and deployment, [the migration guide](docs/supabase-migration-guide.md) for schema changes, and [the Qwen integration note](docs/qwen/qwen3.6-flash.md) for the AI response contract.
+`make smoke` verifies the cross-client API path without a paid model call (it needs `SUPABASE_SECRET_KEY` in `.env`, because signup requires email confirmation and the test confirms its own throwaway user). To exercise one real OpenRouter request, use `node scripts/smoke-test.mjs --ai`. See [supabase/README.md](supabase/README.md) for local services and deployment, [the migration guide](docs/supabase-migration-guide.md) for schema changes, and [the Qwen integration note](docs/qwen/qwen3.7-flash.md) for the AI response contract.
 
 ## Pull requests
 
