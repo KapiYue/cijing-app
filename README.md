@@ -170,7 +170,7 @@ With Supabase running, `make smoke` verifies the cross-client API flow. Producti
 ## Documentation
 
 - [Supabase architecture, local development, and production operations](supabase/README.md)
-- [Database migration guide](docs/supabase-migration-guide.md) and [Qwen3.6 Flash integration](docs/qwen/qwen3.6-flash.md)
+- [Database migration guide](docs/supabase-migration-guide.md) and [Qwen3.7 Flash integration](docs/qwen/qwen3.7-flash.md)
 - [Trusted Flask server](server/README.md) and [public website](website/README.md)
 - [Privacy policy](docs/privacy-policy.md), [terms of service](docs/terms-of-service.md), and [support](docs/support.md)
 

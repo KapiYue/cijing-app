@@ -167,7 +167,7 @@ make ios-build
 ## 文档导航
 
 - [Supabase 架构、本地开发与生产运维](supabase/README.md)
-- [数据库迁移指南](docs/supabase-migration-guide.md)与 [Qwen3.6 Flash 集成说明](docs/qwen/qwen3.6-flash.md)
+- [数据库迁移指南](docs/supabase-migration-guide.md)与 [Qwen3.7 Flash 集成说明](docs/qwen/qwen3.7-flash.md)
 - [可信 Flask 服务](server/README.md)与[公开网站](website/README.md)
 - [隐私政策](docs/privacy-policy.md)、[使用条款](docs/terms-of-service.md)与[支持说明](docs/support.md)
 

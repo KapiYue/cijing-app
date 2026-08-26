@@ -1,4 +1,4 @@
-.PHONY: config device-config config-check client-config client-config-check supabase-start supabase-stop supabase-reset functions edge-secrets smoke keepalive production-audit production-smoke delete-account-smoke extension-test server-start server-test ios-build verify
+.PHONY: config device-config config-check client-config client-config-check supabase-start supabase-stop supabase-reset functions edge-secrets smoke keepalive model-check production-audit production-smoke delete-account-smoke extension-test server-start server-test ios-build verify
 
 config:
 	node scripts/generate-config.mjs
@@ -33,6 +33,9 @@ smoke:
 
 keepalive:
 	node scripts/keepalive.mjs
+
+model-check:
+	node scripts/check-model.mjs
 
 production-audit:
 	node scripts/audit-production.mjs
