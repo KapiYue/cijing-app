@@ -76,6 +76,12 @@ jobs:
       #   而这一步失败只是「该换模型了」的通知。步骤失败会中断后续步骤，所以顺序
       #   反过来的话，一次模型告警就会顺手把保活也停掉。
       #
+      # ⚠️ 放在最后就必须自己把工作区切回来：上一步 git switch 到了 keepalive
+      #    孤儿分支，那上面只有 HEARTBEAT 一个文件，而同一个 job 的所有步骤共用
+      #    这一个工作区 —— 不切回来，scripts/ 整个目录都不存在（#11 就是这么挂的）。
+      #    在这里切而不是改上一步，是为了让这一步的前置条件自成一体，不去动那两个
+      #    关系到存活的步骤的语义。已经在 main 上时这条命令也是无害的。
+      #
       # OPENROUTER_MODEL 不是敏感值（.env.example 和文档里都是明文），但必须与
       # 生产 Supabase secret 保持一致 —— 换模型时记得同步改这里，否则巡检的是
       # 一个线上早就不用的标识。设了仓库变量就用仓库变量。
@@ -83,4 +89,6 @@ jobs:
         if: always()
         env:
           OPENROUTER_MODEL: ${{ vars.OPENROUTER_MODEL || 'qwen/qwen3.7-flash' }}
-        run: node scripts/check-model.mjs
+        run: |
+          git switch --detach "$GITHUB_SHA"
+          node scripts/check-model.mjs
