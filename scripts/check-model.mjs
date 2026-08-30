@@ -3,6 +3,7 @@
 //   本地：node scripts/check-model.mjs        （模型标识从 .env 读）
 //   CI  ：由 .github/workflows/keepalive.yml 注入 OPENROUTER_MODEL
 //   换模：node scripts/check-model.mjs --live  （多发一次真实请求，见文件末尾）
+//   核对：node scripts/check-model.mjs --accept（人工看过新批次后按下确认，见线索二）
 //
 // 为什么需要这个脚本：
 //   当前模型 qwen/qwen3.7-flash 在 OpenRouter 上只有阿里云一个供应方，没有路由
@@ -12,20 +13,24 @@
 //   这两个数据源都是公开页面，不需要任何 API key。
 //
 // 两条独立的线索，早晚各一条：
-//   1. 阿里云下线表 —— 早期预警。主线模型提前 3 个月、快照模型提前 30 天公布；
-//   2. OpenRouter 端点 —— 兜底告警。模型真下架时端点会消失，属于「已经出事」。
+//   1. OpenRouter 端点 —— 兜底告警。模型真下架时端点会消失，属于「已经出事」；
+//   2. 阿里云下线批次 —— 早期预警。主线模型提前 3 个月、快照模型提前 30 天公布。
 //
-// 不做静默跳过：网络失败、页面改版、表头找不到，一律非零退出。定时任务显示绿色、
+// 不做静默跳过：网络失败、页面改版、批次对不上，一律非零退出。定时任务显示绿色、
 // 实际什么都没检查，正是这个脚本要防的那种失败。
 
+import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { readEnvFile } from "./load-env.mjs";
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const ENDPOINTS_API = "https://openrouter.ai/api/v1/models";
-// 国际站页面（www.alibabacloud.com）不需要登录；help.aliyun.com 是同一份内容的国内镜像。
-const DEPRECATION_PAGE = "https://www.alibabacloud.com/help/en/model-studio/model-depreciation";
+// 2026-08-30 换到国内站：国际站（www.alibabacloud.com）的服务端渲染坏了，返回的
+// 壳子里 $lang、$productId 这些模板变量都没被替换，正文一个字都没有，换 UA 也一样。
+// 国内站是同一份内容，且把正文完整嵌在页面的 __ICE_PAGE_PROPS__ 里，不需要登录。
+const DEPRECATION_PAGE = "https://help.aliyun.com/zh/model-studio/model-depreciation";
+const BATCH_SNAPSHOT = path.join(root, "scripts", "model-deprecation-batches.json");
 
 function readModelId() {
   const fromEnvironment = process.env.OPENROUTER_MODEL;
@@ -41,6 +46,7 @@ if (!modelId) {
 }
 // OpenRouter 标识是 "供应商/模型名"，阿里云文档里只用后半段。
 const bareName = modelId.includes("/") ? modelId.slice(modelId.indexOf("/") + 1) : modelId;
+const today = new Date().toISOString().slice(0, 10);
 
 console.log(`巡检模型：${modelId}\n`);
 
@@ -65,6 +71,12 @@ try {
       console.log(`  供应方 ${endpoint.provider_name}：status=${endpoint.status ?? 0} 近一天可用率=${typeof uptime === "number" ? `${uptime.toFixed(1)}%` : "未知"}`);
       if (!healthy) problems.push(`端点 ${endpoint.provider_name} 状态异常（status=${endpoint.status}）`);
     }
+    // 顺手看一眼 OpenRouter 自己的下线日期字段。它极少填（2026-08-30 抽查 396 个模型
+    // 只有 7 个有值，Qwen 系列一个都没有，连阿里云已公告 10-10 下线的 qwen3-max 都是空），
+    // 所以它只能当白捡的额外信号，绝不能拿来代替线索二。
+    if (data?.expiration_date) {
+      problems.push(`OpenRouter 给 ${modelId} 标了下线日期 ${data.expiration_date}`);
+    }
     // 单供应方本身不是错误，但值得每次打印：它决定了「换模型」是不是唯一的补救手段。
     if (endpoints.length === 1) console.log(`  ⚠️ 只有 ${endpoints[0].provider_name} 一家供应方，无路由兜底\n`);
     else console.log("");
@@ -73,11 +85,21 @@ try {
   problems.push(`访问 OpenRouter 失败：${error instanceof Error ? error.message : error}`);
 }
 
-// ── 线索二：阿里云下线表里有没有它 ────────────────────────────────────────────
+// ── 线索二：阿里云有没有新的下线批次 ──────────────────────────────────────────
 //
-// 这一页的坑：一个模型名会同时出现在「Model name」列和「Replacement model」列
-// —— 后者是说它是别人的接替者，不是它自己要下线（qwen3.6-flash 就是这种情况）。
-// 所以不能 grep 整页，必须按列判断。
+// 2026-08-30 重写。原先这一段是「把下线表按列解析，看 Model name 列里有没有我们的
+// 模型」，它在 #16 挂了 —— 不是模型出事，是那张表没了：
+//
+//   下线页现在只剩「下线模型列表」下面一串按日期分组的小标题，每组指向几条
+//   www.aliyun.com/notice/<id> 官网公告，具体哪些模型下线写在公告里。而公告页是
+//   前端渲染的，清单有的是文字表格、有的干脆是一张图片（118344、118345 都是图），
+//   拿不到 HTML 也 OCR 不了。也就是说：「这个模型有没有被点名」这件事，已经没有
+//   任何一个公开接口能机器判断了。
+//
+// 所以这里换一种问法，把「模型在不在表里」换成「有没有新的批次需要人看」：
+// 页面上未来日期的批次全部记进 scripts/model-deprecation-batches.json，出现新批次
+// 或某个批次追加了公告，就红一次、点名让人去翻公告。批次一年才几次，噪音可以接受，
+// 而漏报的代价是三个 Edge Function 同时挂掉。人工核对完跑 --accept 收进快照。
 
 function stripTags(html) {
   return html
@@ -90,61 +112,137 @@ function stripTags(html) {
     .trim();
 }
 
-// 表格里大量使用 rowspan（同一个下线日期跨十几行），必须还原成网格才能按列取值。
-function toGrid(tableHtml) {
-  const grid = [];
-  const rows = tableHtml.match(/<tr\b[^>]*>[\s\S]*?<\/tr>/gi) ?? [];
-  rows.forEach((rowHtml, rowIndex) => {
-    grid[rowIndex] ??= [];
-    const cells = rowHtml.match(/<t[dh]\b[^>]*>[\s\S]*?<\/t[dh]>/gi) ?? [];
-    let column = 0;
-    for (const cellHtml of cells) {
-      while (grid[rowIndex][column] !== undefined) column += 1; // 跳过被上方 rowspan 占住的格子
-      const rowSpan = Number(cellHtml.match(/rowspan="(\d+)"/i)?.[1] ?? 1);
-      const colSpan = Number(cellHtml.match(/colspan="(\d+)"/i)?.[1] ?? 1);
-      const text = stripTags(cellHtml.replace(/^<t[dh]\b[^>]*>/i, "").replace(/<\/t[dh]>$/i, ""));
-      for (let r = 0; r < rowSpan; r += 1) {
-        grid[rowIndex + r] ??= [];
-        for (let c = 0; c < colSpan; c += 1) grid[rowIndex + r][column + c] = text;
-      }
-      column += colSpan;
+// 标题里塞了一堆 <span class="help-letter-space">，剥完标签会变成「2026 年 10 月 10 日」，
+// 比对前先把空白全去掉。
+const compact = (text) => text.replace(/\s+/g, "");
+
+// 正文以 JSON 字符串的形式挂在 window.__ICE_PAGE_PROPS__ 上，同一行后面还跟着别的
+// 语句，不能整段 JSON.parse，只能自己数花括号找对象结尾（字符串里的括号要跳过）。
+function extractPageProps(html) {
+  const marker = "window.__ICE_PAGE_PROPS__=";
+  const start = html.indexOf(marker);
+  if (start < 0) return null;
+  const body = html.slice(start + marker.length);
+  let depth = 0;
+  let inString = false;
+  let escaped = false;
+  for (let index = 0; index < body.length; index += 1) {
+    const character = body[index];
+    if (inString) {
+      if (escaped) escaped = false;
+      else if (character === "\\") escaped = true;
+      else if (character === '"') inString = false;
+      continue;
     }
-  });
-  return grid;
+    if (character === '"') inString = true;
+    else if (character === "{") depth += 1;
+    else if (character === "}") {
+      depth -= 1;
+      if (depth === 0) {
+        try {
+          return JSON.parse(body.slice(0, index + 1));
+        } catch {
+          return null;
+        }
+      }
+    }
+  }
+  return null;
 }
+
+// 「下线模型列表」下面每个 <h3> 是一个批次，正文里的 notice 链接是该批次的公告。
+function parseBatches(content) {
+  const anchor = content.indexOf('id="下线模型列表"');
+  if (anchor < 0) return null;
+  const section = content.slice(anchor);
+  const batches = [];
+  for (const match of section.matchAll(/<h3\b[^>]*>([\s\S]*?)<\/h3>([\s\S]*?)(?=<h[23]\b|$)/g)) {
+    const heading = compact(stripTags(match[1]));
+    const parts = heading.match(/(\d{4})年(\d{1,2})月(\d{1,2})日/);
+    if (!parts) continue;
+    const date = `${parts[1]}-${parts[2].padStart(2, "0")}-${parts[3].padStart(2, "0")}`;
+    const notices = [...new Set([...match[2].matchAll(/aliyun\.com\/notice\/(\d+)/g)].map((link) => link[1]))].sort();
+    // 「将下线」是页面自己的措辞；日期兜一层，防止公告发布后措辞改成别的说法。
+    batches.push({ date, heading, notices, pending: heading.includes("将下线") || date >= today });
+  }
+  return batches;
+}
+
+function readSnapshot() {
+  if (!fs.existsSync(BATCH_SNAPSHOT)) return { batches: {} };
+  try {
+    const parsed = JSON.parse(fs.readFileSync(BATCH_SNAPSHOT, "utf8"));
+    return { ...parsed, batches: parsed.batches ?? {} };
+  } catch (error) {
+    problems.push(`读取 ${path.relative(root, BATCH_SNAPSHOT)} 失败：${error instanceof Error ? error.message : error}`);
+    return null;
+  }
+}
+
+let pendingBatches = null;
 
 try {
   const response = await fetch(DEPRECATION_PAGE, { headers: { "User-Agent": "cijing-model-check" } });
   if (!response.ok) throw new Error(`HTTP ${response.status}`);
   const html = await response.text();
 
-  let tablesUnderstood = 0;
-  let listedAs = null;
+  const props = extractPageProps(html);
+  const content = props?.docDetailData?.storeData?.data?.content;
+  const batches = typeof content === "string" ? parseBatches(content) : null;
 
-  for (const tableHtml of html.match(/<table\b[\s\S]*?<\/table>/gi) ?? []) {
-    const grid = toGrid(tableHtml);
-    const header = grid[0] ?? [];
-    const nameColumn = header.findIndex((cell) => /^model name$/i.test(cell ?? ""));
-    const timeColumn = header.findIndex((cell) => /^deprecation time$/i.test(cell ?? ""));
-    if (nameColumn < 0) continue; // 不是下线表（页面上还有别的表格）
-    tablesUnderstood += 1;
-
-    for (const row of grid.slice(1)) {
-      if (row?.[nameColumn] !== bareName) continue;
-      listedAs = timeColumn >= 0 ? (row[timeColumn] ?? "日期未知") : "日期未知";
-    }
-  }
-
-  if (!tablesUnderstood) {
+  if (!content) {
     // 页面改版会让「什么都没匹配到」看起来和「安全」一模一样，必须当失败处理。
-    problems.push("阿里云下线页解析失败：没找到带「Model name」表头的表格，页面结构可能已变，请人工核对");
-  } else if (listedAs) {
-    problems.push(`阿里云已把 ${bareName} 排进下线表，下线时间 ${listedAs}，到期后 API 调用直接失败`);
+    problems.push("阿里云下线页解析失败：页面里没有 __ICE_PAGE_PROPS__ 正文，渲染方式可能又变了，请人工核对");
+  } else if (!batches || !batches.length) {
+    problems.push("阿里云下线页解析失败：没找到「下线模型列表」下的批次标题，页面结构可能已变，请人工核对");
   } else {
-    console.log(`  阿里云下线表（已解析 ${tablesUnderstood} 张）里没有 ${bareName}\n`);
+    pendingBatches = batches.filter((batch) => batch.pending);
+    console.log(`  阿里云下线页：解析到 ${batches.length} 个批次，其中 ${pendingBatches.length} 个待下线`);
+
+    // 页面正文本身点名了我们的模型，那就不用等人工翻公告了，直接报。
+    const contentText = compact(stripTags(content));
+    if (contentText.includes(bareName)) {
+      problems.push(`阿里云下线页正文里出现了 ${bareName}，请立刻核对下线时间`);
+    }
+
+    const snapshot = readSnapshot();
+    if (snapshot) {
+      for (const batch of pendingBatches) {
+        const known = snapshot.batches[batch.date];
+        const links = batch.notices.map((id) => `https://www.aliyun.com/notice/${id}`).join(" ");
+        if (!known) {
+          problems.push(`阿里云新增待下线批次 ${batch.date}（${batch.heading}）：清单在公告里、可能是图片，脚本判断不了含不含 ${bareName}，请人工核对 ${links}`);
+        } else if (known.join(",") !== batch.notices.join(",")) {
+          problems.push(`阿里云 ${batch.date} 批次的公告有变动（原 ${known.length} 条、现 ${batch.notices.length} 条）：请人工核对 ${links}`);
+        } else {
+          console.log(`  ${batch.date} 批次已人工核对过（${batch.notices.length} 条公告），不含 ${bareName}`);
+        }
+      }
+      console.log("");
+    }
   }
 } catch (error) {
   problems.push(`访问阿里云下线页失败：${error instanceof Error ? error.message : error}`);
+}
+
+// --accept：人工翻完公告、确认这些批次不影响我们之后，把当前的待下线批次收进快照。
+// 单独做成一个开关而不是自动写文件，是因为「确认过了」这件事只有人能做。
+if (process.argv.includes("--accept")) {
+  if (!pendingBatches) {
+    console.error("--accept 失败：这次没能解析出批次，先把上面的问题解决掉再确认。");
+    process.exit(1);
+  }
+  const batches = {};
+  for (const batch of pendingBatches) batches[batch.date] = batch.notices;
+  const snapshot = {
+    note: "人工核对过的阿里云下线批次。出现新批次或公告有变动时 scripts/check-model.mjs 会报警；翻完公告确认不影响本项目后跑 node scripts/check-model.mjs --accept 更新这里。",
+    model: modelId,
+    reviewedAt: today,
+    batches,
+  };
+  fs.writeFileSync(BATCH_SNAPSHOT, `${JSON.stringify(snapshot, null, 2)}\n`);
+  console.log(`已把 ${pendingBatches.length} 个待下线批次记进 ${path.relative(root, BATCH_SNAPSHOT)}，记得提交。`);
+  process.exit(0);
 }
 
 // ── 线索三：--live 才跑，用生产同款契约发一次真实请求 ─────────────────────────
@@ -232,7 +330,7 @@ if (process.argv.includes("--live")) {
 // ── 结论 ──────────────────────────────────────────────────────────────────────
 
 if (!problems.length) {
-  console.log("巡检通过：模型在售、未列入下线表。");
+  console.log("巡检通过：模型在售，阿里云没有需要核对的新下线批次。");
   process.exit(0);
 }
 

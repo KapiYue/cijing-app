@@ -119,10 +119,14 @@ node scripts/smoke-test.mjs --ai
 make model-check
 ```
 
-`scripts/check-model.mjs` 查两个公开数据源，都不需要 API key：OpenRouter 端点接口确认模型还在售、端点是否健康；[阿里云模型下线页](https://www.alibabacloud.com/help/en/model-studio/model-depreciation) 确认它没被排进下线表。注意该页上一个模型名会同时出现在「Model name」和「Replacement model」两列，后者只表示它是别人的接替者，脚本按列判断，不做整页匹配。
+`scripts/check-model.mjs` 查两个公开数据源，都不需要 API key：OpenRouter 端点接口确认模型还在售、端点是否健康；[阿里云模型下线页](https://help.aliyun.com/zh/model-studio/model-depreciation) 确认没有需要人工核对的新下线批次。
+
+2026-08-30 重写了第二条线索，起因是 keepalive #16 报「没找到带 Model name 表头的表格」——不是模型出事，是那张表没了。下线页现在只剩「下线模型列表」下面一串按日期分组的批次标题，各自指向几条 `www.aliyun.com/notice/<id>` 官网公告，具体哪些模型下线写在公告里；而公告页是前端渲染的，清单有的是文字表格、有的干脆是一张图片（118344、118345 都是图）。也就是说「这个模型有没有被点名」已经没有任何公开接口能机器判断，所以脚本改成盯「有没有新批次要看」：未来日期的批次记在 `scripts/model-deprecation-batches.json`，出现新批次或某批次追加了公告就报警，人工翻完公告、确认不影响本项目后跑 `node scripts/check-model.mjs --accept` 收进快照并提交。批次一年才几次，噪音可以接受，漏报的代价是三个 Edge Function 同时挂掉。
+
+数据源同时从国际站换到国内站：`www.alibabacloud.com` 的服务端渲染已经坏了，返回的壳子里 `$lang`、`$productId` 这些模板变量都没被替换，正文一个字都没有，换 UA 也一样；国内站是同一份内容，且把正文完整嵌在页面的 `__ICE_PAGE_PROPS__` 里，同样不需要登录。
 
 同一份检查挂在 `.github/workflows/keepalive.yml` 的最后一步，两天跑一次；巡检失败会让该次运行标红。放最后是因为前面两步关系到后端保活，不能被一次模型告警顺带停掉。换模型时要同步更新仓库变量 `OPENROUTER_MODEL`，否则巡检的是线上早就不用的标识。
 
-主线模型提前 3 个月、快照模型提前 30 天公布下线；截至 2026-08-26，`qwen3.7-flash` 未列入任何下线表。
+主线模型提前 3 个月、快照模型提前 30 天公布下线。截至 2026-08-30，`qwen3.7-flash` 未出现在任何下线公告里：最近一个批次 2026-10-10 的六条公告已逐条人工核对，下线的是 qwen3 世代及更早的模型（qwen3-max、qwen3-vl-flash、qwen3-coder-plus、qwen-turbo 等）和语音系列，阿里云给出的推荐替换模型正是 qwen3.6/3.7 系列。
 
 参考：[OpenRouter 的 Qwen3.7 Flash 模型页](https://openrouter.ai/qwen/qwen3.7-flash) 与 [API 参数页](https://openrouter.ai/qwen/qwen3.7-flash/apps)。

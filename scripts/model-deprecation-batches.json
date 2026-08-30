@@ -1,0 +1,15 @@
+{
+  "note": "人工核对过的阿里云下线批次。出现新批次或公告有变动时 scripts/check-model.mjs 会报警；翻完公告确认不影响本项目后跑 node scripts/check-model.mjs --accept 更新这里。",
+  "model": "qwen/qwen3.7-flash",
+  "reviewedAt": "2026-08-30",
+  "batches": {
+    "2026-10-10": [
+      "118177",
+      "118331",
+      "118332",
+      "118344",
+      "118345",
+      "118434"
+    ]
+  }
+}
