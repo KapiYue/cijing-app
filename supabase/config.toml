@@ -29,7 +29,11 @@ max_rows = 1000
 [db]
 port = 54322
 shadow_port = 54320
-major_version = 15
+# 必须与生产一致。生产是 PostgreSQL 17（supabase/.temp/postgres-version 记录了
+# 精确小版本），本地写 15 会让 db reset 的结果失去参考价值。
+# 改这个值以后必须 `supabase stop --no-backup` 丢掉旧数据卷再 start，
+# 否则容器会拿 15 的数据目录去启 17，直接起不来。
+major_version = 17
 
 [studio]
 enabled = true
