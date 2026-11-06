@@ -5,124 +5,121 @@
 </p>
 
 <p align="center">
-  把真实阅读中遇见的单词，变成个人词库、AI 分级短文和可持续的间隔复习。
+  从真实阅读中遇见的单词开始，把语境、阅读、练习与复习连成一个可持续的学习闭环。
 </p>
 
 <p align="center">
-  <a href="README.md">English</a> ·
-  <a href="CONTRIBUTING.md">参与贡献</a> ·
-  <a href="supabase/README.md">Supabase 指南</a> ·
-  <a href="server/README.md">可信服务</a> ·
-  <a href="docs/privacy-policy.md">隐私政策</a>
+  <a href="https://apps.apple.com/cn/iphone/search?term=%E8%AF%8D%E9%B2%B8%E8%83%8C%E5%8D%95%E8%AF%8D">在 App Store 搜索词鲸背单词</a> ·
+  <a href="https://chromewebstore.google.com/detail/%E8%AF%8D%E9%B2%B8%E8%83%8C%E5%8D%95%E8%AF%8D/afihhehkmefgcknloikpejfpikcddifn">安装 Chrome 扩展</a> ·
+  <a href="https://github.com/KapiYue/huoci">活词微信小程序</a> ·
+  <a href="README.md">English</a>
 </p>
 
 <p align="center">
   <img alt="iOS 17+" src="https://img.shields.io/badge/iOS-17%2B-6f49cc">
+  <img alt="Chrome Extension" src="https://img.shields.io/badge/Chrome-Extension-4285F4">
   <img alt="SwiftUI" src="https://img.shields.io/badge/UI-SwiftUI-f09b62">
-  <img alt="Supabase" src="https://img.shields.io/badge/后端-Supabase-3ecf8e">
-  <img alt="MIT License" src="https://img.shields.io/badge/许可证-MIT-7252cc">
+  <img alt="Supabase" src="https://img.shields.io/badge/backend-Supabase-3ecf8e">
+  <img alt="MIT License" src="https://img.shields.io/badge/license-MIT-7252cc">
 </p>
 
-## 页面展示
+## 产品演示
 
-软件只有首页、词库、查词和设置四个一级页面。首页把今日计划、累计成果、持久化短文记录和真实可用的学习入口集中在一屏，信息更完整，也能直接继续上一次学习。
+<table>
+  <tr>
+    <td width="50%" align="center" valign="top">
+      <a href="https://youtu.be/H4Yp9_9SJho">
+        <img src="https://github.com/user-attachments/assets/26671414-6fac-46d8-a5bd-2a7d5d682154" alt="词鲸背单词：查词收藏、分级短文与巩固复习" width="100%">
+      </a>
+      <br><br>
+      <strong>完整产品演示</strong>
+      <br>
+      <sub>查词收藏 → AI 分级短文 → 阅读练习 → 间隔复习</sub>
+      <br><br>
+      <a href="https://youtu.be/H4Yp9_9SJho">▶ 点击封面观看 YouTube 演示</a>
+    </td>
+    <td width="50%" align="center" valign="top">
+      <a href="https://chromewebstore.google.com/detail/%E8%AF%8D%E9%B2%B8%E8%83%8C%E5%8D%95%E8%AF%8D/afihhehkmefgcknloikpejfpikcddifn">
+        <img src="https://github.com/user-attachments/assets/f467091f-a881-4a28-8d85-c4e824c1224c" alt="词鲸 Chrome 扩展：双击生词，在网页语境内完成查词与收藏" width="100%">
+      </a>
+      <br><br>
+      <strong>词鲸 Chrome 扩展</strong>
+      <br>
+      <sub>双击查词 → 保留原句与来源 → 一键收藏 → 在词鲸继续学习</sub>
+      <br><br>
+      <a href="https://chromewebstore.google.com/detail/%E8%AF%8D%E9%B2%B8%E8%83%8C%E5%8D%95%E8%AF%8D/afihhehkmefgcknloikpejfpikcddifn">▶ 前往 Chrome Web Store 安装</a>
+    </td>
+  </tr>
+</table>
+
+## 为什么做它
+
+背单词常常脱离真实阅读：查过的词散落在搜索记录中，读到的原句很快被遗忘，收藏、练习和复习又分散在不同工具里。词鲸把“遇见一个词”之后的关键动作串起来：在语境中理解它，把它保存下来，让它进入可读的内容，并在合适的时间再次遇见它。
+
+## 核心交付
+
+| 词鲸 iOS App | 词鲸 Chrome 扩展 | 活词微信小程序 |
+| --- | --- | --- |
+| 个人词库、AI 分级短文、阅读练习、逐句跟读与学习进度。 | 在网页当前语境中双击查词、听发音、保存单词及来源。 | 微信内的轻量学习入口；搜索“活词”即可使用。 |
+
+三个入口共享核心词汇数据、语境和复习基础；每个产品仍保有适合自身场景的页面与学习编排。
+
+## 核心体验
+
+| 1. 在语境中理解 | 2. 带着来源入库 | 3. 让词进入故事 | 4. 通过练习留下来 |
+| --- | --- | --- | --- |
+| 在网页双击，或在 App 内查词；查看释义、音标、发音和例句。 | 保存第一次遇见它的原句、网页来源和个人笔记。 | 从新词、薄弱词与到期词中选择，生成自然连贯的双语分级短文。 | 完成词义、语境填空、主动回忆与拼写，并由结果安排后续复习。 |
 
 <p align="center">
-  <img src="docs/assets/screenshots/home.png" width="330" alt="包含今日计划、累计成果、历史短文与学习入口的词鲸首页">
+  <img src="docs/assets/screenshots/reading-setup.jpg" width="205" alt="选择目标词和阅读设置">
+  <img src="docs/assets/screenshots/reading.jpg" width="205" alt="阅读双语短文">
+  <img src="docs/assets/screenshots/practice.jpg" width="205" alt="完成阅读后的巩固练习">
+  <img src="docs/assets/screenshots/shadowing.jpg" width="205" alt="逐句跟读训练">
 </p>
 
-### 四个一级页面
+## 产品界面与模块展示
 
-<table>
-  <tr>
-    <td align="center"><strong>首页</strong><br><sub>今日计划、可持久化的短文记录与练习入口</sub></td>
-    <td align="center"><strong>词库</strong><br><sub>学习状态、熟练度、复习时间与语境单词</sub></td>
-  </tr>
-  <tr>
-    <td align="center"><img src="docs/assets/screenshots/home.png" width="310" alt="词鲸首页"></td>
-    <td align="center"><img src="docs/assets/screenshots/library.png" width="310" alt="词鲸词库"></td>
-  </tr>
-  <tr>
-    <td align="center"><strong>查词</strong><br><sub>释义、发音、例句与一键收藏</sub></td>
-    <td align="center"><strong>设置</strong><br><sub>学习偏好、隐私管理、缓存与账户</sub></td>
-  </tr>
-  <tr>
-    <td align="center"><img src="docs/assets/screenshots/lookup.png" width="310" alt="词鲸查词"></td>
-    <td align="center"><img src="docs/assets/screenshots/settings.png" width="310" alt="词鲸设置"></td>
-  </tr>
-</table>
+| 首页 | 词库 | 查词 | 设置 |
+| --- | --- | --- | --- |
+| 今日计划、累计成果、已保存短文，以及继续学习的入口。 | 查看学习状态、熟练度、到期时间和每个词的语境。 | 获取释义、发音和例句，并一键收藏进词库。 | 管理学习偏好、隐私、缓存与账号。 |
+| <img src="docs/assets/screenshots/home.png" width="190" alt="词鲸首页"> | <img src="docs/assets/screenshots/library.png" width="190" alt="词鲸词库"> | <img src="docs/assets/screenshots/lookup.png" width="190" alt="词鲸查词"> | <img src="docs/assets/screenshots/settings.png" width="190" alt="词鲸设置"> |
 
-### 完整学习过程
+## 多端互通，而不强行做成同一种产品
 
-一级导航保持克制，进入学习后形成完整闭环：选词定制短文、双语阅读、语境练习、逐句跟读、查看积累，并可在 App 重启后继续已保存的短文。以下全部是 App 内真实页面，不是概念图。
+[活词](https://github.com/KapiYue/huoci) 是词鲸的微信小程序端。它与词鲸共享核心词汇数据、语境和复习基础，但针对小程序场景有自己的首启流程、每日学习编排和产品状态。
 
-<table>
-  <tr>
-    <td align="center"><strong>1 · 选词定制</strong><br><sub>主题、文体、难度和目标词</sub></td>
-    <td align="center"><strong>2 · 双语阅读</strong><br><sub>目标词高亮，翻译可按段展开</sub></td>
-    <td align="center"><strong>3 · 巩固练习</strong><br><sub>词义、语境、拼写与主动回忆</sub></td>
-  </tr>
-  <tr>
-    <td align="center"><img src="docs/assets/screenshots/reading-setup.jpg" width="220" alt="选择阅读设置与目标词"></td>
-    <td align="center"><img src="docs/assets/screenshots/reading.jpg" width="220" alt="阅读 AI 双语短文"></td>
-    <td align="center"><img src="docs/assets/screenshots/practice.jpg" width="220" alt="完成阅读后的巩固练习"></td>
-  </tr>
-  <tr>
-    <td align="center"><strong>4 · 逐句跟读</strong><br><sub>听一句、读一句、查看匹配反馈</sub></td>
-    <td align="center"><strong>5 · 查看成长</strong><br><sub>活跃趋势、词库状态与薄弱词</sub></td>
-    <td align="center"><strong>6 · 重启后继续</strong><br><sub>随时打开已保存的短文接着阅读</sub></td>
-  </tr>
-  <tr>
-    <td align="center"><img src="docs/assets/screenshots/shadowing.jpg" width="220" alt="逐句跟读训练"></td>
-    <td align="center"><img src="docs/assets/screenshots/progress.jpg" width="220" alt="学习进度与薄弱词页面"></td>
-    <td align="center"><img src="docs/assets/screenshots/reading.jpg" width="220" alt="App 重启后继续阅读已保存的短文"></td>
-  </tr>
-</table>
+```text
+词鲸 iOS App ───────┐
+词鲸 Chrome 扩展 ───┼── 共享账号、词汇事实、语境与复习基础 ── Supabase
+活词微信小程序 ─────┘
 
-## 核心能力
+各端分别决定：页面体验、学习队列、产品指标与交互节奏
+```
 
-- 通过 Chrome Manifest V3 扩展收藏网页单词和首次出现的语境。
-- 维护用户私有词库、学习状态、笔记、熟练度和下一次复习时间。
-- 从薄弱词、到期词和新词中选择目标词，生成自然连贯的双语分级短文。
-- 每篇生成内容都写入 `reading_sessions`，重启 App 或重新登录后仍可从首页继续阅读。
-- 使用熟练度、易度系数、间隔、遗忘次数与到期时间安排复习。
-- 支持系统发音、跟读和基于短文的练习闭环。
-- 所有用户数据均由 Supabase Row Level Security 按账号隔离。
-- 未登录和未设置显示模式时默认跟随系统外观；登录后的显示选择及本机学习开关按用户 UUID 隔离，App Icon 随系统浅色/深色模式切换。
-- 新账号必须完成邮箱验证后登录；客户端会拒绝注册后异常建立的即时会话。
+这让你既能在电脑阅读中积累真实单词，也能在 iPhone 深度阅读和练习；活词则提供微信内更轻量的每日学习入口。
 
 ## 仓库结构
 
 ```text
 .
 ├── client/      # SwiftUI iOS App
-├── extension/   # Chrome 双击查词与收藏扩展
-├── supabase/    # PostgreSQL 迁移、RLS、RPC 与 Edge Functions
+├── extension/   # 已上架的 Chrome 查词与收藏扩展
+├── supabase/    # 共享数据模型、RLS、RPC 与 Edge Functions
 ├── server/      # 可信 Flask 服务边界与健康检查
-├── scripts/     # 配置、审计与冒烟测试脚本
-├── docs/        # 公开政策、开发者指南、模型说明与截图
-└── website/     # 对外托管的隐私政策与支持页面
+├── scripts/     # 配置、审计与自动化验证
+├── docs/        # 公开文档、截图与演示素材
+└── website/     # 隐私政策与支持页面
 ```
 
-## 架构与安全摘要
+活词小程序、跨端共享类型和其小程序专属逻辑维护在独立的 [huoci](https://github.com/KapiYue/huoci) 仓库。
 
-```text
-iPhone 真机 ── Mac 本地 Flask:8000 ── 线上 Supabase Auth / PostgREST
-Chrome 扩展 ──────────────────────┘              ├─ PostgreSQL + RLS + RPC
-                                                └─ Edge Functions ── OpenRouter / Qwen
-```
+## 本地运行
 
-iOS App 和扩展复用同一个 Supabase 账号及按用户隔离的学习数据。所有业务表都启用 Row Level Security，数据库函数在已认证用户范围内执行。真机联调时，iOS 的 Auth、PostgREST 与 Edge Functions 请求先经过 Mac 上的 Flask 透明代理，再访问线上 Supabase；Chrome 扩展仍直接访问线上 Supabase。代理保留用户访问令牌与 RLS 边界，不向客户端注入服务端密钥。
-
-根目录 `.env` 是本地配置的唯一来源，生成的 iOS 和扩展配置不会进入 Git。客户端包只含 Supabase URL 与 publishable key；Supabase secret key 和 OpenRouter API key 只存在于可信运行时。组件细节见 [Supabase 架构与运维指南](supabase/README.md)和[可信服务指南](server/README.md)。
-
-## 快速开始
-
-需要 macOS、Xcode 16 或更新版本、Node.js 20+、Docker Desktop 和 Chrome。仓库脚本会在首次使用时下载并缓存固定版本的 Supabase CLI。
+需要 macOS、Xcode 16+、Node.js 20+、Docker Desktop 和 Chrome。复制环境变量后生成客户端配置，并启动本地 Supabase：
 
 ```bash
 cp .env.example .env
-# 在 .env 中填写当前环境变量
+# 在 .env 中填写环境变量
 make config
 
 ./scripts/supabase.sh start
@@ -130,30 +127,9 @@ make config
 make functions
 ```
 
-用 Xcode 打开 `client/CiJing.xcodeproj`，选择 `CiJing` scheme 和 iOS 17+ 模拟器运行。Chrome 扩展可在 `chrome://extensions` 中选择“加载已解压的扩展程序”，然后载入 `extension/`。
+用 Xcode 打开 `client/CiJing.xcodeproj`，选择 `CiJing` scheme 和 iOS 17+ 模拟器运行。开发版扩展可在 `chrome://extensions` 中选择“加载已解压的扩展程序”，然后载入 `extension/`。
 
-配置、数据库、Edge Functions 与生产上线说明见 [supabase/README.md](supabase/README.md)；贡献流程和真机排障见 [CONTRIBUTING.md](CONTRIBUTING.md)。
-
-## 真机联调与正式归档速查
-
-如果 iPhone 上已经安装过通过 `make device-config` 生成并重新构建的真机联调版本，之后日常本地联调只需在项目根目录运行：
-
-```bash
-make server-start
-```
-
-保持该终端运行，并确保 iPhone 与 Mac 位于同一局域网。真机使用 Mac 的 Bonjour `.local` 主机名，Wi-Fi 更换 IP 后不需要重新生成配置。如果是首次配置真机、刚执行过正式配置，或者清理了生成文件，则先运行 `make device-config`，再用 Xcode 重新构建并安装一次；单独启动 Flask 不会改变已安装 App 的连接地址。
-
-正式 Archive、TestFlight 或 App Store 构建前，先确认根目录 `.env` 的 `SUPABASE_URL` 是线上生产 HTTPS 地址，然后运行：
-
-```bash
-make config
-make config-check
-```
-
-`make device-config` 不会修改根目录 `.env`，所以 `make config` 会把 iOS 配置恢复为 `.env` 中的线上地址；`make config-check` 负责确认生成文件与 `.env` 一致。两条命令成功后必须重新构建 Archive，不能复用之前指向 Flask 的本地联调包；正式包运行时也不需要启动本地 Flask。
-
-## 验证
+## 验证与开发文档
 
 ```bash
 make config-check
@@ -162,17 +138,11 @@ make server-test
 make ios-build
 ```
 
-本地 Supabase 启动后可运行 `make smoke` 验证跨端 API 流程；生产部署完成后可运行 `make production-audit` 与 `make production-smoke`。
-
-## 文档导航
+更深入的开发、数据库和发布说明已下沉到对应文档：
 
 - [Supabase 架构、本地开发与生产运维](supabase/README.md)
-- [数据库迁移指南](docs/supabase-migration-guide.md)与 [Qwen3.7 Flash 集成说明](docs/qwen/qwen3.7-flash.md)
-- [可信 Flask 服务](server/README.md)与[公开网站](website/README.md)
-- [隐私政策](docs/privacy-policy.md)、[使用条款](docs/terms-of-service.md)与[支持说明](docs/support.md)
+- [可信 Flask 服务](server/README.md)
+- [贡献指南](CONTRIBUTING.md)
+- [隐私政策](docs/privacy-policy.md)、[使用条款](docs/terms-of-service.md) 与 [支持说明](docs/support.md)
 
-## 参与贡献与安全
-
-提交贡献前请阅读 [CONTRIBUTING.md](CONTRIBUTING.md) 与 [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md)。发现安全问题时请按照 [SECURITY.md](SECURITY.md) 私下报告，不要创建公开 Issue。
-
-本项目采用 [MIT License](LICENSE)。
+本项目采用 [MIT License](LICENSE)。安全问题请按 [SECURITY.md](SECURITY.md) 私下报告。

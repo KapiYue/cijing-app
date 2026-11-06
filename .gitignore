@@ -17,6 +17,7 @@ DerivedData/
 client/DerivedData/
 client/DerivedDataSimulator/
 client/.derived-data/
+client/.derived-data-*/
 *.moved-aside
 *.pbxuser
 *.mode1v3

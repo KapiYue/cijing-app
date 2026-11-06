@@ -1,127 +1,121 @@
-# CiJing · 词鲸背单词
+# CiJing · Learn Words in Context
 
 <p align="center">
   <img src="client/CiJing/Assets.xcassets/AppIcon.appiconset/AppIcon.png" width="112" alt="CiJing app icon">
 </p>
 
 <p align="center">
-  Turn words found in real reading into a personal vocabulary library, graded AI stories, and a spaced-review routine.
+  Start with words you meet in real reading, then connect their context, reading, practice, and review into a learning loop that lasts.
 </p>
 
 <p align="center">
-  <a href="README_zh.md">简体中文</a> ·
-  <a href="CONTRIBUTING.md">Contributing</a> ·
-  <a href="supabase/README.md">Supabase</a> ·
-  <a href="server/README.md">Trusted server</a> ·
-  <a href="docs/privacy-policy.md">Privacy policy</a>
+  <a href="https://apps.apple.com/cn/iphone/search?term=%E8%AF%8D%E9%B2%B8%E8%83%8C%E5%8D%95%E8%AF%8D">Find CiJing on the App Store</a> ·
+  <a href="https://chromewebstore.google.com/detail/%E8%AF%8D%E9%B2%B8%E8%83%8C%E5%8D%95%E8%AF%8D/afihhehkmefgcknloikpejfpikcddifn">Install the Chrome extension</a> ·
+  <a href="https://github.com/KapiYue/huoci">HuoCi WeChat Mini Program</a> ·
+  <a href="README_zh.md">简体中文</a>
 </p>
 
 <p align="center">
   <img alt="iOS 17+" src="https://img.shields.io/badge/iOS-17%2B-6f49cc">
+  <img alt="Chrome Extension" src="https://img.shields.io/badge/Chrome-Extension-4285F4">
   <img alt="SwiftUI" src="https://img.shields.io/badge/UI-SwiftUI-f09b62">
   <img alt="Supabase" src="https://img.shields.io/badge/backend-Supabase-3ecf8e">
   <img alt="license MIT" src="https://img.shields.io/badge/license-MIT-7252cc">
 </p>
 
-## Product tour
+## Product demo
 
-CiJing has four focused top-level areas. Home brings the daily plan, accumulated progress, persistent reading history, and real learning entry points together in one glance.
+<table>
+  <tr>
+    <td width="50%" align="center" valign="top">
+      <a href="https://youtu.be/H4Yp9_9SJho">
+        <img src="https://github.com/user-attachments/assets/26671414-6fac-46d8-a5bd-2a7d5d682154" alt="CiJing: look up and save words, read graded stories, and practise retrieval" width="100%">
+      </a>
+      <br><br>
+      <strong>Full product walkthrough</strong>
+      <br>
+      <sub>Capture words → AI graded reading → reading practice → spaced review</sub>
+      <br><br>
+      <a href="https://youtu.be/H4Yp9_9SJho">▶ Watch the YouTube walkthrough</a>
+    </td>
+    <td width="50%" align="center" valign="top">
+      <a href="https://chromewebstore.google.com/detail/%E8%AF%8D%E9%B2%B8%E8%83%8C%E5%8D%95%E8%AF%8D/afihhehkmefgcknloikpejfpikcddifn">
+        <img src="https://github.com/user-attachments/assets/f467091f-a881-4a28-8d85-c4e824c1224c" alt="CiJing Chrome extension: double-click a word to look it up and save it with web context" width="100%">
+      </a>
+      <br><br>
+      <strong>CiJing Chrome extension</strong>
+      <br>
+      <sub>Double-click lookup → preserve sentence and source → save once → continue in CiJing</sub>
+      <br><br>
+      <a href="https://chromewebstore.google.com/detail/%E8%AF%8D%E9%B2%B8%E8%83%8C%E5%8D%95%E8%AF%8D/afihhehkmefgcknloikpejfpikcddifn">▶ Install from Chrome Web Store</a>
+    </td>
+  </tr>
+</table>
+
+## Why CiJing exists
+
+Vocabulary study is often separated from real reading: looked-up words disappear into search history, their original sentences are forgotten, and saving, practice, and review live in different tools. CiJing connects the meaningful actions that follow meeting a word: understand it in context, save it, bring it into readable content, and meet it again at the right time.
+
+## What it delivers
+
+| CiJing iOS app | CiJing Chrome extension | HuoCi WeChat Mini Program |
+| --- | --- | --- |
+| Personal vocabulary library, AI graded readings, reading practice, sentence shadowing, and progress. | Double-click lookup in the current web context, pronunciation, and saving a word with its source. | A lighter entry point for daily study in WeChat; search for “活词” to use it. |
+
+The three entry points share core vocabulary data, context, and review foundations, while each keeps screens and learning orchestration designed for its setting.
+
+## Core experience
+
+| 1. Understand in context | 2. Save the source | 3. Bring words into a story | 4. Retain through practice |
+| --- | --- | --- | --- |
+| Double-click on the web or look up in the app to see definitions, phonetics, pronunciation, and examples. | Save the first sentence, webpage source, and your own notes. | Choose from new, weak, and due words to create a coherent bilingual, graded story. | Complete meaning, contextual cloze, active recall, and spelling tasks; results guide later review. |
 
 <p align="center">
-  <img src="docs/assets/screenshots/home.png" width="330" alt="CiJing home with a completed plan, learning totals, saved readings, and study entry points">
+  <img src="docs/assets/screenshots/reading-setup.jpg" width="205" alt="Choose target words and reading settings">
+  <img src="docs/assets/screenshots/reading.jpg" width="205" alt="Read a bilingual story">
+  <img src="docs/assets/screenshots/practice.jpg" width="205" alt="Complete reading-based practice">
+  <img src="docs/assets/screenshots/shadowing.jpg" width="205" alt="Shadow a sentence">
 </p>
 
-### Four top-level areas
+## Interface and modules
 
-<table>
-  <tr>
-    <td align="center"><strong>Home</strong><br><sub>Daily plan, persistent reading history, and practice entry points</sub></td>
-    <td align="center"><strong>Library</strong><br><sub>Learning states, strength, due dates, and contextual vocabulary</sub></td>
-  </tr>
-  <tr>
-    <td align="center"><img src="docs/assets/screenshots/home.png" width="310" alt="CiJing home screen"></td>
-    <td align="center"><img src="docs/assets/screenshots/library.png" width="310" alt="CiJing word library"></td>
-  </tr>
-  <tr>
-    <td align="center"><strong>Lookup</strong><br><sub>Definitions, pronunciation, examples, and one-tap saving</sub></td>
-    <td align="center"><strong>Settings</strong><br><sub>Learning preferences, privacy controls, cache, and account</sub></td>
-  </tr>
-  <tr>
-    <td align="center"><img src="docs/assets/screenshots/lookup.png" width="310" alt="CiJing word lookup"></td>
-    <td align="center"><img src="docs/assets/screenshots/settings.png" width="310" alt="CiJing settings"></td>
-  </tr>
-</table>
+| Home | Library | Lookup | Settings |
+| --- | --- | --- | --- |
+| Daily plan, accumulated progress, saved readings, and a way back into learning. | Learning states, strength, due dates, and each word's context. | Definitions, pronunciation, examples, and one-tap saving. | Learning preferences, privacy, cache, and account controls. |
+| <img src="docs/assets/screenshots/home.png" width="190" alt="CiJing home"> | <img src="docs/assets/screenshots/library.png" width="190" alt="CiJing library"> | <img src="docs/assets/screenshots/lookup.png" width="190" alt="CiJing lookup"> | <img src="docs/assets/screenshots/settings.png" width="190" alt="CiJing settings"> |
 
-### The complete learning loop
+## Interoperable across products, without forcing one product shape
 
-The top-level navigation stays simple, while each reading opens a focused sequence: choose target words, read with optional translations, practise retrieval, shadow sentence by sentence, review progress, and resume saved readings after relaunch.
+[HuoCi](https://github.com/KapiYue/huoci) is CiJing's WeChat Mini Program companion. It shares core vocabulary data, context, and review foundations with CiJing, while keeping its own onboarding, daily learning flow, and product states for the Mini Program.
 
-<table>
-  <tr>
-    <td align="center"><strong>1 · Choose</strong><br><sub>Theme, style, level, and target words</sub></td>
-    <td align="center"><strong>2 · Read</strong><br><sub>Graded bilingual story with highlighted words</sub></td>
-    <td align="center"><strong>3 · Practise</strong><br><sub>Meaning, context, spelling, and recall</sub></td>
-  </tr>
-  <tr>
-    <td align="center"><img src="docs/assets/screenshots/reading-setup.jpg" width="220" alt="Choose reading settings and target words"></td>
-    <td align="center"><img src="docs/assets/screenshots/reading.jpg" width="220" alt="Read a bilingual AI story"></td>
-    <td align="center"><img src="docs/assets/screenshots/practice.jpg" width="220" alt="Complete reading-based practice"></td>
-  </tr>
-  <tr>
-    <td align="center"><strong>4 · Shadow</strong><br><sub>Listen, speak, and compare sentence by sentence</sub></td>
-    <td align="center"><strong>5 · Improve</strong><br><sub>Activity, vocabulary states, and weak words</sub></td>
-    <td align="center"><strong>6 · Resume</strong><br><sub>Continue any saved reading after relaunch</sub></td>
-  </tr>
-  <tr>
-    <td align="center"><img src="docs/assets/screenshots/shadowing.jpg" width="220" alt="Sentence shadowing practice"></td>
-    <td align="center"><img src="docs/assets/screenshots/progress.jpg" width="220" alt="Learning progress dashboard"></td>
-    <td align="center"><img src="docs/assets/screenshots/reading.jpg" width="220" alt="Resume a saved reading after relaunch"></td>
-  </tr>
-</table>
+```text
+CiJing iOS app ────────┐
+CiJing Chrome extension ┼── Shared account, vocabulary facts, context, and review foundations ── Supabase
+HuoCi WeChat Mini Program ┘
 
-## What it does
+Each product owns its own screens, learning queue, product metrics, and interaction rhythm.
+```
 
-- Captures words and source context from a Chrome Manifest V3 extension.
-- Keeps a private, user-scoped word library with notes and learning states.
-- Generates coherent bilingual readings from weak, due, and new words.
-- Persists every generated reading to `reading_sessions`, so history survives relaunches and sign-ins.
-- Schedules review with strength, ease factor, interval, lapse, and due-date signals.
-- Provides system pronunciation, shadowing, and short reading-based exercises.
-- Protects all user data with Supabase Row Level Security.
-- Follows the system appearance before sign-in and for unset accounts; signed-in appearance and local learning switches are isolated by user UUID, and the App Icon includes light/dark system variants.
-- Requires email verification for new accounts and rejects an unexpected session returned directly from sign-up.
+This lets you collect real words while reading at your computer, study them deeply on iPhone, and use HuoCi as a lighter daily entry point in WeChat.
 
 ## Repository layout
 
 ```text
 .
 ├── client/      # SwiftUI iOS app
-├── extension/   # Chrome extension for contextual lookup and saving
-├── supabase/    # PostgreSQL migrations, RLS, RPCs, and Edge Functions
+├── extension/   # Published Chrome lookup and saving extension
+├── supabase/    # Shared data model, RLS, RPCs, and Edge Functions
 ├── server/      # Trusted Flask boundary and health checks
-├── scripts/     # Configuration, audit, and smoke-test utilities
-├── docs/        # Public policies, developer guides, model notes, and screenshots
-└── website/     # Privacy policy and support pages for public hosting
+├── scripts/     # Configuration, auditing, and automated checks
+├── docs/        # Public documentation, screenshots, and demo assets
+└── website/     # Privacy policy and support pages
 ```
 
-## Architecture and security
+The HuoCi Mini Program, cross-product shared types, and Mini Program-specific logic live in the separate [huoci](https://github.com/KapiYue/huoci) repository.
 
-```text
-iOS app ─────┐
-             ├─ Supabase Auth / PostgREST ── PostgreSQL + RLS + RPC
-Chrome ──────┘                    └────────── Edge Functions ── OpenRouter / Qwen
+## Run locally
 
-Physical iPhone ── local Flask integration gateway ── hosted Supabase
-Flask server ── trusted health and operations boundary
-```
-
-The iOS app and extension share a Supabase account and user-scoped learning data. Every business table has Row Level Security, and database functions execute in the authenticated user's scope. During physical-device testing, iOS Auth, PostgREST, and Edge Functions requests pass through the local Flask gateway before reaching hosted Supabase; the Chrome extension continues to call hosted Supabase directly. The gateway preserves the user's access token and RLS boundary and never injects a server secret into client requests.
-
-The root `.env` is the only local configuration source. Generated iOS and extension configuration is ignored by Git. Client bundles contain only the Supabase URL and publishable key; Supabase secret keys and the OpenRouter API key stay in trusted runtimes. See [Supabase architecture and operations](supabase/README.md) and the [trusted server guide](server/README.md) for component details.
-
-## Quick start
-
-Requirements: macOS, Xcode 16 or newer, Node.js 20+, Docker Desktop, and Chrome. The repository wrapper downloads and caches its pinned Supabase CLI version on first use.
+You need macOS, Xcode 16+, Node.js 20+, Docker Desktop, and Chrome. Copy the environment template, generate the client configuration, then start local Supabase:
 
 ```bash
 cp .env.example .env
@@ -133,30 +127,9 @@ make config
 make functions
 ```
 
-Open `client/CiJing.xcodeproj`, select the `CiJing` scheme and an iOS 17+ simulator, then run. Load `extension/` as an unpacked extension from `chrome://extensions`.
+Open `client/CiJing.xcodeproj` in Xcode, select the `CiJing` scheme and an iOS 17+ simulator, then run. For the development extension, open `chrome://extensions`, enable developer mode, and load `extension/` unpacked.
 
-Configuration, database, Edge Function, and production instructions live in [supabase/README.md](supabase/README.md). Contribution workflow and physical-device troubleshooting live in [CONTRIBUTING.md](CONTRIBUTING.md).
-
-## Physical-device and release quick reference
-
-Once the iPhone has a device-integration build generated with `make device-config` and rebuilt in Xcode, routine local testing only requires this command from the repository root:
-
-```bash
-make server-start
-```
-
-Keep that terminal running and keep the iPhone and Mac on the same LAN. The device uses the Mac's Bonjour `.local` hostname, so a Wi-Fi IP change does not require regenerating configuration. For the first device setup, after switching back from release configuration, or after generated files were cleaned, run `make device-config` first and rebuild/reinstall the app in Xcode; starting Flask alone cannot change the URL embedded in an installed app.
-
-Before creating an Archive, TestFlight build, or App Store build, verify that `SUPABASE_URL` in the root `.env` is the hosted production HTTPS URL, then run:
-
-```bash
-make config
-make config-check
-```
-
-`make device-config` never changes the root `.env`, so `make config` restores the iOS client to the hosted URL from `.env`; `make config-check` verifies that generated files match it. Rebuild the Archive after both commands succeed—do not reuse a local device build that points to Flask. The release app does not require the local Flask server.
-
-## Verification
+## Verification and developer documentation
 
 ```bash
 make config-check
@@ -165,17 +138,11 @@ make server-test
 make ios-build
 ```
 
-With Supabase running, `make smoke` verifies the cross-client API flow. Production environments can use `make production-audit` and `make production-smoke` after deployment.
-
-## Documentation
+Implementation, database, and release detail lives in the component documentation:
 
 - [Supabase architecture, local development, and production operations](supabase/README.md)
-- [Database migration guide](docs/supabase-migration-guide.md) and [Qwen3.7 Flash integration](docs/qwen/qwen3.7-flash.md)
-- [Trusted Flask server](server/README.md) and [public website](website/README.md)
-- [Privacy policy](docs/privacy-policy.md), [terms of service](docs/terms-of-service.md), and [support](docs/support.md)
+- [Trusted Flask server](server/README.md)
+- [Contributing](CONTRIBUTING.md)
+- [Privacy policy](docs/privacy-policy.md), [terms](docs/terms-of-service.md), and [support](docs/support.md)
 
-## Contributing and security
-
-Please read [CONTRIBUTING.md](CONTRIBUTING.md) and [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md) before opening a contribution. Report vulnerabilities privately by following [SECURITY.md](SECURITY.md), not through a public issue.
-
-This project is available under the [MIT License](LICENSE).
+This project is available under the [MIT License](LICENSE). Please report vulnerabilities privately through [SECURITY.md](SECURITY.md).
