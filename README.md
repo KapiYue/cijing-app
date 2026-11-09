@@ -28,7 +28,7 @@
 <table>
   <tr>
     <td width="50%" align="center" valign="top">
-      <a href="https://youtu.be/H4Yp9_9SJho">
+      <a href="https://youtu.be/jo6ooChwgmo">
         <img src="https://github.com/user-attachments/assets/26671414-6fac-46d8-a5bd-2a7d5d682154" alt="CiJing: look up and save words, read graded stories, and practise retrieval" width="100%">
       </a>
       <br><br>
@@ -36,7 +36,7 @@
       <br>
       <sub>Capture words → AI graded reading → reading practice → spaced review</sub>
       <br><br>
-      <a href="https://youtu.be/H4Yp9_9SJho">▶ Watch the YouTube walkthrough</a>
+      <a href="https://youtu.be/jo6ooChwgmo">▶ Watch the YouTube walkthrough</a>
     </td>
     <td width="50%" align="center" valign="top">
       <a href="https://chromewebstore.google.com/detail/%E8%AF%8D%E9%B2%B8%E8%83%8C%E5%8D%95%E8%AF%8D/afihhehkmefgcknloikpejfpikcddifn">
@@ -65,6 +65,12 @@ Vocabulary study is often separated from real reading: looked-up words disappear
 The three entry points share core vocabulary data, context, and review foundations, while each keeps screens and learning orchestration designed for its setting.
 
 ## Core experience
+
+<p align="center">
+  <a href="https://youtu.be/jo6ooChwgmo">
+    <img src="https://github.com/user-attachments/assets/93ab886f-4544-4562-bbf5-094fdbc90e43" width="420" alt="CiJing core experience: create an AI graded reading from target words and retain them through practice">
+  </a>
+</p>
 
 | 1. Understand in context | 2. Save the source | 3. Bring words into a story | 4. Retain through practice |
 | --- | --- | --- | --- |

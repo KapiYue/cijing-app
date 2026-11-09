@@ -28,7 +28,7 @@
 <table>
   <tr>
     <td width="50%" align="center" valign="top">
-      <a href="https://youtu.be/H4Yp9_9SJho">
+      <a href="https://youtu.be/jo6ooChwgmo">
         <img src="https://github.com/user-attachments/assets/26671414-6fac-46d8-a5bd-2a7d5d682154" alt="词鲸背单词：查词收藏、分级短文与巩固复习" width="100%">
       </a>
       <br><br>
@@ -36,7 +36,7 @@
       <br>
       <sub>查词收藏 → AI 分级短文 → 阅读练习 → 间隔复习</sub>
       <br><br>
-      <a href="https://youtu.be/H4Yp9_9SJho">▶ 点击封面观看 YouTube 演示</a>
+      <a href="https://youtu.be/jo6ooChwgmo">▶ 点击封面观看 YouTube 演示</a>
     </td>
     <td width="50%" align="center" valign="top">
       <a href="https://chromewebstore.google.com/detail/%E8%AF%8D%E9%B2%B8%E8%83%8C%E5%8D%95%E8%AF%8D/afihhehkmefgcknloikpejfpikcddifn">
@@ -65,6 +65,12 @@
 三个入口共享核心词汇数据、语境和复习基础；每个产品仍保有适合自身场景的页面与学习编排。
 
 ## 核心体验
+
+<p align="center">
+  <a href="https://youtu.be/jo6ooChwgmo">
+    <img src="https://github.com/user-attachments/assets/93ab886f-4544-4562-bbf5-094fdbc90e43" width="420" alt="词鲸核心体验：选择目标词生成 AI 分级短文，并通过练习加深记忆">
+  </a>
+</p>
 
 | 1. 在语境中理解 | 2. 带着来源入库 | 3. 让词进入故事 | 4. 通过练习留下来 |
 | --- | --- | --- | --- |
